@@ -88,7 +88,8 @@ public final class SpmCommands {
         LiteralArgumentBuilder stageup = CommandManager.literal("stageup");
         stageup.requires(SpmCommands::isCreativePlayer);
         stageup.executes(ctx -> {
-            if (!(ctx.getSource().getEntity() instanceof ServerPlayerEntity player)) {
+            if (!(ctx.getSource() instanceof ServerCommandSource src)
+                    || !(src.getEntity() instanceof ServerPlayerEntity player)) {
                 return 0;
             }
             PlayerPowers powers = SpiderState.get(player.getUuid());
@@ -96,7 +97,7 @@ public final class SpmCommands {
                 TransformLogic.grantBite(player);
             }
             if (powers.stage >= 4) {
-                feedback(ctx.getSource(), "Already at max stage (4).");
+                feedback(src, "Already at max stage (4).");
                 return Command.SINGLE_SUCCESS;
             }
             powers.stage++;
@@ -104,7 +105,7 @@ public final class SpmCommands {
             player.playSound(ModSounds.STAGE_UP, 1.0f, 1.0f);
             ServerNetworking.sendPowers(player);
             TransformLogic.grantAdvancement(player, "stage_" + powers.stage);
-            feedback(ctx.getSource(), "Stage set to " + powers.stage + ".");
+            feedback(src, "Stage set to " + powers.stage + ".");
             return Command.SINGLE_SUCCESS;
         });
         root.then(stageup);
