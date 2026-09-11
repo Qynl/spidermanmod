@@ -146,6 +146,9 @@ public final class AbilityExecutor {
         if (powers.swinging) {
             SwingPhysics.detach(player, powers, false);
         }
+        // Drop the climb flag directly (not via setClimbing): the zip flight
+        // needs noGravity left on, and the climb tick would otherwise steal it.
+        powers.climbing = false;
         powers.zipX = target.x;
         powers.zipY = target.y;
         powers.zipZ = target.z;

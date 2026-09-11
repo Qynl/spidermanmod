@@ -57,8 +57,8 @@ public final class SpiderState {
                         PlayerPowers powers = new PlayerPowers();
                         powers.fromNbt(root.getCompound(key));
                         POWERS.put(id, powers);
-                    } catch (IllegalArgumentException ignored) {
-                        // Skip malformed keys.
+                    } catch (RuntimeException ignored) {
+                        // Skip malformed keys or corrupt entries (wrong NBT types).
                     }
                 }
                 SpiderManMod.LOGGER.info("[spiderman] loaded powers for {} players", POWERS.size());

@@ -18,6 +18,7 @@ import com.spiderman.mod.net.ServerNetworking;
 import com.spiderman.mod.server.JoinHandler;
 import com.spiderman.mod.server.ServerTickHandler;
 import com.spiderman.mod.server.TransformLogic;
+import com.spiderman.mod.server.WebCleanup;
 import com.spiderman.mod.state.PlayerPowers;
 import com.spiderman.mod.state.SpiderState;
 
@@ -58,7 +59,10 @@ public class SpiderManMod implements ModInitializer {
             TransformLogic.applyStageAttributes(newPlayer, powers);
             ServerNetworking.sendPowers(newPlayer);
         });
-        ServerLifecycleEvents.SERVER_STOPPED.register(SpiderState::onServerStopped);
+        ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
+            SpiderState.onServerStopped(server);
+            WebCleanup.clearAll();
+        });
         LOGGER.info("[spiderman] common init complete");
     }
 }

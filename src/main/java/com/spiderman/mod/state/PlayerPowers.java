@@ -82,8 +82,11 @@ public class PlayerPowers {
 
     public void fromNbt(NbtCompound nbt) {
         hasPowers = nbt.getBoolean("Powers");
-        stage = nbt.getInt("Stage");
-        mastery = nbt.getInt("Mastery");
-        selected = nbt.getInt("Selected");
+        // Clamp: a corrupt spiderman.dat must never load an out-of-range
+        // stage (array indexing), negative mastery, or invalid selection.
+        stage = Math.min(4, Math.max(0, nbt.getInt("Stage")));
+        mastery = Math.max(0, nbt.getInt("Mastery"));
+        int loaded = nbt.getInt("Selected");
+        selected = AbilityIds.valid(loaded) ? loaded : 0;
     }
 }

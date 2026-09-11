@@ -97,6 +97,67 @@ public final class SpiderConfig {
         } catch (Exception e) {
             SpiderManMod.LOGGER.warn("[spiderman] failed to load config, using defaults", e);
         }
+        // Always sanitize: a hand-edited file may hold nulls, negatives, NaN
+        // or infinities, any of which can crash the server on next use.
+        instance.sanitize();
+    }
+
+    /**
+     * Clamps every tunable into a crash-safe range. Runs on every load,
+     * including the built-in defaults.
+     */
+    private void sanitize() {
+        spiderWeight = atLeast(spiderWeight, 0, 4);
+        biteChance = Double.isFinite(biteChance)
+                ? Math.min(1.0, Math.max(0.0, biteChance)) : 1.0;
+        webRange = nonNegative(webRange, 24.0);
+        swingRange = nonNegative(swingRange, 40.0);
+        zipRange = nonNegative(zipRange, 32.0);
+        shotCooldown = atLeast(shotCooldown, 0, 10);
+        swingCooldown = atLeast(swingCooldown, 0, 4);
+        zipCooldown = atLeast(zipCooldown, 0, 40);
+        pullCooldown = atLeast(pullCooldown, 0, 60);
+        trapCooldown = atLeast(trapCooldown, 0, 30);
+        lineCooldown = atLeast(lineCooldown, 0, 100);
+        burstCooldown = atLeast(burstCooldown, 0, 120);
+        impactCooldown = atLeast(impactCooldown, 0, 80);
+        platformCooldown = atLeast(platformCooldown, 0, 200);
+        doubleCooldown = atLeast(doubleCooldown, 0, 60);
+        shotDamage = nonNegative(shotDamage, 4.0);
+        impactDamage = nonNegative(impactDamage, 10.0);
+        burstDamage = nonNegative(burstDamage, 8.0);
+        burstRadius = nonNegative(burstRadius, 5.0);
+        comboWindow = atLeast(comboWindow, 0, 80);
+        comboBonus = nonNegative(comboBonus, 0.25);
+        comboCap = atLeast(comboCap, 0, 4);
+        jumpMult = nonNegative(jumpMult, 1.35);
+        speedMult = nonNegative(speedMult, 1.15);
+        strengthMult = nonNegative(strengthMult, 1.5);
+        fallMult = nonNegative(fallMult, 0.1);
+        senseRadiusBase = nonNegative(senseRadiusBase, 10.0);
+        senseRadiusPerStage = nonNegative(senseRadiusPerStage, 4.0);
+        webLiveTicks = atLeast(webLiveTicks, 0, 100);
+        // Must stay >= 1: the trap-web eviction loop removes index 0 while
+        // capped, which would throw on an empty list if this were 0.
+        maxTrapWebs = atLeast(maxTrapWebs, 1, 24);
+        if (stageThresholds == null || stageThresholds.length != 4) {
+            stageThresholds = new int[]{100, 300, 700, 1400};
+        } else {
+            for (int i = 0; i < stageThresholds.length; i++) {
+                if (stageThresholds[i] < 1) {
+                    stageThresholds[i] = 1;
+                }
+            }
+        }
+        masteryMult = nonNegative(masteryMult, 1.0);
+    }
+
+    private static int atLeast(int value, int min, int dflt) {
+        return value < min ? dflt : value;
+    }
+
+    private static double nonNegative(double value, double dflt) {
+        return !Double.isFinite(value) || value < 0.0 ? dflt : value;
     }
 
     public int cooldownFor(int ability) {

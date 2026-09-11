@@ -56,11 +56,11 @@ public final class TransformLogic {
     /** Stages up when mastery crosses the next threshold. Returns new stage or -1. */
     public static int tryStageUp(ServerPlayerEntity player) {
         PlayerPowers powers = SpiderState.get(player.getUuid());
-        if (!powers.hasPowers || powers.stage >= 4) {
+        if (!powers.hasPowers || powers.stage < 0 || powers.stage >= 4) {
             return -1;
         }
         int[] thresholds = SpiderConfig.get().stageThresholds;
-        if (powers.stage < thresholds.length && powers.mastery >= thresholds[powers.stage]) {
+        if (thresholds != null && powers.stage < thresholds.length && powers.mastery >= thresholds[powers.stage]) {
             powers.stage++;
             applyStageAttributes(player, powers);
             player.playSound(ModSounds.STAGE_UP, 1.0f, 1.0f);

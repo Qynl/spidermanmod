@@ -37,6 +37,7 @@ public final class JoinHandler {
         PlayerPowers powers = SpiderState.get(player.getUuid());
         powers.stopSwing();
         powers.zipTicks = 0;
+        WebCleanup.clearPlayer(player.getUuid());
         MinecraftServer server = player.getServer();
         if (server != null) {
             SpiderState.save(server);

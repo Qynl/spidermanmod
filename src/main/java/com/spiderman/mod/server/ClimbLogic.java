@@ -99,6 +99,13 @@ public final class ClimbLogic {
         if (push.lengthSquared() < 0.01) {
             Vec3d look = player.getRotationVector();
             push = new Vec3d(-look.x, 0.0, -look.z);
+            if (push.lengthSquared() < 0.01) {
+                // Looking straight up/down while ceiling-clinging: there is no
+                // horizontal push, so fall back to the facing direction instead
+                // of normalizing a near-zero vector (which yields NaN).
+                Direction facing = player.getHorizontalFacing();
+                push = new Vec3d(facing.getOffsetX(), 0.0, facing.getOffsetZ());
+            }
         }
         push = push.normalize();
         SwingPhysics.push(player, new Vec3d(push.x * 0.9, 0.85, push.z * 0.9));

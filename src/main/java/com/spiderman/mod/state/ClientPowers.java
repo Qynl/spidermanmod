@@ -1,8 +1,7 @@
 package com.spiderman.mod.state;
 
-import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * Client-side mirror of the local player's powers, fed by S2C packets.
@@ -24,8 +23,12 @@ public final class ClientPowers {
     public static int lastShotHand = -1;
     public static long lastShotTick = -1000;
 
-    /** Active spider-sense pings: {x, y, z, kind, ticksLeft}. */
-    public static final List<double[]> pings = new ArrayList<>();
+    /**
+     * Active spider-sense pings: {x, y, z, kind, ticksLeft}. Copy-on-write:
+     * mutated from the client thread (tick, packet handlers) and cleared on
+     * disconnect, while the HUD iterates it every frame.
+     */
+    public static final List<double[]> pings = new CopyOnWriteArrayList<>();
 
     private ClientPowers() {
     }
@@ -54,14 +57,10 @@ public final class ClientPowers {
                 swingActive = false;
             }
         }
-        Iterator<double[]> it = pings.iterator();
-        while (it.hasNext()) {
-            double[] ping = it.next();
+        pings.removeIf(ping -> {
             ping[4] -= 1.0;
-            if (ping[4] <= 0.0) {
-                it.remove();
-            }
-        }
+            return ping[4] <= 0.0;
+        });
     }
 
     public static void addPing(double x, double y, double z, int kind) {

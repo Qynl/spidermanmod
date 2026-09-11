@@ -52,7 +52,10 @@ public final class ModEntities {
 
         SpawnRestriction.register(RADIOACTIVE_SPIDER, SpawnLocationTypes.ON_GROUND,
                 Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, HostileEntity::canSpawnInDark);
-        BiomeModifications.addSpawn(BiomeSelectors.foundInOverworld(), SpawnGroup.MONSTER,
-                RADIOACTIVE_SPIDER, SpiderConfig.get().spiderWeight, 1, 1);
+        int spiderWeight = SpiderConfig.get().spiderWeight;
+        if (spiderWeight > 0) {
+            BiomeModifications.addSpawn(BiomeSelectors.foundInOverworld(), SpawnGroup.MONSTER,
+                    RADIOACTIVE_SPIDER, spiderWeight, 1, 1);
+        }
     }
 }

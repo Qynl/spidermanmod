@@ -44,7 +44,7 @@ public final class WebCleanup {
         }
         SpiderConfig cfg = SpiderConfig.get();
         List<Web> owned = BY_OWNER.computeIfAbsent(player.getUuid(), k -> new ArrayList<>());
-        while (owned.size() >= cfg.maxTrapWebs) {
+        while (!owned.isEmpty() && owned.size() >= cfg.maxTrapWebs) {
             Web oldest = owned.remove(0);
             removeIfOurs(oldest);
         }
@@ -74,6 +74,16 @@ public final class WebCleanup {
                 removeIfOurs(web);
             }
         }
+    }
+
+    /** Removes every tracked web (server stop / world switch). */
+    public static void clearAll() {
+        for (List<Web> owned : BY_OWNER.values()) {
+            for (Web web : owned) {
+                removeIfOurs(web);
+            }
+        }
+        BY_OWNER.clear();
     }
 
     private static void removeIfOurs(Web web) {

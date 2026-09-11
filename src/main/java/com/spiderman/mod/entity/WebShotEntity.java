@@ -70,12 +70,18 @@ public class WebShotEntity extends Entity {
 
     @Override
     public void readCustomDataFromNbt(NbtCompound nbt) {
-        if (nbt.contains("Owner")) {
-            owner = nbt.getUuid("Owner");
+        try {
+            if (nbt.contains("Owner")) {
+                owner = nbt.getUuid("Owner");
+            }
+            damage = nbt.getFloat("Damage");
+            heavy = nbt.getBoolean("Heavy");
+            life = nbt.getInt("Age");
+        } catch (RuntimeException e) {
+            // Corrupt entity NBT (foreign editor, disk corruption): keep the
+            // field defaults rather than crashing the chunk load.
+            owner = null;
         }
-        damage = nbt.getFloat("Damage");
-        heavy = nbt.getBoolean("Heavy");
-        life = nbt.getInt("Age");
     }
 
     @Override
