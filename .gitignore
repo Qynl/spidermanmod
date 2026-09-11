@@ -1,0 +1,27 @@
+# Gradle
+.gradle/
+build/
+out/
+run/
+!gradle/wrapper/gradle-wrapper.jar
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+*.code-workspace
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Local build outputs (kept out of git; release jars are attached to GitHub releases)
+/local-build/
+*.jar
+!gradle/wrapper/gradle-wrapper.jar
+
+# Python tooling caches
+__pycache__/
+*.pyc
