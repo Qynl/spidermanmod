@@ -905,8 +905,33 @@ public class ItemGroupEvents {
             net.minecraft.registry.RegistryKey<net.minecraft.item.ItemGroup> groupKey) { return null; }
 
     public interface ModifyEntries {
-        void modifyEntries(net.minecraft.item.ItemGroup.Entries entries);
+        void modifyEntries(
+                net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroupEntries entries);
     }
+}
+""")
+
+# Concrete like the real one; declares only the inherited add() the stubs
+# know, so javac is satisfied. IMPORTANT: mod code must call add() through
+# the vanilla ItemGroup.Entries type, never through this class: the offline
+# remap keeps fabric-owner memberrefs as-written, and a yarn-named add()
+# would miss at runtime (intermediary is method_45421).
+stub("net/fabricmc/fabric/api/itemgroup/v1/FabricItemGroupEntries.java", """package net.fabricmc.fabric.api.itemgroup.v1;
+
+public class FabricItemGroupEntries implements net.minecraft.item.ItemGroup.Entries {
+    public void add(net.minecraft.item.ItemConvertible item) { }
+}
+""")
+
+# INTERFACE like the real one (fabric-api 0.116): a class stub would make
+# javac emit invokevirtual and die with IncompatibleClassChangeError.
+stub("net/fabricmc/fabric/api/client/rendering/v1/ColorProviderRegistry.java", """package net.fabricmc.fabric.api.client.rendering.v1;
+
+public interface ColorProviderRegistry<T, Provider> {
+    ColorProviderRegistry<net.minecraft.item.ItemConvertible,
+            net.minecraft.client.color.item.ItemColorProvider> ITEM = null;
+
+    void register(Provider provider, T... objects);
 }
 """)
 
