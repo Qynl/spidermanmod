@@ -910,18 +910,6 @@ public class ItemGroupEvents {
 }
 """)
 
-# Same erasure as real (fabric-api 0.116): register(P provider, T... items).
-stub("net/fabricmc/fabric/api/client/rendering/v1/ColorProviderRegistry.java", """package net.fabricmc.fabric.api.client.rendering.v1;
-
-public class ColorProviderRegistry<T, P> {
-    public static ColorProviderRegistry<net.minecraft.item.ItemConvertible,
-            net.minecraft.client.color.item.ItemColorProvider> ITEM;
-
-    public void register(P provider, T... items) { }
-}
-""")
-
-
 def main():
     n = 0
     for path, content in sorted(STUBS.items()):

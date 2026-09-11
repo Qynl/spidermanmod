@@ -480,9 +480,6 @@ INTERFACE net/minecraft/item/ItemGroup$Entries
 CLASS net/minecraft/item/ItemGroups
   FIELD SPAWN_EGGS STATIC
 
-INTERFACE net/minecraft/client/color/item/ItemColorProvider
-  METHOD getColor
-
 # ---------------- attribute ----------------
 CLASS net/minecraft/entity/attribute/EntityAttributes
   FIELD GENERIC_MAX_HEALTH STATIC
