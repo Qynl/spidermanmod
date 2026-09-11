@@ -21,8 +21,8 @@ import zipfile
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from remap import (CLASS_RE, JDK_KEEP, NETTY_KEEP, ClassFile, Mapper,  # noqa: E402
-                   is_mod, member_decl_positions, parse_mixin_shadows,
-                   walk_supers)
+                   is_mc, is_mod, member_decl_positions,
+                   parse_mixin_shadows, walk_supers)
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 MIXIN_SRC_DIR = os.path.join(ROOT, "src/main/java/com/spiderman/mod/mixin")
