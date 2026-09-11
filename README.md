@@ -52,7 +52,7 @@ surface, remaps Yarn → Intermediary, generates the mixin refmap, packages the 
 
 ```bash
 ./build-local/build.sh
-# jar -> local-build/spiderman-1.0.0-local.jar
+# jar -> build-local/spiderman-1.0.0.jar (also copied to build/libs/)
 ```
 
 See [`build-local/README.md`](build-local/README.md) for how the local toolchain works.

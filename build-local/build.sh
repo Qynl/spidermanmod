@@ -57,4 +57,7 @@ EOF
 
 echo "[build] verifying..."
 python3 build-local/verify.py build-local/classes "$OUT_JAR"
-echo "[build] DONE: $OUT_JAR"
+# Standard Gradle location, so the jar is also where `gradlew build` puts it.
+mkdir -p build/libs
+cp "$OUT_JAR" build/libs/
+echo "[build] DONE: $OUT_JAR (also copied to build/libs/)"
