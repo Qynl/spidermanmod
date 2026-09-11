@@ -7,6 +7,9 @@ name: fetch-deps
 
 on:
   workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/fetch-deps.yml'
 
 permissions:
   contents: write
