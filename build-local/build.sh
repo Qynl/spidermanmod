@@ -11,6 +11,18 @@ rm -rf build-local/gen-stubs build-local/stub-classes build-local/classes-named 
 python3 build-local/stubgen.py
 python3 build-local/handstubs.py
 
+# Linkage audit: stub kind/static/descriptor vs real API sources. Runs only
+# where the truth corpora exist (dev sandbox); CI without them skips it.
+if [ -d /tmp/mc-yarn/minecraft/src ] && [ -d /tmp/loader-ref/src/main/java ] \
+   && [ -d /tmp/fabric_ref2 ] && [ -d /tmp/tp-brigadier/src/main/java ] \
+   && [ -d /tmp/tp-gson/gson/src/main/java ] && [ -d /tmp/tp-slf4j/slf4j-api/src/main/java ] \
+   && [ -d /tmp/tp-netty ] && [ -d /tmp/mixin-src/src/main/java ]; then
+  echo "[build] auditing stubs against truth corpora..."
+  python3 build-local/audit_stubs.py
+else
+  echo "[build] audit skipped (no truth corpora)"
+fi
+
 echo "[build] compiling stubs..."
 mkdir -p build-local/stub-classes build-local/classes-named build-local/classes build-local/jar-work
 find "$PWD/build-local/gen-stubs" -name "*.java" > /tmp/stub-sources.txt

@@ -116,7 +116,7 @@ CLASS net/minecraft/util/math/MathHelper
   METHOD ceil STATIC ARGS (D)
   METHOD wrapDegrees STATIC ARGS (F)
 
-CLASS net/minecraft/util/math/random/Random
+INTERFACE net/minecraft/util/math/random/Random
   METHOD nextInt ARGS (I)
   METHOD nextFloat
   METHOD nextDouble
@@ -124,13 +124,13 @@ CLASS net/minecraft/util/math/random/Random
   METHOD nextLong
   METHOD nextGaussian
 
-CLASS net/minecraft/util/math/RotationAxis
-  FIELD POSITIVE_X STATIC
-  FIELD POSITIVE_Y STATIC
-  FIELD POSITIVE_Z STATIC
-  FIELD NEGATIVE_X STATIC
-  FIELD NEGATIVE_Y STATIC
-  FIELD NEGATIVE_Z STATIC
+INTERFACE net/minecraft/util/math/RotationAxis
+  RAW net.minecraft.util.math.RotationAxis POSITIVE_X = null;
+  RAW net.minecraft.util.math.RotationAxis POSITIVE_Y = null;
+  RAW net.minecraft.util.math.RotationAxis POSITIVE_Z = null;
+  RAW net.minecraft.util.math.RotationAxis NEGATIVE_X = null;
+  RAW net.minecraft.util.math.RotationAxis NEGATIVE_Y = null;
+  RAW net.minecraft.util.math.RotationAxis NEGATIVE_Z = null;
   METHOD rotationDegrees
 
 CLASS net/minecraft/util/math/Vec2f
@@ -326,11 +326,11 @@ INTERFACE net/minecraft/entity/SpawnRestriction$SpawnPredicate
 
 INTERFACE net/minecraft/entity/SpawnLocation
 
-CLASS net/minecraft/entity/SpawnLocationTypes
-  FIELD ON_GROUND STATIC
-  FIELD IN_WATER STATIC
-  FIELD IN_LAVA STATIC
-  FIELD UNRESTRICTED STATIC
+INTERFACE net/minecraft/entity/SpawnLocationTypes
+  RAW net.minecraft.entity.SpawnLocation ON_GROUND = null;
+  RAW net.minecraft.entity.SpawnLocation IN_WATER = null;
+  RAW net.minecraft.entity.SpawnLocation IN_LAVA = null;
+  RAW net.minecraft.entity.SpawnLocation UNRESTRICTED = null;
 
 CLASS net/minecraft/entity/SpawnReason
 
@@ -388,7 +388,7 @@ CLASS net/minecraft/server/world/ServerWorld ABSTRACT EXTENDS net/minecraft/worl
 
 CLASS net/minecraft/client/world/ClientWorld ABSTRACT EXTENDS net/minecraft/world/World
 
-CLASS net/minecraft/world/ServerWorldAccess
+INTERFACE net/minecraft/world/ServerWorldAccess
 
 CLASS net/minecraft/world/Heightmap
 
@@ -531,17 +531,17 @@ CLASS net/minecraft/entity/damage/DamageSources
 CLASS net/minecraft/entity/damage/DamageSource
   METHOD isOf
 
-CLASS net/minecraft/entity/damage/DamageTypes
-  FIELD FALL STATIC
-  FIELD GENERIC STATIC
-  FIELD MOB_ATTACK STATIC
-  FIELD PLAYER_ATTACK STATIC
-  FIELD ARROW STATIC
-  FIELD MAGIC STATIC
-  FIELD EXPLOSION STATIC
-  FIELD SONIC_BOOM STATIC
-  FIELD THORNS STATIC
-  FIELD LIGHTNING_BOLT STATIC
+INTERFACE net/minecraft/entity/damage/DamageTypes
+  RAW net.minecraft.registry.RegistryKey FALL = null;
+  RAW net.minecraft.registry.RegistryKey GENERIC = null;
+  RAW net.minecraft.registry.RegistryKey MOB_ATTACK = null;
+  RAW net.minecraft.registry.RegistryKey PLAYER_ATTACK = null;
+  RAW net.minecraft.registry.RegistryKey ARROW = null;
+  RAW net.minecraft.registry.RegistryKey MAGIC = null;
+  RAW net.minecraft.registry.RegistryKey EXPLOSION = null;
+  RAW net.minecraft.registry.RegistryKey SONIC_BOOM = null;
+  RAW net.minecraft.registry.RegistryKey THORNS = null;
+  RAW net.minecraft.registry.RegistryKey LIGHTNING_BOLT = null;
 
 # ---------------- sound ----------------
 CLASS net/minecraft/sound/SoundEvent
@@ -759,10 +759,11 @@ CLASS net/minecraft/server/command/CommandManager
 
 CLASS net/minecraft/server/command/CommandManager$RegistrationEnvironment
 
-CLASS net/minecraft/server/command/AbstractServerCommandSource
+INTERFACE net/minecraft/server/command/AbstractServerCommandSource
   METHOD hasPermissionLevel
 
-CLASS net/minecraft/server/command/ServerCommandSource EXTENDS net/minecraft/server/command/AbstractServerCommandSource
+CLASS net/minecraft/server/command/ServerCommandSource IMPLEMENTS net/minecraft/server/command/AbstractServerCommandSource
+  RAW public boolean hasPermissionLevel(int p0) { return false; }
   METHOD sendMessage
   METHOD sendFeedback
   METHOD getPlayerOrThrow
@@ -856,9 +857,9 @@ CLASS net/minecraft/client/gui/screen/Screen ABSTRACT IMPLEMENTS net/minecraft/c
   RAW public net.minecraft.client.gui.navigation.GuiNavigationPath getNavigationPath(net.minecraft.client.gui.navigation.GuiNavigation a) { return null; }
   RAW public net.minecraft.client.gui.ScreenRect getNavigationFocus() { return null; }
 
-CLASS net/minecraft/client/gui/navigation/GuiNavigationPath
+INTERFACE net/minecraft/client/gui/navigation/GuiNavigationPath
 
-CLASS net/minecraft/client/gui/navigation/GuiNavigation
+INTERFACE net/minecraft/client/gui/navigation/GuiNavigation
 
 CLASS net/minecraft/client/gui/ScreenRect
 
@@ -896,7 +897,7 @@ CLASS net/minecraft/client/render/RenderLayer
   METHOD getLines STATIC
   METHOD getEntityCutout STATIC
 
-CLASS net/minecraft/client/render/VertexConsumerProvider
+INTERFACE net/minecraft/client/render/VertexConsumerProvider
   METHOD getBuffer
 
 INTERFACE net/minecraft/client/render/VertexConsumer
@@ -907,7 +908,7 @@ CLASS net/minecraft/client/render/WorldRenderer
 CLASS net/minecraft/client/render/OverlayTexture
   FIELD DEFAULT_UV STATIC
 
-CLASS net/minecraft/client/render/RenderTickCounter
+INTERFACE net/minecraft/client/render/RenderTickCounter
   METHOD getTickDelta
   METHOD getLastFrameDuration
 

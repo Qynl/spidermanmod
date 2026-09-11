@@ -47,11 +47,11 @@ public interface Text extends StringVisitable {
 # Descs verified in tiny: append/append/formatted/formatted.
 stub("net/minecraft/text/MutableText.java", """package net.minecraft.text;
 
-public interface MutableText extends Text {
-    MutableText append(Text t);
-    MutableText append(String s);
-    MutableText formatted(net.minecraft.util.Formatting f);
-    MutableText formatted(net.minecraft.util.Formatting[] f);
+public class MutableText implements Text {
+    public MutableText append(Text t) { return null; }
+    public MutableText append(String s) { return null; }
+    public MutableText formatted(net.minecraft.util.Formatting f) { return null; }
+    public MutableText formatted(net.minecraft.util.Formatting[] f) { return null; }
 }
 """)
 
@@ -61,7 +61,8 @@ stub("net/minecraft/registry/entry/RegistryEntry.java", """package net.minecraft
 public interface RegistryEntry<T> {
     T value();
 
-    public interface Reference<T> extends RegistryEntry<T> {
+    public static class Reference<T> implements RegistryEntry<T> {
+        public T value() { return null; }
     }
 }
 """)
@@ -75,13 +76,13 @@ public class RegistryKey<T> {
 # Real: public static <T> T register(Registry<T>, Identifier, T). Erasure matches.
 stub("net/minecraft/registry/DefaultedRegistry.java", """package net.minecraft.registry;
 
-public class DefaultedRegistry<T> extends Registry<T> {
+public interface DefaultedRegistry<T> extends Registry<T> {
 }
 """)
 
 stub("net/minecraft/registry/Registry.java", """package net.minecraft.registry;
 
-public class Registry<T> {
+public interface Registry<T> {
     public static <V, T extends V> T register(Registry<V> registry, net.minecraft.util.Identifier id, T entry) { return null; }
 }
 """)
@@ -241,7 +242,7 @@ public class EntityArgumentType implements com.mojang.brigadier.arguments.Argume
 
 stub("net/minecraft/command/CommandRegistryAccess.java", """package net.minecraft.command;
 
-public class CommandRegistryAccess {
+public interface CommandRegistryAccess {
 }
 """)
 
@@ -267,12 +268,14 @@ public class Event<T> {
 }
 """)
 
-# fabric-loader (hand: tiny surface used by config).
+# fabric-loader (hand: tiny surface used by config). FabricLoader is an
+# INTERFACE at runtime; declaring it a class makes javac emit Methodref
+# constants that die with IncompatibleClassChangeError on first call.
 stub("net/fabricmc/loader/api/FabricLoader.java", """package net.fabricmc.loader.api;
 
-public class FabricLoader {
-    public static FabricLoader getInstance() { return null; }
-    public java.nio.file.Path getConfigDir() { return null; }
+public interface FabricLoader {
+    static FabricLoader getInstance() { return null; }
+    default java.nio.file.Path getConfigDir() { return null; }
 }
 """)
 
@@ -544,7 +547,7 @@ public class KeyBindingHelper {
 
 stub("net/fabricmc/fabric/api/biome/v1/BiomeSelectionContext.java", """package net.fabricmc.fabric.api.biome.v1;
 
-public class BiomeSelectionContext {
+public interface BiomeSelectionContext {
 }
 """)
 
