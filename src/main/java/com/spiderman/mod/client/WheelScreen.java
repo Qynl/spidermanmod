@@ -95,7 +95,9 @@ public class WheelScreen extends Screen {
             select(hovered);
             return true;
         }
-        return super.mouseClicked(mouseX, mouseY, button);
+        // Screen does not implement mouseClicked itself; Element's default
+        // (which a childless screen inherits) just returns false.
+        return false;
     }
 
     @Override
@@ -109,7 +111,8 @@ public class WheelScreen extends Screen {
             select(num);
             return true;
         }
-        return super.keyPressed(keyCode, scanCode, modifiers);
+        // See mouseClicked: Element's default just returns false.
+        return false;
     }
 
     // Package-visible for unit tests (WheelMathTest).

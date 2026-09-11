@@ -28,6 +28,7 @@ public class WebShotRenderer extends EntityRenderer<WebShotEntity> {
     private final ModelPart core;
 
     public WebShotRenderer(EntityRendererFactory.Context context) {
+        super(context);
         ModelPart.Cuboid cuboid = new ModelPart.Cuboid(
                 0, 0, -3.0f, -3.0f, -3.0f, 6.0f, 6.0f, 6.0f,
                 0.0f, 0.0f, 0.0f, false, 16.0f, 16.0f,

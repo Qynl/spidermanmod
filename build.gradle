@@ -41,6 +41,12 @@ tasks.withType(JavaCompile).configureEach {
     it.options.release = 21
 }
 
+// Logic tests are plain dependency-free mains (see build-local/test.sh, run by
+// the local-build CI job), not JUnit tests, so there is nothing for `test` to run.
+test {
+    enabled = false
+}
+
 java {
     withSourcesJar()
 

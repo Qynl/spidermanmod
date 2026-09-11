@@ -190,7 +190,7 @@ public interface CustomPayload {
 stub("net/minecraft/client/render/entity/EntityRenderer.java", """package net.minecraft.client.render.entity;
 
 public class EntityRenderer<T extends net.minecraft.entity.Entity> {
-    protected EntityRenderer() {}
+    protected EntityRenderer(EntityRendererFactory.Context context) {}
     public net.minecraft.util.Identifier getTexture(T entity) { return null; }
     public void render(T entity, float yaw, float tickDelta,
             net.minecraft.client.util.math.MatrixStack matrices,
@@ -201,7 +201,7 @@ public class EntityRenderer<T extends net.minecraft.entity.Entity> {
 stub("net/minecraft/client/render/entity/SpiderEntityRenderer.java", """package net.minecraft.client.render.entity;
 
 public class SpiderEntityRenderer extends EntityRenderer<net.minecraft.entity.mob.SpiderEntity> {
-    public SpiderEntityRenderer(EntityRendererFactory.Context context) {}
+    public SpiderEntityRenderer(EntityRendererFactory.Context context) { super(context); }
 }
 """)
 

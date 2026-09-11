@@ -831,7 +831,7 @@ CLASS net/minecraft/client/render/GameRenderer
   METHOD getFov
   METHOD renderWorld
 
-CLASS net/minecraft/client/gui/screen/Screen ABSTRACT IMPLEMENTS net/minecraft/client/gui/Drawable
+CLASS net/minecraft/client/gui/screen/Screen ABSTRACT IMPLEMENTS net/minecraft/client/gui/Drawable,net/minecraft/client/gui/Element
   CTOR (Lnet/minecraft/text/Text;)V
   FIELD width
   FIELD height
