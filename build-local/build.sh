@@ -43,6 +43,10 @@ python3 - build-local/classes build-local/jar-work "$OUT_JAR" <<'EOF'
 import os, sys, zipfile
 classes, work, out = sys.argv[1], sys.argv[2], sys.argv[3]
 with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED) as z:
+    # A manifest first entry is what makes this a normal jar (rather than a
+    # plain zip) for upload validators and archive tools.
+    z.writestr("META-INF/MANIFEST.MF",
+               "Manifest-Version: 1.0\nCreated-By: spidermanmod local build\n")
     for root, _ds, files in os.walk(classes):
         for fn in sorted(files):
             if fn.endswith(".class"):
