@@ -41,6 +41,12 @@ EXTRA_SUPERS = {
     "net/minecraft/registry/entry/RegistryEntry$Reference": [
         "net/minecraft/registry/entry/RegistryEntry"],
     "net/minecraft/client/gui/screen/Screen": ["net/minecraft/client/gui/Element"],
+    # Renderer chain (handstub declares no extends): override lookups from
+    # mod renderers must reach EntityRenderer.getTexture/render.
+    "net/minecraft/client/render/entity/MobEntityRenderer": [
+        "net/minecraft/client/render/entity/LivingEntityRenderer"],
+    "net/minecraft/client/render/entity/LivingEntityRenderer": [
+        "net/minecraft/client/render/entity/EntityRenderer"],
 }
 
 MIXIN_SRC_DIR = os.path.join(ROOT, "src/main/java/com/spiderman/mod/mixin")
@@ -125,10 +131,10 @@ def parse_mixin_shadows():
 
 
 def member_decl_positions(tail):
-    """Yields (kind, name_index_pos, name_cp_index, desc_cp_index) for every
-    field/method declaration. Positions are offsets into the given tail bytes
-    (the class file region after the constant pool). Sizes never change, so
-    indices can be patched in place with struct.pack_into."""
+    """Yields (kind, name_index_pos, access_flags, name_cp_index, desc_cp_index)
+    for every field/method declaration. Positions are offsets into the given
+    tail bytes (the class file region after the constant pool). Sizes never
+    change, so indices can be patched in place with struct.pack_into."""
     pos = 2 + 2 + 2  # access_flags, this_class, super_class
     n_ifaces = struct.unpack_from(">H", tail, pos)[0]
     pos += 2 + 2 * n_ifaces
@@ -136,6 +142,7 @@ def member_decl_positions(tail):
         n = struct.unpack_from(">H", tail, pos)[0]
         pos += 2
         for _ in range(n):
+            flags = struct.unpack_from(">H", tail, pos)[0]
             pos += 2  # access_flags
             name_i = struct.unpack_from(">H", tail, pos)[0]
             name_pos = pos
@@ -147,11 +154,71 @@ def member_decl_positions(tail):
             for _ in range(n_attr):
                 alen = struct.unpack_from(">I", tail, pos + 2)[0]
                 pos += 6 + alen
-            yield kind, name_pos, name_i, desc_i
+            yield kind, name_pos, flags, name_i, desc_i
 
 
 def is_mc(path):
     return path.startswith("net/minecraft/") and "/class_" not in path
+
+
+MOD_PREFIX = "com/spiderman/mod/"
+
+
+def is_mod(path):
+    return path.startswith(MOD_PREFIX)
+
+
+ACC_PUBLIC = 0x0001
+ACC_PRIVATE = 0x0002
+ACC_PROTECTED = 0x0004
+ACC_STATIC = 0x0008
+
+
+def _inheritable(flags):
+    """True for members a subclass could override (public/protected, instance)."""
+    return bool(flags & (ACC_PUBLIC | ACC_PROTECTED)) and not (flags & ACC_STATIC)
+
+
+# (name, named-desc) pairs a memberref may keep without intermediary mapping.
+# java/* is never remapped, so refs to JDK-declared members resolve as-is;
+# ThreadExecutor's runtime execute() override keeps this exact JDK name.
+# Fail-closed: any other unresolvable/unmapped ref is a build error.
+JDK_KEEP = {
+    ("toString", "()Ljava/lang/String;"),
+    ("hashCode", "()I"),
+    ("equals", "(Ljava/lang/Object;)Z"),
+    ("clone", "()Ljava/lang/Object;"),
+    ("finalize", "()V"),
+    ("getClass", "()Ljava/lang/Class;"),
+    ("wait", "()V"),
+    ("wait", "(J)V"),
+    ("wait", "(JI)V"),
+    ("notify", "()V"),
+    ("notifyAll", "()V"),
+    ("execute", "(Ljava/lang/Runnable;)V"),
+}
+
+
+# (name, named-desc) pairs declared by io.netty.buffer.ByteBuf (never
+# remapped): PacketByteBuf inherits them, so MC-owner refs to them keep
+# their names. Pinned exactly; extend deliberately if mod code uses more.
+NETTY_KEEP = {
+    ("readBoolean", "()Z"),
+    ("readDouble", "()D"),
+}
+
+
+def walk_supers(start, supers_fn):
+    """Yields classes nearest-first over supers_fn(class) -> [supers]."""
+    seen = set()
+    queue = [start]
+    while queue:
+        o = queue.pop(0)
+        if o in seen:
+            continue
+        seen.add(o)
+        yield o
+        queue.extend(supers_fn(o))
 
 
 class Hierarchy:
@@ -208,9 +275,14 @@ class Hierarchy:
 
 
 class Mapper:
-    def __init__(self):
+    def __init__(self, declmap=None):
         self.db = load()
         self.classes = self.db["classes"]
+        # {mod owner: {"super": owner|None, "ifaces": [...],
+        #   "fields": {(n,d): flags}, "methods": {(n,d): flags}}} (named forms)
+        self.declmap = declmap if declmap is not None else {}
+        self._declmemo = {}
+        self.def_renamed = 0
         self.h = Hierarchy()
         self._warned = set()
         self.h.load_surface(os.path.join(ROOT, "build-local/api-surface.txt"))
@@ -230,12 +302,24 @@ class Mapper:
             self.shadow[(mixin_owner, name, desc)] = cands[0]["i"]
 
     def map_class(self, path):
+        # Class-entry content: a/b/C, [La/b/C; (any depth), L...; form,
+        # primitives or JDK/fabric paths (returned unchanged).
+        prefix = ""
+        while path.startswith("["):
+            prefix += "["
+            path = path[1:]
+        if path.startswith("L") and path.endswith(";"):
+            inner = path[1:-1]
+            if not is_mc(inner):
+                return prefix + path
+            try:
+                return prefix + "L" + self.classes[inner] + ";"
+            except KeyError:
+                raise SystemExit(f"[remap] MISSING class mapping: {inner}")
         if not is_mc(path):
-            return path
-        if path.startswith("["):
-            return "[" + self.map_class(path[1:])
+            return prefix + path
         try:
-            return self.classes[path]
+            return prefix + self.classes[path]
         except KeyError:
             raise SystemExit(f"[remap] MISSING class mapping: {path}")
 
@@ -244,27 +328,27 @@ class Mapper:
             return "L" + self.map_class(m.group(1)) + ";"
         return CLASS_RE.sub(sub, desc)
 
+    def _scan(self, owner, name, desc, is_field):
+        """Walks the MC hierarchy; returns (exact_match_or_None, name_only)."""
+        bucket = self.db["fields"] if is_field else self.db["methods"]
+        name_only = []
+        for o in walk_supers(owner, lambda c: self.h.supers.get(c, [])):
+            for m in bucket.get(o, []):
+                if m["n"] != name:
+                    continue
+                if m.get("dn", m["d"]) == desc:
+                    return m, name_only
+                name_only.append((o, m))
+        return None, name_only
+
     def lookup(self, owner, name, desc, is_field):
         """Returns (inter_name, inter_desc); the tiny desc is authoritative."""
         key = (owner, name, desc)
         if key in MANUAL:
             return MANUAL[key]
-        bucket = self.db["fields"] if is_field else self.db["methods"]
-        seen = set()
-        queue = [owner]
-        name_only = []
-        while queue:
-            o = queue.pop(0)
-            if o in seen:
-                continue
-            seen.add(o)
-            for m in bucket.get(o, []):
-                if m["n"] != name:
-                    continue
-                if m.get("dn", m["d"]) == desc:
-                    return m["i"], m["d"]
-                name_only.append((o, m))
-            queue.extend(self.h.supers.get(o, []))
+        m, name_only = self._scan(owner, name, desc, is_field)
+        if m is not None:
+            return m["i"], m["d"]
         if is_field and len(name_only) == 1:
             _o, m = name_only[0]
             return m["i"], m["d"]
@@ -278,6 +362,125 @@ class Mapper:
             return name, self.map_desc(desc)
         kind = "field" if is_field else "method"
         raise SystemExit(f"[remap] MISSING {kind}: {owner} {name} {desc}")
+
+    def tiny_has(self, owner, name, desc, is_field):
+        """True if lookup() would map (exact, or the single-name field fallback)."""
+        m, name_only = self._scan(owner, name, desc, is_field)
+        return m is not None or (is_field and len(name_only) == 1)
+
+    def _mod_supers(self, cls):
+        d = self.declmap.get(cls)
+        if not d:
+            return []
+        out = [d["super"]] if d["super"] else []
+        return out + d["ifaces"]
+
+    def resolve(self, owner, name, desc, is_field, exclude_self=False,
+                inheritable_only=False):
+        """Nearest declaration of (name, exact-desc) up the hierarchy.
+
+        Walks mod bytecode declarations plus the MC stub hierarchy.
+        Returns ("mc", mc_class) | ("mod", mod_class, flags) | None.
+        """
+        def supers_fn(c):
+            if is_mod(c):
+                return self._mod_supers(c)
+            return self.h.supers.get(c, [])
+        fields_bucket = self.db["fields"]
+        methods_bucket = self.db["methods"]
+        mc_name_only = []
+        first = True
+        for o in walk_supers(owner, supers_fn):
+            if first and exclude_self:
+                first = False
+                continue
+            first = False
+            if is_mod(o):
+                d = self.declmap.get(o)
+                if d is None:
+                    continue
+                decls = d["fields"] if is_field else d["methods"]
+                if (name, desc) in decls:
+                    flags = decls[(name, desc)]
+                    if inheritable_only and not _inheritable(flags):
+                        continue  # private/static mod decl: not an override link
+                    return ("mod", o, flags)
+                continue
+            if not is_mc(o):
+                continue  # fabric/JDK/Record/...: unknowable, keep walking
+            bucket = fields_bucket if is_field else methods_bucket
+            for m in bucket.get(o, []):
+                if m["n"] != name:
+                    continue
+                if m.get("dn", m["d"]) == desc:
+                    return ("mc", o)
+                mc_name_only.append((o, m))
+        if is_field and len(mc_name_only) == 1:
+            return ("mc", mc_name_only[0][0])
+        return None
+
+    def decl_mapping(self, cls, name, desc, is_field, flags):
+        """Mapping for a MOD declaration: MC overrides -> intermediary.
+
+        Fields, statics, constructors, private/package-private methods and
+        members with no MC ancestor declaration keep their names (hiding and
+        uniqueness are name-exact at runtime). Instance overrides must match
+        the ancestor's intermediary name or dispatch misses them.
+        """
+        memo_key = (cls, name, desc, is_field, flags)
+        if memo_key in self._declmemo:
+            return self._declmemo[memo_key]
+        if (name in ("<init>", "<clinit>") or is_field or (flags & ACC_STATIC)
+                or not (flags & (ACC_PUBLIC | ACC_PROTECTED))):
+            out = (name, self.map_desc(desc))
+        else:
+            r = self.resolve(cls, name, desc, False, exclude_self=True,
+                             inheritable_only=True)
+            if r is None:
+                out = (name, self.map_desc(desc))  # mod-unique member
+            elif r[0] == "mc":
+                out = self.lookup(r[1], name, desc, False)
+            else:
+                out = self.decl_mapping(r[1], name, desc, False, r[2])
+        self._declmemo[memo_key] = out
+        return out
+
+    def member_mapping(self, owner, name, desc, is_field):
+        """(iname, idesc) for a memberref, or None to defer to the shadow pass.
+
+        Every ref resolves to its declaring class first: MC-declared members
+        map to intermediary (even when qualified by a mod subclass owner, as
+        javac emits for inherited access); mod-declared members follow their
+        declaration's mapping so defs and call sites stay consistent.
+        """
+        if name in ("<init>", "<clinit>"):
+            return name, self.map_desc(desc)
+        if (owner, name, desc) in self.shadow:
+            return None  # @Shadow usage: pass 2b owns it
+        if is_mod(owner):
+            r = self.resolve(owner, name, desc, is_field)
+            if r is None:
+                if (name, desc) in JDK_KEEP or (name, desc) in NETTY_KEEP:
+                    key = (owner, name, desc)
+                    if key not in self._warned:
+                        self._warned.add(key)
+                        print(f"[remap] WARN keep-name (JDK/netty decl): "
+                              f"{owner} {name} {desc}")
+                    return name, self.map_desc(desc)
+                raise SystemExit(
+                    f"[remap] UNRESOLVABLE mod-owner ref: {owner} {name} {desc}")
+            if r[0] == "mc":
+                return self.lookup(r[1], name, desc, is_field)
+            return self.decl_mapping(r[1], name, desc, is_field, r[2])
+        if is_mc(owner):
+            if ((owner, name, desc) not in MANUAL
+                    and not self.tiny_has(owner, name, desc, is_field)
+                    and (name, desc) not in JDK_KEEP
+                    and (name, desc) not in NETTY_KEEP):
+                raise SystemExit(
+                    f"[remap] UNMAPPED mc-owner ref: {owner} {name} {desc}")
+            return self.lookup(owner, name, desc, is_field)
+        return name, self.map_desc(desc)  # fabric/JDK/mixin/...: keep
 
 
 # ---------------- classfile ----------------
@@ -355,6 +558,15 @@ class ClassFile:
                 return i
         return None
 
+    def find_nat(self, name, desc):
+        for i in range(1, len(self.cp)):
+            e = self.cp[i]
+            if e is not None and e["tag"] == 12:
+                if self.cp[e["ref"]]["str"] == name \
+                        and self.cp[e["ref2"]]["str"] == desc:
+                    return i
+        return None
+
     def serialize(self):
         out = bytearray(self.data[:8])
         out += struct.pack(">H", len(self.cp))
@@ -378,10 +590,22 @@ class ClassFile:
         return bytes(out)
 
 
-def set_nat_str(cf, nat, which, s):
-    """Write a NameAndType name/desc, duplicating the Utf8 if shared."""
+def set_nat_str(cf, nat, which, s, protected=None):
+    """Write a NameAndType name/desc, duplicating the Utf8 if shared.
+
+    `protected` is a set of cp indices backing field/method declarations:
+    javac interns those Utf8s with NATs, and an in-place rewrite would
+    silently rename the declaration too.
+    """
     idx = nat["ref"] if which == "name" else nat["ref2"]
     if cf.utf(idx) == s:
+        return
+    if protected is not None and idx in protected:
+        ni = cf.find_utf(s) or cf.add_utf(s)
+        if which == "name":
+            nat["ref"] = ni
+        else:
+            nat["ref2"] = ni
         return
     for j in range(1, len(cf.cp)):
         e = cf.cp[j]
@@ -408,67 +632,57 @@ def remap_class(data, mapper, rel):
     for i, utf in orig_class.items():
         if is_mc(utf) or (utf.startswith("[") and "net/minecraft/" in utf):
             cf.set_utf(cf.cp[i]["ref"], mapper.map_class(utf))
-    # 2) Memberrefs -> intermediary member names (+ translated descs).
-    # Group refs by NameAndType to handle javac's constant sharing safely.
-    refs_by_nat = {}
+    this_owner = rel[:-6].replace(os.sep, "/") if rel.endswith(".class") else None
+    # 2) Every memberref resolves to its declaring class, then maps.
+    # Refs never rewrite NAT Utf8s in place: a changed ref is repointed at a
+    # deduplicated (name, desc) NAT, so javac's constant sharing is always safe.
     for i in range(1, len(cf.cp)):
         e = cf.cp[i]
-        if e is not None and e["tag"] in (9, 10, 11):
-            owner = orig_class[e["ref"]]
-            refs_by_nat.setdefault(e["ref2"], []).append((i, e["tag"], owner))
-    for nat_i, refs in refs_by_nat.items():
-        nat = cf.cp[nat_i]
+        if e is None or e["tag"] not in (9, 10, 11):
+            continue
+        owner = orig_class[e["ref"]]
+        nat = cf.cp[e["ref2"]]
         name, desc = cf.utf(nat["ref"]), cf.utf(nat["ref2"])
-        mc = [(i, tag, o) for (i, tag, o) in refs if is_mc(o)]
-        others = [(i, tag, o) for (i, tag, o) in refs if not is_mc(o)]
-        if not mc:
+        mapping = mapper.member_mapping(owner, name, desc, e["tag"] == 9)
+        if mapping is None:
+            continue  # @Shadow usage: pass 2b owns it
+        iname, idesc = mapping
+        if iname == name and idesc == desc:
             continue
-        # Distinct mappings needed among MC refs.
-        mappings = []
-        for (i, tag, o) in mc:
-            is_field = tag == 9
-            if name in ("<init>", "<clinit>"):
-                iname, idesc = name, mapper.map_desc(desc)
-            else:
-                iname, idesc = mapper.lookup(o, name, desc, is_field)
-            mappings.append((i, iname, idesc))
-        distinct = []
-        for m in mappings:
-            if m[1:] not in [d[1:] for d in distinct]:
-                distinct.append(m)
-        need_dup = len(distinct) > 1 or bool(others)
-        if not need_dup:
-            i, iname, idesc = distinct[0]
-            set_nat_str(cf, nat, "name", iname)
-            set_nat_str(cf, nat, "desc", idesc)
-            continue
-        # First mapping keeps the NAT; every other ref gets a duplicate.
-        first = True
-        for (i, iname, idesc) in mappings:
-            if first:
-                set_nat_str(cf, nat, "name", iname)
-                set_nat_str(cf, nat, "desc", idesc)
-                first = False
-                continue
+        dup = cf.find_nat(iname, idesc)
+        if dup is None:
             ni = cf.find_utf(iname) or cf.add_utf(iname)
             di = cf.find_utf(idesc) or cf.add_utf(idesc)
-            cf.cp[i]["ref2"] = cf.add_nat(ni, di)
-        if others:
-            # Non-MC refs sharing this NAT keep the ORIGINAL name/desc.
-            ni = cf.find_utf(name) or cf.add_utf(name)
-            di = cf.find_utf(desc) or cf.add_utf(desc)
             dup = cf.add_nat(ni, di)
-            for (i, tag, o) in others:
-                cf.cp[i]["ref2"] = dup
-    # 2b/2c) @Shadow members declared by this mixin class -> intermediary
+        e["ref2"] = dup
+    # 2c) Method declarations overriding MC members -> intermediary names.
+    # Without this, dispatch misses the override (silent) or mod call sites
+    # resolved through the subclass keep yarn names the runtime lacks (loud).
+    if this_owner is not None and is_mod(this_owner):
+        tail = bytearray(cf.tail)
+        for kind, name_pos, flags, name_i, desc_i in member_decl_positions(bytes(tail)):
+            if kind != "method":
+                continue
+            dname, ddesc = cf.utf(name_i), cf.utf(desc_i)
+            iname, _idesc = mapper.decl_mapping(this_owner, dname, ddesc, False, flags)
+            if iname == dname:
+                continue
+            # Duplicate-on-write: the yarn Utf8 may back call-site NATs that
+            # legitimately keep their own mapping.
+            ni = cf.find_utf(iname) or cf.add_utf(iname)
+            struct.pack_into(">H", tail, name_pos, ni)
+            mapper.def_renamed += 1
+        cf.tail = bytes(tail)
+    # 2b) @Shadow members declared by this mixin class -> intermediary
     # target names (loom equivalent: AP out-mappings). Runs before step 3
     # so descriptors still match their named forms.
-    this_owner = rel[:-6].replace(os.sep, "/") if rel.endswith(".class") else None
     by_name = {(name, desc): inter for (o, name, desc), inter in mapper.shadow.items()
                if o == this_owner}
     if by_name:
-        # Rebuilt from current pool state: step 2 may have moved refs to
-        # duplicate NATs, which the pre-step-2 grouping cannot see.
+        decl_cp = set()
+        for _k, _p, _f, name_i, desc_i in member_decl_positions(cf.tail):
+            decl_cp.add(name_i)
+            decl_cp.add(desc_i)
         refs_by_nat2 = {}
         for i in range(1, len(cf.cp)):
             e = cf.cp[i]
@@ -485,7 +699,7 @@ def remap_class(data, mapper, rel):
             rest = [(i, t, o) for (i, t, o) in refs if o != this_owner]
             if not mine:
                 continue
-            set_nat_str(cf, nat, "name", inter)
+            set_nat_str(cf, nat, "name", inter, decl_cp)
             mapper.shadow_applied.add((this_owner, name, desc))
             if rest:
                 ni = cf.find_utf(name) or cf.add_utf(name)
@@ -494,7 +708,7 @@ def remap_class(data, mapper, rel):
                 for (i, _t, _o) in rest:
                     cf.cp[i]["ref2"] = dup
         tail = bytearray(cf.tail)
-        for _kind, name_pos, name_i, desc_i in member_decl_positions(bytes(tail)):
+        for _kind, name_pos, _flags, name_i, desc_i in member_decl_positions(bytes(tail)):
             dname, ddesc = cf.utf(name_i), cf.utf(desc_i)
             inter = by_name.get((dname, ddesc))
             if inter is None:
@@ -521,9 +735,43 @@ def remap_class(data, mapper, rel):
     return cf.serialize()
 
 
+def build_declmap(src_dir):
+    """Reads every class's declarations from PRE-remap bytes.
+
+    Returns {owner: {"super": owner|None, "ifaces": [...],
+    "fields": {(name, desc): flags}, "methods": {(name, desc): flags}}}
+    in named forms, so memberrefs can resolve to their declaring class.
+    """
+    out = {}
+    for root, _ds, files in os.walk(src_dir):
+        for fn in files:
+            if not fn.endswith(".class"):
+                continue
+            with open(os.path.join(root, fn), "rb") as f:
+                cf = ClassFile(f.read())
+            orig = {}
+            for i in range(1, len(cf.cp)):
+                e = cf.cp[i]
+                if e is not None and e["tag"] == 7:
+                    orig[i] = cf.utf(e["ref"])
+            this_i, sup_i = struct.unpack_from(">HH", cf.tail, 2)
+            n_ifaces = struct.unpack_from(">H", cf.tail, 6)[0]
+            ifaces = [orig[struct.unpack_from(">H", cf.tail, 8 + 2 * k)[0]]
+                      for k in range(n_ifaces)]
+            fields, methods = {}, {}
+            for kind, _pos, flags, name_i, desc_i in member_decl_positions(cf.tail):
+                box = fields if kind == "field" else methods
+                box[(cf.utf(name_i), cf.utf(desc_i))] = flags
+            out[orig[this_i]] = {
+                "super": orig.get(sup_i) if sup_i else None,
+                "ifaces": ifaces, "fields": fields, "methods": methods,
+            }
+    return out
+
+
 def main():
     src_dir, dst_dir = sys.argv[1], sys.argv[2]
-    mapper = Mapper()
+    mapper = Mapper(build_declmap(src_dir))
     count = 0
     for root, _ds, files in os.walk(src_dir):
         for fn in files:
@@ -539,6 +787,7 @@ def main():
                 f.write(data)
             count += 1
     print(f"[remap] remapped {count} classes -> {dst_dir}")
+    print(f"[remap] renamed {mapper.def_renamed} override def(s) to intermediary")
     missing = set(mapper.shadow) - mapper.shadow_applied
     if missing:
         raise SystemExit(f"[remap] shadow members never matched: {sorted(missing)}")
