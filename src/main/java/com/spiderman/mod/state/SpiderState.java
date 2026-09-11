@@ -21,6 +21,7 @@ import com.spiderman.mod.SpiderManMod;
 public final class SpiderState {
     private static final Map<UUID, PlayerPowers> POWERS = new HashMap<>();
     private static boolean loaded;
+    private static Path loadedPath;
 
     private SpiderState() {
     }
@@ -34,12 +35,19 @@ public final class SpiderState {
     }
 
     public static void ensureLoaded(MinecraftServer server) {
+        Path path = savePath(server);
+        if (loaded && !path.equals(loadedPath)) {
+            // Singleplayer world switch in the same JVM: drop the previous
+            // world's data instead of leaking it into the new world.
+            POWERS.clear();
+            loaded = false;
+        }
         if (loaded) {
             return;
         }
         loaded = true;
+        loadedPath = path;
         try {
-            Path path = savePath(server);
             if (Files.exists(path)) {
                 NbtCompound root = NbtIo.readCompressed(path, NbtSizeTracker.ofUnlimitedBytes());
                 for (Object o : root.getKeys()) {
@@ -74,6 +82,14 @@ public final class SpiderState {
         } catch (Exception e) {
             SpiderManMod.LOGGER.warn("[spiderman] failed to save spiderman.dat", e);
         }
+    }
+
+    /** Called when the server stops: persist and drop all in-memory state. */
+    public static void onServerStopped(MinecraftServer server) {
+        save(server);
+        POWERS.clear();
+        loaded = false;
+        loadedPath = null;
     }
 
     private static Path savePath(MinecraftServer server) {

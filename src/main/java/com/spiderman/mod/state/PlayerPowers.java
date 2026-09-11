@@ -49,6 +49,25 @@ public class PlayerPowers {
         cooldowns.put(ability, time + SpiderConfig.get().cooldownFor(ability));
     }
 
+    /**
+     * Clears transient session state (join/respawn). Persistent fields
+     * (powers/stage/mastery/selected) are kept. This also prevents cooldowns
+     * from locking out a fresh life: cooldowns are stored in entity-age ticks
+     * and a respawned player starts at age 0 again.
+     */
+    public void resetTransient() {
+        cooldowns.clear();
+        combo = 0;
+        comboUntil = 0;
+        stopSwing();
+        swingHand = 0;
+        zipTicks = 0;
+        doubleJumpUsed = false;
+        climbing = false;
+        wallRunUntil = 0;
+        focusTicks = 0;
+    }
+
     public void stopSwing() {
         swinging = false;
         ropeLen = 0.0;

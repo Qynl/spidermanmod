@@ -102,7 +102,8 @@ public class WheelScreen extends Screen {
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        if (keyCode == GLFW.GLFW_KEY_G || keyCode == 256) {
+        // Closes on Esc or the (rebindable) wheel key itself.
+        if (keyCode == 256 || Keybinds.wheel.matchesKey(keyCode, scanCode)) {
             close();
             return true;
         }

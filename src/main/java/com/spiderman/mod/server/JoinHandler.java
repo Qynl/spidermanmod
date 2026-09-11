@@ -20,6 +20,7 @@ public final class JoinHandler {
             SpiderState.ensureLoaded(server);
         }
         PlayerPowers powers = SpiderState.get(player.getUuid());
+        powers.resetTransient();
         TransformLogic.applyStageAttributes(player, powers);
         ServerNetworking.sendPowers(player);
         if (!powers.hasPowers) {

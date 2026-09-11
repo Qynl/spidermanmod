@@ -21,6 +21,10 @@ public final class ClimbLogic {
             setClimbing(player, powers, false);
             return;
         }
+        if (!player.isAlive() || player.isSpectator() || player.getAbilities().flying) {
+            setClimbing(player, powers, false);
+            return;
+        }
         boolean wall = player.horizontalCollision && !player.isOnGround() && !player.isSneaking();
         boolean ceiling = false;
         if (!wall && !player.isOnGround() && !player.isSneaking()) {
@@ -57,7 +61,7 @@ public final class ClimbLogic {
 
     /** Jump pressed mid-air: wall jump when clinging, else experimental double jump. */
     public static void tryAirAction(ServerPlayerEntity player, PlayerPowers powers) {
-        if (!powers.hasPowers || player.isOnGround()) {
+        if (!powers.hasPowers || !player.isAlive() || player.isSpectator() || player.isOnGround()) {
             return;
         }
         if (powers.swinging) {
@@ -109,6 +113,11 @@ public final class ClimbLogic {
         Vec3d pos = player.getPos();
         BlockPos head = BlockPos.ofFloored(pos.x, pos.y + 1.9, pos.z);
         return !world.getBlockState(head).isAir();
+    }
+
+    /** Force-clears climbing state (death/disconnect cleanup). */
+    public static void cancel(ServerPlayerEntity player, PlayerPowers powers) {
+        setClimbing(player, powers, false);
     }
 
     private static void setClimbing(ServerPlayerEntity player, PlayerPowers powers, boolean climbing) {

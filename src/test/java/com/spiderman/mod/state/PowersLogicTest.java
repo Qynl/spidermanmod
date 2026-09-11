@@ -15,6 +15,8 @@ public final class PowersLogicTest {
         clientPowersReset();
         clientPowersTick();
         clientPowersPings();
+        playerPowersGating();
+        playerPowersReset();
         System.out.println("PowersLogicTest: " + passed + " assertions passed");
     }
 
@@ -99,6 +101,47 @@ public final class PowersLogicTest {
         }
         check(ClientPowers.pings.size() <= 10, "ping list stays bounded");
         check(ClientPowers.pings.get(0)[0] > 0.0, "oldest pings evicted first");
+    }
+
+    private static void playerPowersGating() {
+        PlayerPowers powers = new PlayerPowers();
+        check(!powers.canUse(AbilityIds.SHOT, 1000), "powerless player cannot use abilities");
+        powers.hasPowers = true;
+        powers.stage = 1;
+        check(!powers.canUse(AbilityIds.SHOT, 1000), "stage gate blocks early shot");
+        check(!powers.canUse(99, 1000), "invalid id rejected");
+        powers.stage = 2;
+        check(powers.canUse(AbilityIds.SHOT, 1000), "unlocked ability usable");
+        powers.cooldowns.put(AbilityIds.SHOT, 1500L);
+        check(!powers.canUse(AbilityIds.SHOT, 1000), "cooldown blocks reuse");
+        check(powers.canUse(AbilityIds.SHOT, 1500), "cooldown expires on time");
+        check(powers.canUse(AbilityIds.TRAP, 1000), "cooldowns are per-ability");
+    }
+
+    private static void playerPowersReset() {
+        PlayerPowers powers = new PlayerPowers();
+        powers.hasPowers = true;
+        powers.stage = 3;
+        powers.mastery = 500;
+        powers.selected = 4;
+        powers.cooldowns.put(AbilityIds.SHOT, 9999L);
+        powers.combo = 5;
+        powers.comboUntil = 9999L;
+        powers.swinging = true;
+        powers.zipTicks = 12;
+        powers.doubleJumpUsed = true;
+        powers.climbing = true;
+        powers.wallRunUntil = 9999L;
+        powers.focusTicks = 7;
+        powers.resetTransient();
+        check(powers.hasPowers && powers.stage == 3, "reset keeps persistent powers");
+        check(powers.mastery == 500 && powers.selected == 4, "reset keeps mastery/selection");
+        check(powers.cooldowns.isEmpty(), "reset clears cooldowns");
+        check(powers.combo == 0 && powers.comboUntil == 0, "reset clears combo");
+        check(!powers.swinging, "reset clears swing");
+        check(powers.zipTicks == 0, "reset clears zip");
+        check(!powers.doubleJumpUsed && !powers.climbing, "reset clears climb/double-jump");
+        check(powers.wallRunUntil == 0 && powers.focusTicks == 0, "reset clears timers");
     }
 
     private static void check(boolean cond, String name) {

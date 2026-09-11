@@ -394,6 +394,33 @@ public class ServerTickEvents {
 }
 """)
 
+stub("net/fabricmc/fabric/api/event/lifecycle/v1/ServerLifecycleEvents.java", """package net.fabricmc.fabric.api.event.lifecycle.v1;
+
+public class ServerLifecycleEvents {
+    public static net.fabricmc.fabric.api.event.Event<ServerStarted> SERVER_STARTED;
+    public static net.fabricmc.fabric.api.event.Event<ServerStopped> SERVER_STOPPED;
+
+    public interface ServerStarted {
+        void onServerStarted(net.minecraft.server.MinecraftServer server);
+    }
+
+    public interface ServerStopped {
+        void onServerStopped(net.minecraft.server.MinecraftServer server);
+    }
+}
+""")
+
+stub("net/fabricmc/fabric/api/entity/event/v1/ServerPlayerEvents.java", """package net.fabricmc.fabric.api.entity.event.v1;
+
+public class ServerPlayerEvents {
+    public static net.fabricmc.fabric.api.event.Event<AfterRespawn> AFTER_RESPAWN;
+
+    public interface AfterRespawn {
+        void afterRespawn(net.minecraft.server.network.ServerPlayerEntity oldPlayer, net.minecraft.server.network.ServerPlayerEntity newPlayer, boolean alive);
+    }
+}
+""")
+
 stub("net/fabricmc/fabric/api/client/event/lifecycle/v1/ClientTickEvents.java", """package net.fabricmc.fabric.api.client.event.lifecycle.v1;
 
 public class ClientTickEvents {

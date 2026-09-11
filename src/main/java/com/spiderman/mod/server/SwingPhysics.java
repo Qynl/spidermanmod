@@ -42,6 +42,9 @@ public final class SwingPhysics {
     }
 
     public static void attach(ServerPlayerEntity player, PlayerPowers powers, Vec3d anchor, int hand) {
+        // Swing and zip are exclusive: a fresh swing always cancels a zip.
+        powers.zipTicks = 0;
+        player.setNoGravity(false);
         powers.swinging = true;
         powers.swingX = anchor.x;
         powers.swingY = anchor.y;
@@ -84,6 +87,12 @@ public final class SwingPhysics {
 
         Vec3d r = pos.add(vel).subtract(anchor);
         double dist = r.length();
+        if (dist > SpiderConfig.get().swingRange * 3.0) {
+            // Teleported (or chunk weirdness) far from the anchor: let go
+            // instead of yanking across the map.
+            detach(player, powers, false);
+            return;
+        }
         if (dist > powers.ropeLen && dist > 0.001) {
             Vec3d n = r.normalize();
             double radial = vel.dotProduct(n);

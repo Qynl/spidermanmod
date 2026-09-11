@@ -2,6 +2,8 @@ package com.spiderman.mod;
 
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
+import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 
@@ -15,6 +17,8 @@ import com.spiderman.mod.config.SpiderConfig;
 import com.spiderman.mod.net.ServerNetworking;
 import com.spiderman.mod.server.JoinHandler;
 import com.spiderman.mod.server.ServerTickHandler;
+import com.spiderman.mod.server.TransformLogic;
+import com.spiderman.mod.state.PlayerPowers;
 import com.spiderman.mod.state.SpiderState;
 
 /**
@@ -48,6 +52,13 @@ public class SpiderManMod implements ModInitializer {
         });
         ServerPlayConnectionEvents.DISCONNECT.register((handler, server) ->
                 JoinHandler.onDisconnect(handler));
+        ServerPlayerEvents.AFTER_RESPAWN.register((oldPlayer, newPlayer, alive) -> {
+            PlayerPowers powers = SpiderState.get(newPlayer.getUuid());
+            powers.resetTransient();
+            TransformLogic.applyStageAttributes(newPlayer, powers);
+            ServerNetworking.sendPowers(newPlayer);
+        });
+        ServerLifecycleEvents.SERVER_STOPPED.register(SpiderState::onServerStopped);
         LOGGER.info("[spiderman] common init complete");
     }
 }

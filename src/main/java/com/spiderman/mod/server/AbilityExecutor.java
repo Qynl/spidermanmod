@@ -38,6 +38,9 @@ public final class AbilityExecutor {
     }
 
     public static void use(ServerPlayerEntity player, int ability, int hand) {
+        if (!player.isAlive() || player.isSpectator()) {
+            return;
+        }
         PlayerPowers powers = SpiderState.get(player.getUuid());
         if (!powers.canUse(ability, player.age)) {
             return;

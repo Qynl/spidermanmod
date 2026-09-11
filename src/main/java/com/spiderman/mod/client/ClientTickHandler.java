@@ -20,7 +20,7 @@ public final class ClientTickHandler {
     public static void onEndTick(MinecraftClient client) {
         ClientPowers.tick();
         ClientPowers.clientTick++;
-        if (client.player == null || client.world == null) {
+        if (client.player == null || client.world == null || !client.player.isAlive()) {
             return;
         }
         while (Keybinds.wheel.wasPressed()) {

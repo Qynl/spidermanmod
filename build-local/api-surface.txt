@@ -800,6 +800,7 @@ CLASS net/minecraft/client/option/KeyBinding
   METHOD isPressed
   METHOD wasPressed
   METHOD setPressed
+  METHOD matchesKey
 
 CLASS net/minecraft/client/util/InputUtil
 

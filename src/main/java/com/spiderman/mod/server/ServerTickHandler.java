@@ -27,6 +27,17 @@ public final class ServerTickHandler {
 
     private static void tickPlayer(ServerPlayerEntity player) {
         PlayerPowers powers = SpiderState.get(player.getUuid());
+        if (!player.isAlive()) {
+            // Death cleanup: never leave swing/zip/climb state (or no-gravity)
+            // stuck on a corpse; transient state resets fully on respawn.
+            if (powers.swinging) {
+                SwingPhysics.detach(player, powers, false);
+            }
+            powers.zipTicks = 0;
+            player.setNoGravity(false);
+            ClimbLogic.cancel(player, powers);
+            return;
+        }
         if (!powers.hasPowers) {
             return;
         }
