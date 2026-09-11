@@ -1,0 +1,49 @@
+name: fetch-deps
+
+# One-time helper: downloads the (CC0-licensed) Yarn tiny mappings for 1.21.1
+# from maven.fabricmc.net and vendors them into build-local/ so the offline
+# local build can remap Yarn -> Intermediary exactly like Loom does.
+# Run manually with: gh workflow run fetch-deps.yml --ref <branch>
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download yarn tiny v2 mappings
+        run: |
+          set -eux
+          mkdir -p build-local
+          DIR="https://maven.fabricmc.net/net/fabricmc/yarn/1.21.1%2Bbuild.3"
+          curl -sSL "$DIR/" -o listing.html
+          cat listing.html | head -40 || true
+          JAR="$(grep -o 'yarn-[^"]*-v2\.jar' listing.html | head -1)"
+          echo "Resolved mappings jar: $JAR"
+          test -n "$JAR"
+          curl -sSL "$DIR/$JAR" -o /tmp/yarn-v2.jar
+          rm -rf /tmp/yarn-v2 && mkdir -p /tmp/yarn-v2
+          unzip -o /tmp/yarn-v2.jar -d /tmp/yarn-v2
+          find /tmp/yarn-v2 -type f
+          TINY="$(find /tmp/yarn-v2 -name '*.tiny' | head -1)"
+          echo "Resolved tiny file: $TINY"
+          test -n "$TINY"
+          cp "$TINY" build-local/yarn-1.21.1.tiny
+          head -5 build-local/yarn-1.21.1.tiny
+          wc -l build-local/yarn-1.21.1.tiny
+
+      - name: Commit vendored mappings
+        run: |
+          set -eux
+          git config user.name "arena-build-bot"
+          git config user.email "arena-build-bot@local"
+          git add build-local/yarn-1.21.1.tiny
+          git diff --cached --quiet && echo "nothing to commit" && exit 0
+          git commit -m "chore: vendor yarn 1.21.1+build.3 tiny mappings (CC0) for offline build"
+          git push origin HEAD
