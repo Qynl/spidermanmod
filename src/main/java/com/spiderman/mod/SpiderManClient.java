@@ -8,6 +8,8 @@ import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
 
+import net.minecraft.client.color.item.ItemColorProvider;
+import net.minecraft.item.ItemStack;
 import net.minecraft.item.SpawnEggItem;
 
 import com.spiderman.mod.client.ClientTickHandler;
@@ -32,13 +34,21 @@ public class SpiderManClient implements ClientModInitializer {
         EntityRendererRegistry.register(ModEntities.RADIOACTIVE_SPIDER, RadioactiveSpiderRenderer::new);
         EntityRendererRegistry.register(ModEntities.WEB_SHOT, WebShotRenderer::new);
         // Vanilla only tint-registers its own spawn eggs; ours needs it explicit.
-        ColorProviderRegistry.ITEM.register((stack, tintIndex) ->
-                ((SpawnEggItem) stack.getItem()).getColor(tintIndex),
-                ModItems.RADIOACTIVE_SPIDER_SPAWN_EGG);
+        // (Explicit class, not a lambda: the offline remap keeps invokedynamic
+        // SAM references as-written, which only works for non-MC interfaces.)
+        ColorProviderRegistry.ITEM.register(new SpawnEggTint(), ModItems.RADIOACTIVE_SPIDER_SPAWN_EGG);
         HudRenderCallback.EVENT.register(HudRenderer::onHudRender);
         WorldRenderEvents.AFTER_ENTITIES.register(StrandRenderer::afterEntities);
         ClientTickEvents.END_CLIENT_TICK.register(ClientTickHandler::onEndTick);
         ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> ClientPowers.reset());
         SpiderManMod.LOGGER.info("[spiderman] client init complete");
+    }
+
+    /** Tints the radioactive-spider spawn egg with its two shell colors. */
+    private static final class SpawnEggTint implements ItemColorProvider {
+        @Override
+        public int getColor(ItemStack stack, int tintIndex) {
+            return ((SpawnEggItem) stack.getItem()).getColor(tintIndex);
+        }
     }
 }
