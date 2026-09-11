@@ -18,7 +18,7 @@ import tempfile
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from remap import (Mapper, build_declmap, remap_class)  # noqa: E402
-from verify import check_leftovers, check_linkage  # noqa: E402
+from verify import check_leftovers, check_linkage, check_shadows  # noqa: E402
 
 PASS = FAIL = 0
 
@@ -433,6 +433,13 @@ def e2e():
         except SystemExit:
             leftovers_clean = False
         check(leftovers_clean, "no leftover named refs in remapped output")
+        try:
+            with contextlib.redirect_stdout(io.StringIO()):
+                check_shadows(tmp, Mapper())
+            shadows_ok = True
+        except SystemExit:
+            shadows_ok = False
+        check(shadows_ok, "shadows renamed in remapped output")
 
     # T5: the gate fails crafted-broken input (ref + missed override).
     bro = CB()

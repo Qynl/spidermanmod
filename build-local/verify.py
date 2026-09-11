@@ -261,11 +261,19 @@ def check_shadows(classes_dir, mapper):
         with open(path, "rb") as f:
             cf = ClassFile(f.read())
         inter = mapper.shadow[(mixin_owner, name, _desc)]
-        utf8s = {cf.utf(i) for i in range(1, len(cf.cp))
-                 if cf.cp[i] is not None and cf.cp[i]["tag"] == 1}
-        if name in utf8s:
+        # Referenced member names only: stale pool Utf8s are semantically
+        # irrelevant (the JVM ignores unreferenced constants), and the
+        # duplicate-on-write remapper legitimately leaves them behind.
+        ref_names = set()
+        for i in range(1, len(cf.cp)):
+            e = cf.cp[i]
+            if e is not None and e["tag"] in (9, 10, 11):
+                ref_names.add(cf.utf(cf.cp[e["ref2"]]["ref"]))
+        def_names = {cf.utf(name_i) for (_k, _p, _f, name_i, _d)
+                     in member_decl_positions(cf.tail)}
+        if name in ref_names or name in def_names:
             raise SystemExit(f"[verify] {mixin_owner}: yarn shadow {name!r} survived remap")
-        if inter not in utf8s:
+        if inter not in def_names:
             raise SystemExit(f"[verify] {mixin_owner}: intermediary {inter!r} missing")
     print(f"[verify] shadows OK: {len(shadows)} member(s) renamed to intermediary")
 
