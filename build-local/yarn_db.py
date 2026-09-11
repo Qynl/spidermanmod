@@ -74,6 +74,11 @@ def _parse_enigma_file(path, classes, methods, fields):
                 owner_inter, owner_yarn = stack[-1][1], stack[-1][2]
                 if yarn_name is None:
                     yarn_name = inter_name
+                key = (owner_yarn, kind, inter_name, desc)
+                if seen is not None and key in seen:
+                    continue
+                if seen is not None:
+                    seen.add(key)
                 target = methods if kind == "METHOD" else fields
                 target.setdefault(owner_yarn, []).append(
                     {"n": yarn_name, "i": inter_name, "d": desc, "oi": owner_inter}
@@ -107,16 +112,17 @@ def _parse_tiny(path, classes, methods, fields):
                 if cur_owner_n not in classes:
                     classes[cur_owner_n] = cur_owner_i
             elif line.startswith("\tm\t") and cur_owner_n:
+                # member lines have a LEADING tab: ['', 'm', desc, inter, named?]
                 p = line.split("\t")
-                desc, inter_name = p[1], p[2]
-                yarn_name = p[3] if len(p) > 3 else inter_name
+                desc, inter_name = p[2], p[3]
+                yarn_name = p[4] if len(p) > 4 else inter_name
                 methods.setdefault(cur_owner_n, []).append(
                     {"n": yarn_name, "i": inter_name, "d": desc, "oi": cur_owner_i}
                 )
             elif line.startswith("\tf\t") and cur_owner_n:
                 p = line.split("\t")
-                desc, inter_name = p[1], p[2]
-                yarn_name = p[3] if len(p) > 3 else inter_name
+                desc, inter_name = p[2], p[3]
+                yarn_name = p[4] if len(p) > 4 else inter_name
                 fields.setdefault(cur_owner_n, []).append(
                     {"n": yarn_name, "i": inter_name, "d": desc, "oi": cur_owner_i}
                 )
@@ -130,8 +136,11 @@ def build():
         _parse_tiny(TINY_PATH, classes, methods, fields)
     else:
         print("[yarn_db] tiny not vendored yet; CI fetch-deps will provide it.", file=sys.stderr)
+    have_tiny = bool(classes)
     mdir = os.path.join(YARN_DIR, "mappings")
-    if os.path.isdir(mdir):
+    if have_tiny:
+        print("[yarn_db] tiny is complete; skipping enigma merge", file=sys.stderr)
+    if os.path.isdir(mdir) and not have_tiny:
         print(f"[yarn_db] merging enigma files from: {mdir}", file=sys.stderr)
         n = 0
         for root, _ds, files in os.walk(mdir):

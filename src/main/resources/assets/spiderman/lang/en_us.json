@@ -1,0 +1,22 @@
+{
+  "category.spiderman": "Spider-Man",
+  "key.spiderman.wheel": "Ability Wheel",
+  "key.spiderman.use_ability": "Use Selected Ability",
+  "key.spiderman.quick_shot": "Quick Web Shot",
+  "key.spiderman.swing": "Web Swing",
+  "key.spiderman.zip": "Web Zip",
+
+  "entity.spiderman.radioactive_spider": "Radioactive Spider",
+  "entity.spiderman.web_shot": "Web Shot",
+
+  "advancement.spiderman.transformation.title": "With Great Power...",
+  "advancement.spiderman.transformation.description": "Get bitten by a radioactive spider",
+  "advancement.spiderman.stage_1.title": "Wall Crawler",
+  "advancement.spiderman.stage_1.description": "Reach spider power stage 1: climb walls and ceilings",
+  "advancement.spiderman.stage_2.title": "Web Slinger",
+  "advancement.spiderman.stage_2.description": "Reach spider power stage 2: fire your first webs",
+  "advancement.spiderman.stage_3.title": "Sky Dancer",
+  "advancement.spiderman.stage_3.description": "Reach spider power stage 3: swing and zip through the sky",
+  "advancement.spiderman.stage_4.title": "Spider Master",
+  "advancement.spiderman.stage_4.description": "Reach spider power stage 4: master every web ability"
+}

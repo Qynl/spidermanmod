@@ -1,0 +1,15 @@
+{
+  "display": {
+    "icon": { "item": "minecraft:cobweb" },
+    "title": { "translate": "advancement.spiderman.transformation.title" },
+    "description": { "translate": "advancement.spiderman.transformation.description" },
+    "frame": "challenge",
+    "background": "minecraft:textures/gui/advancements/backgrounds/adventure.png",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "trigger": { "trigger": "minecraft:impossible" }
+  }
+}

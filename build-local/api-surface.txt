@@ -1,0 +1,930 @@
+# API surface for stubgen.py — every METHOD/FIELD resolves against yarn-1.21.1.tiny.
+# Format: CLASS|INTERFACE|HOLDER <binary> [ABSTRACT] [EXTENDS <bin>] [IMPLEMENTS a,b]
+#   CTOR <desc>            (hand-written, trusted; validated by CI loom build)
+#   METHOD <name> [STATIC] [ARGS <desc-substring>] [THROWS a,b]
+#   FIELD <name> [STATIC]
+#   RAW <full member source line>
+# Rules: no getUuid/getId/getName/getDisplayName/getOwner/getTarget (avoidance);
+# isPlayer -> instanceof; getBlockPos -> ofFloored(getX/Y/Z); getCustomName dropped.
+# World/ServerWorld/ClientWorld are ABSTRACT in stubs (never extended by mod code,
+# so interface links emit correct invokeinterface owners). Entity has NO interface
+# links (mod entities extend it, so it must stay concrete with Entity-owned members).
+
+# ---------------- util/math ----------------
+CLASS net/minecraft/util/math/Vec3d
+  CTOR (DDD)V
+  FIELD ZERO STATIC
+  FIELD x
+  FIELD y
+  FIELD z
+  METHOD add ARGS (DDD)
+  METHOD add ARGS (Lnet/minecraft/util/math/Vec3d;)
+  METHOD subtract ARGS (Lnet/minecraft/util/math/Vec3d;)
+  METHOD subtract ARGS (DDD)
+  METHOD multiply ARGS (D)
+  METHOD normalize
+  METHOD length
+  METHOD lengthSquared
+  METHOD distanceTo
+  METHOD dotProduct
+  METHOD crossProduct
+  METHOD negate
+  METHOD lerp
+  METHOD horizontalLength
+  METHOD rotateY
+
+CLASS net/minecraft/util/math/Vec3i
+  CTOR (III)V
+  METHOD getX
+  METHOD getY
+  METHOD getZ
+  METHOD add ARGS (III)
+  METHOD add ARGS (Lnet/minecraft/util/math/Vec3i;)
+  METHOD subtract
+  METHOD crossProduct
+
+CLASS net/minecraft/util/math/BlockPos EXTENDS net/minecraft/util/math/Vec3i
+  CTOR (III)V
+  CTOR (Lnet/minecraft/util/math/Vec3i;)V
+  FIELD ORIGIN STATIC
+  METHOD ofFloored STATIC ARGS (DDD)
+  METHOD add ARGS (III)
+  METHOD up ARGS ()
+  METHOD down ARGS ()
+  METHOD north ARGS ()
+  METHOD south ARGS ()
+  METHOD east ARGS ()
+  METHOD west ARGS ()
+  METHOD offset ARGS (Lnet/minecraft/util/math/Direction;)
+  METHOD toImmutable
+  METHOD toCenterPos
+  METHOD asLong ARGS ()
+  METHOD fromLong STATIC
+
+CLASS net/minecraft/util/math/Box
+  CTOR (DDDDDD)V
+  FIELD minX
+  FIELD minY
+  FIELD minZ
+  FIELD maxX
+  FIELD maxY
+  FIELD maxZ
+  METHOD offset ARGS (Lnet/minecraft/util/math/Vec3d;)
+  METHOD contains ARGS (Lnet/minecraft/util/math/Vec3d;)
+  METHOD intersects ARGS (Lnet/minecraft/util/math/Box;)
+  METHOD expand ARGS (D)
+  METHOD stretch ARGS (DDD)
+  METHOD shrink ARGS (DDD)
+  METHOD contract ARGS (D)
+  METHOD union
+  METHOD getCenter
+
+CLASS net/minecraft/util/math/Direction
+  FIELD DOWN STATIC
+  FIELD UP STATIC
+  FIELD NORTH STATIC
+  FIELD SOUTH STATIC
+  FIELD WEST STATIC
+  FIELD EAST STATIC
+  METHOD getOffsetX
+  METHOD getOffsetY
+  METHOD getOffsetZ
+  METHOD getOpposite
+  METHOD getAxis
+
+HOLDER net/minecraft/util/Arm
+  FIELD RIGHT STATIC
+  FIELD LEFT STATIC
+
+CLASS net/minecraft/client/render/item/HeldItemRenderer
+
+HOLDER net/minecraft/util/math/Direction$Axis
+  FIELD X STATIC
+  FIELD Y STATIC
+  FIELD Z STATIC
+
+CLASS net/minecraft/util/math/MathHelper
+  METHOD sin STATIC
+  METHOD cos STATIC
+  METHOD sqrt STATIC
+  METHOD atan2 STATIC
+  METHOD clamp STATIC ARGS (FFF)
+  METHOD clamp STATIC ARGS (DDD)
+  METHOD lerp STATIC ARGS (FFF)
+  METHOD lerp STATIC ARGS (DDD)
+  METHOD floor STATIC ARGS (D)
+  METHOD ceil STATIC ARGS (D)
+  METHOD wrapDegrees STATIC ARGS (F)
+
+CLASS net/minecraft/util/math/random/Random
+  METHOD nextInt ARGS (I)
+  METHOD nextFloat
+  METHOD nextDouble
+  METHOD nextBoolean
+  METHOD nextLong
+  METHOD nextGaussian
+
+CLASS net/minecraft/util/math/RotationAxis
+  FIELD POSITIVE_X STATIC
+  FIELD POSITIVE_Y STATIC
+  FIELD POSITIVE_Z STATIC
+  FIELD NEGATIVE_X STATIC
+  FIELD NEGATIVE_Y STATIC
+  FIELD NEGATIVE_Z STATIC
+  METHOD rotationDegrees
+
+CLASS net/minecraft/util/math/Vec2f
+
+CLASS net/minecraft/util/Identifier
+  METHOD of STATIC ARGS (Ljava/lang/String;)
+  METHOD of STATIC ARGS (Ljava/lang/String;Ljava/lang/String;)
+  METHOD tryParse STATIC ARGS (Ljava/lang/String;)
+  METHOD getPath
+  METHOD getNamespace
+
+HOLDER net/minecraft/util/Hand
+  FIELD MAIN_HAND STATIC
+  FIELD OFF_HAND STATIC
+
+HOLDER net/minecraft/util/ActionResult
+  FIELD SUCCESS STATIC
+  FIELD PASS STATIC
+  FIELD FAIL STATIC
+  FIELD CONSUME STATIC
+
+CLASS net/minecraft/util/Formatting
+  FIELD BLACK STATIC
+  FIELD DARK_BLUE STATIC
+  FIELD DARK_GREEN STATIC
+  FIELD DARK_AQUA STATIC
+  FIELD DARK_RED STATIC
+  FIELD DARK_PURPLE STATIC
+  FIELD GOLD STATIC
+  FIELD GRAY STATIC
+  FIELD DARK_GRAY STATIC
+  FIELD BLUE STATIC
+  FIELD GREEN STATIC
+  FIELD AQUA STATIC
+  FIELD RED STATIC
+  FIELD LIGHT_PURPLE STATIC
+  FIELD YELLOW STATIC
+  FIELD WHITE STATIC
+  FIELD OBFUSCATED STATIC
+  FIELD BOLD STATIC
+  FIELD STRIKETHROUGH STATIC
+  FIELD UNDERLINE STATIC
+  FIELD ITALIC STATIC
+  FIELD RESET STATIC
+
+CLASS net/minecraft/util/WorldSavePath
+  FIELD ROOT STATIC
+
+# ---------------- entity ----------------
+CLASS net/minecraft/entity/data/DataTracker
+
+CLASS net/minecraft/entity/data/DataTracker$Builder
+
+CLASS net/minecraft/entity/Entity
+  CTOR (Lnet/minecraft/entity/EntityType;Lnet/minecraft/world/World;)V
+  FIELD fallDistance
+  FIELD age
+  FIELD prevX
+  FIELD prevY
+  FIELD prevZ
+  METHOD getWorld
+  METHOD getPos
+  METHOD getEyePos
+  METHOD getRotationVector ARGS ()
+  METHOD getVelocity
+  METHOD setVelocity ARGS (Lnet/minecraft/util/math/Vec3d;)
+  METHOD setVelocity ARGS (DDD)
+  METHOD addVelocity ARGS (DDD)
+  METHOD addVelocity ARGS (Lnet/minecraft/util/math/Vec3d;)
+  METHOD getType
+  METHOD getWidth
+  METHOD getHeight
+  METHOD getStandingEyeHeight
+  METHOD getEyeY
+  METHOD getX
+  METHOD getY
+  METHOD getZ
+  METHOD setPos
+  METHOD setPosition ARGS (Lnet/minecraft/util/math/Vec3d;)
+  METHOD setPosition ARGS (DDD)
+  METHOD refreshPositionAndAngles ARGS (DDDFF)
+  METHOD move
+  METHOD isOnGround
+  METHOD setOnGround ARGS (Z)
+  METHOD isSneaking
+  METHOD isSprinting
+  METHOD isTouchingWater
+  METHOD isSubmergedInWater
+  METHOD isAlive
+  METHOD isRemoved
+  METHOD isSpectator
+  METHOD hasNoGravity
+  METHOD setNoGravity
+  METHOD discard
+  METHOD kill
+  METHOD damage
+  METHOD handleFallDamage
+  METHOD getSafeFallDistance
+  METHOD writeCustomDataToNbt
+  METHOD readCustomDataFromNbt
+  METHOD setCustomName
+  METHOD setCustomNameVisible
+  METHOD getServer
+  RAW public java.util.UUID getUuid() { return null; }
+  RAW public net.minecraft.util.math.BlockPos getBlockPos() { return null; }
+  FIELD horizontalCollision
+  FIELD velocityModified
+  METHOD getYaw ARGS ()
+  METHOD getPitch ARGS ()
+  METHOD squaredDistanceTo ARGS (Lnet/minecraft/entity/Entity;)
+  METHOD squaredDistanceTo ARGS (Lnet/minecraft/util/math/Vec3d;)
+  METHOD initDataTracker
+  METHOD tick
+  METHOD playSound
+
+HOLDER net/minecraft/entity/MovementType
+  FIELD SELF STATIC
+  FIELD PLAYER STATIC
+
+CLASS net/minecraft/entity/LivingEntity EXTENDS net/minecraft/entity/Entity
+  CTOR (Lnet/minecraft/entity/EntityType;Lnet/minecraft/world/World;)V
+  METHOD getHealth
+  METHOD setHealth
+  METHOD getMaxHealth
+  METHOD getAttributeInstance
+  METHOD getMovementSpeed ARGS ()
+  METHOD addStatusEffect ARGS (Lnet/minecraft/entity/effect/StatusEffectInstance;)
+  METHOD getStatusEffect
+  METHOD removeStatusEffect
+  METHOD hasStatusEffect
+  METHOD heal
+  METHOD swingHand ARGS (Lnet/minecraft/util/Hand;)
+  METHOD isFallFlying
+  METHOD isHoldingOntoLadder
+  METHOD tryAttack
+
+CLASS net/minecraft/entity/mob/MobEntity EXTENDS net/minecraft/entity/LivingEntity
+  CTOR (Lnet/minecraft/entity/EntityType;Lnet/minecraft/world/World;)V
+  METHOD createMobAttributes STATIC
+  METHOD initGoals
+  FIELD goalSelector
+  FIELD targetSelector
+
+CLASS net/minecraft/entity/mob/PathAwareEntity EXTENDS net/minecraft/entity/mob/MobEntity
+  CTOR (Lnet/minecraft/entity/EntityType;Lnet/minecraft/world/World;)V
+
+CLASS net/minecraft/entity/mob/HostileEntity EXTENDS net/minecraft/entity/mob/PathAwareEntity
+  CTOR (Lnet/minecraft/entity/EntityType;Lnet/minecraft/world/World;)V
+  METHOD canSpawnInDark STATIC
+
+CLASS net/minecraft/entity/mob/SpiderEntity EXTENDS net/minecraft/entity/mob/HostileEntity
+  CTOR (Lnet/minecraft/entity/EntityType;Lnet/minecraft/world/World;)V
+  METHOD isClimbingWall
+  METHOD setClimbingWall
+  METHOD createSpiderAttributes STATIC
+
+CLASS net/minecraft/entity/player/PlayerEntity EXTENDS net/minecraft/entity/LivingEntity
+  METHOD getAbilities
+  METHOD isCreative
+  METHOD getGameProfile
+  METHOD sendMessage
+  METHOD sendAbilitiesUpdate
+
+CLASS net/minecraft/entity/player/PlayerAbilities
+  FIELD allowFlying
+  FIELD flying
+  FIELD invulnerable
+  FIELD creativeMode
+  METHOD getFlySpeed
+  METHOD setFlySpeed
+
+CLASS net/minecraft/server/network/ServerPlayerEntity EXTENDS net/minecraft/entity/player/PlayerEntity
+  METHOD getServerWorld
+  METHOD getAdvancementTracker
+
+CLASS net/minecraft/entity/projectile/ProjectileEntity EXTENDS net/minecraft/entity/Entity
+
+CLASS net/minecraft/entity/ItemEntity EXTENDS net/minecraft/entity/Entity
+  CTOR (Lnet/minecraft/world/World;DDDLnet/minecraft/item/ItemStack;)V
+  METHOD setPickupDelay
+  METHOD setCovetedItem
+  METHOD setNeverDespawn
+
+HOLDER net/minecraft/entity/SpawnGroup
+  FIELD MONSTER STATIC
+  FIELD MISC STATIC
+
+CLASS net/minecraft/entity/SpawnRestriction
+  METHOD register STATIC
+
+INTERFACE net/minecraft/entity/SpawnRestriction$SpawnPredicate
+  METHOD test
+
+INTERFACE net/minecraft/entity/SpawnLocation
+
+CLASS net/minecraft/entity/SpawnLocationTypes
+  FIELD ON_GROUND STATIC
+  FIELD IN_WATER STATIC
+  FIELD IN_LAVA STATIC
+  FIELD UNRESTRICTED STATIC
+
+CLASS net/minecraft/entity/SpawnReason
+
+CLASS net/minecraft/entity/ai/goal/Goal
+  METHOD canStart
+  METHOD shouldContinue
+  METHOD tick
+
+CLASS net/minecraft/entity/ai/goal/MeleeAttackGoal EXTENDS net/minecraft/entity/ai/goal/Goal
+  CTOR (Lnet/minecraft/entity/mob/PathAwareEntity;DZ)V
+  METHOD attack
+
+CLASS net/minecraft/entity/ai/goal/GoalSelector
+  METHOD add
+
+# ---------------- world ----------------
+CLASS net/minecraft/world/World ABSTRACT IMPLEMENTS net/minecraft/world/BlockView,net/minecraft/world/EntityView,net/minecraft/world/WorldAccess,net/minecraft/world/ModifiableWorld,net/minecraft/world/WorldView
+  FIELD isClient
+  FIELD random
+  METHOD getDamageSources
+  METHOD playSound ARGS (Lnet/minecraft/entity/player/PlayerEntity;DDDLnet/minecraft/sound/SoundEvent;Lnet/minecraft/sound/SoundCategory;FF)
+  METHOD addParticle
+  METHOD setBlockState
+
+INTERFACE net/minecraft/world/BlockView
+  METHOD getBlockState
+  METHOD raycast ARGS (Lnet/minecraft/world/RaycastContext;)
+
+INTERFACE net/minecraft/world/EntityView
+  METHOD getClosestPlayer ARGS (Lnet/minecraft/entity/Entity;D)
+  METHOD getPlayerByUuid
+  RAW java.util.List<net.minecraft.entity.player.PlayerEntity> getPlayers();
+  RAW java.util.List<net.minecraft.entity.Entity> getOtherEntities(net.minecraft.entity.Entity e, net.minecraft.util.math.Box b, java.util.function.Predicate<net.minecraft.entity.Entity> p);
+  RAW <T extends net.minecraft.entity.Entity> java.util.List<T> getEntitiesByClass(java.lang.Class<T> cls, net.minecraft.util.math.Box b, java.util.function.Predicate<T> p);
+
+INTERFACE net/minecraft/world/WorldAccess
+  METHOD getServer
+  METHOD getRandom
+  METHOD playSound ARGS (Lnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/sound/SoundEvent;Lnet/minecraft/sound/SoundCategory;FF)
+  METHOD addParticle
+
+INTERFACE net/minecraft/world/ModifiableWorld
+  METHOD breakBlock ARGS (Lnet/minecraft/util/math/BlockPos;Z)
+  METHOD setBlockState ARGS (Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;I)
+  METHOD removeBlock
+  METHOD spawnEntity
+
+INTERFACE net/minecraft/world/WorldView
+  METHOD isChunkLoaded ARGS (Lnet/minecraft/util/math/BlockPos;)
+  METHOD isAir
+
+CLASS net/minecraft/server/world/ServerWorld ABSTRACT EXTENDS net/minecraft/world/World
+  METHOD getEntity
+  METHOD spawnParticles ARGS (Lnet/minecraft/particle/ParticleEffect;DDDIDDDD)
+
+CLASS net/minecraft/client/world/ClientWorld ABSTRACT EXTENDS net/minecraft/world/World
+
+CLASS net/minecraft/world/ServerWorldAccess
+
+CLASS net/minecraft/world/Heightmap
+
+HOLDER net/minecraft/world/Heightmap$Type
+  FIELD MOTION_BLOCKING_NO_LEAVES STATIC
+  FIELD WORLD_SURFACE STATIC
+
+CLASS net/minecraft/world/RaycastContext
+  CTOR (Lnet/minecraft/util/math/Vec3d;Lnet/minecraft/util/math/Vec3d;Lnet/minecraft/world/RaycastContext$ShapeType;Lnet/minecraft/world/RaycastContext$FluidHandling;Lnet/minecraft/entity/Entity;)V
+
+HOLDER net/minecraft/world/RaycastContext$ShapeType
+  FIELD COLLIDER STATIC
+  FIELD OUTLINE STATIC
+
+HOLDER net/minecraft/world/RaycastContext$FluidHandling
+  FIELD NONE STATIC
+  FIELD ANY STATIC
+
+# ---------------- hit ----------------
+CLASS net/minecraft/util/hit/HitResult
+  METHOD getType
+  METHOD getPos
+
+HOLDER net/minecraft/util/hit/HitResult$Type
+  FIELD MISS STATIC
+  FIELD BLOCK STATIC
+  FIELD ENTITY STATIC
+
+CLASS net/minecraft/util/hit/BlockHitResult EXTENDS net/minecraft/util/hit/HitResult
+  METHOD getBlockPos
+  METHOD getSide
+
+CLASS net/minecraft/util/hit/EntityHitResult EXTENDS net/minecraft/util/hit/HitResult
+  METHOD getEntity
+
+CLASS net/minecraft/entity/projectile/ProjectileUtil
+  METHOD raycast STATIC
+  METHOD getEntityCollision STATIC ARGS Predicate;F)
+
+# ---------------- block ----------------
+CLASS net/minecraft/block/Block
+  METHOD getDefaultState
+
+CLASS net/minecraft/block/Blocks
+  FIELD COBWEB STATIC
+  FIELD AIR STATIC
+  FIELD CAVE_AIR STATIC
+  FIELD VOID_AIR STATIC
+
+CLASS net/minecraft/block/AbstractBlock
+
+CLASS net/minecraft/block/AbstractBlock$AbstractBlockState
+  METHOD isAir
+  METHOD isSolidBlock
+  METHOD getBlock
+  METHOD isOf ARGS (Lnet/minecraft/block/Block;)
+
+CLASS net/minecraft/block/BlockState EXTENDS net/minecraft/block/AbstractBlock$AbstractBlockState
+
+# ---------------- item ----------------
+INTERFACE net/minecraft/item/ItemConvertible
+
+CLASS net/minecraft/item/Item IMPLEMENTS net/minecraft/item/ItemConvertible
+
+CLASS net/minecraft/item/Items
+  FIELD STRING STATIC
+  FIELD SPIDER_EYE STATIC
+  FIELD FERMENTED_SPIDER_EYE STATIC
+  FIELD COBWEB STATIC
+
+CLASS net/minecraft/item/ItemStack
+  CTOR (Lnet/minecraft/item/ItemConvertible;)V
+  CTOR (Lnet/minecraft/item/ItemConvertible;I)V
+
+# ---------------- attribute ----------------
+CLASS net/minecraft/entity/attribute/EntityAttributes
+  FIELD GENERIC_MAX_HEALTH STATIC
+  FIELD GENERIC_MOVEMENT_SPEED STATIC
+  FIELD GENERIC_ATTACK_DAMAGE STATIC
+  FIELD GENERIC_ARMOR STATIC
+  FIELD GENERIC_ARMOR_TOUGHNESS STATIC
+  FIELD GENERIC_JUMP_STRENGTH STATIC
+  FIELD GENERIC_SAFE_FALL_DISTANCE STATIC
+  FIELD GENERIC_FALL_DAMAGE_MULTIPLIER STATIC
+  FIELD GENERIC_GRAVITY STATIC
+  FIELD GENERIC_STEP_HEIGHT STATIC
+  FIELD GENERIC_SCALE STATIC
+  FIELD GENERIC_ATTACK_KNOCKBACK STATIC
+  FIELD GENERIC_KNOCKBACK_RESISTANCE STATIC
+  FIELD GENERIC_FLYING_SPEED STATIC
+  FIELD GENERIC_FOLLOW_RANGE STATIC
+  FIELD GENERIC_LUCK STATIC
+
+CLASS net/minecraft/entity/attribute/EntityAttribute
+
+CLASS net/minecraft/entity/attribute/DefaultAttributeContainer
+  METHOD builder STATIC
+
+CLASS net/minecraft/entity/attribute/DefaultAttributeContainer$Builder
+  METHOD add ARGS (Lnet/minecraft/registry/entry/RegistryEntry;D)
+  METHOD add ARGS (Lnet/minecraft/registry/entry/RegistryEntry;)
+  METHOD build
+
+CLASS net/minecraft/entity/attribute/EntityAttributeInstance
+  METHOD setBaseValue
+  METHOD getValue
+  METHOD getBaseValue
+
+# ---------------- effect ----------------
+CLASS net/minecraft/entity/effect/StatusEffect
+
+CLASS net/minecraft/entity/effect/StatusEffects
+  FIELD NAUSEA STATIC
+  FIELD BLINDNESS STATIC
+  FIELD SPEED STATIC
+  FIELD SLOWNESS STATIC
+  FIELD JUMP_BOOST STATIC
+  FIELD REGENERATION STATIC
+  FIELD STRENGTH STATIC
+  FIELD NIGHT_VISION STATIC
+  FIELD SLOW_FALLING STATIC
+  FIELD DARKNESS STATIC
+  FIELD GLOWING STATIC
+
+CLASS net/minecraft/entity/effect/StatusEffectInstance
+  CTOR (Lnet/minecraft/registry/entry/RegistryEntry;II)V
+
+# ---------------- damage ----------------
+CLASS net/minecraft/entity/damage/DamageSources
+  METHOD generic
+  METHOD fall
+  METHOD outOfWorld
+  METHOD mobAttack
+  METHOD playerAttack
+  METHOD thorns
+  METHOD sonicBoom
+  METHOD explosion ARGS (Lnet/minecraft/entity/Entity;Lnet/minecraft/entity/Entity;)
+  METHOD magic
+
+CLASS net/minecraft/entity/damage/DamageSource
+  METHOD isOf
+
+CLASS net/minecraft/entity/damage/DamageTypes
+  FIELD FALL STATIC
+  FIELD GENERIC STATIC
+  FIELD MOB_ATTACK STATIC
+  FIELD PLAYER_ATTACK STATIC
+  FIELD ARROW STATIC
+  FIELD MAGIC STATIC
+  FIELD EXPLOSION STATIC
+  FIELD SONIC_BOOM STATIC
+  FIELD THORNS STATIC
+  FIELD LIGHTNING_BOLT STATIC
+
+# ---------------- sound ----------------
+CLASS net/minecraft/sound/SoundEvent
+  METHOD of STATIC ARGS (Lnet/minecraft/util/Identifier;)
+
+CLASS net/minecraft/sound/SoundEvents
+  FIELD ENTITY_SPIDER_AMBIENT STATIC
+  FIELD ENTITY_SPIDER_HURT STATIC
+  FIELD ENTITY_SPIDER_DEATH STATIC
+  FIELD ENTITY_SPIDER_STEP STATIC
+  FIELD ENTITY_PLAYER_LEVELUP STATIC
+  FIELD ENTITY_PLAYER_ATTACK_SWEEP STATIC
+  FIELD ENTITY_PLAYER_ATTACK_WEAK STATIC
+  FIELD ENTITY_PLAYER_HURT STATIC
+  FIELD ENTITY_PLAYER_DEATH STATIC
+  FIELD ENTITY_PLAYER_SPLASH STATIC
+  FIELD ENTITY_PLAYER_SWIM STATIC
+  FIELD ENTITY_PLAYER_BIG_FALL STATIC
+  FIELD ENTITY_PLAYER_SMALL_FALL STATIC
+  FIELD ENTITY_ARROW_SHOOT STATIC
+  FIELD ENTITY_ARROW_HIT STATIC
+  FIELD ENTITY_ARROW_HIT_PLAYER STATIC
+  FIELD ENTITY_ENDER_PEARL_THROW STATIC
+  FIELD ENTITY_FIREWORK_ROCKET_LAUNCH STATIC
+  FIELD ENTITY_FIREWORK_ROCKET_BLAST STATIC
+  FIELD ENTITY_FIREWORK_ROCKET_TWINKLE STATIC
+  FIELD ENTITY_GENERIC_EXPLODE STATIC
+  FIELD ENTITY_GENERIC_SPLASH STATIC
+  FIELD ENTITY_GENERIC_EAT STATIC
+  FIELD ENTITY_GENERIC_DRINK STATIC
+  FIELD BLOCK_WOOL_BREAK STATIC
+  FIELD BLOCK_WOOL_PLACE STATIC
+  FIELD BLOCK_WOOL_STEP STATIC
+  FIELD BLOCK_WOOL_HIT STATIC
+  FIELD BLOCK_WOOL_FALL STATIC
+  FIELD BLOCK_SLIME_BLOCK_BREAK STATIC
+  FIELD BLOCK_SLIME_BLOCK_PLACE STATIC
+  FIELD BLOCK_SLIME_BLOCK_STEP STATIC
+  FIELD BLOCK_SLIME_BLOCK_HIT STATIC
+  FIELD BLOCK_SLIME_BLOCK_FALL STATIC
+  FIELD BLOCK_LADDER_BREAK STATIC
+  FIELD BLOCK_LADDER_PLACE STATIC
+  FIELD BLOCK_LADDER_STEP STATIC
+  FIELD BLOCK_LADDER_HIT STATIC
+  FIELD BLOCK_LADDER_FALL STATIC
+  FIELD BLOCK_VINE_BREAK STATIC
+  FIELD BLOCK_VINE_PLACE STATIC
+  FIELD BLOCK_VINE_STEP STATIC
+  FIELD BLOCK_VINE_HIT STATIC
+  FIELD BLOCK_VINE_FALL STATIC
+  FIELD ENTITY_BAT_TAKEOFF STATIC
+  FIELD ENTITY_BAT_LOOP STATIC
+  FIELD ENTITY_ENDER_DRAGON_FLAP STATIC
+  FIELD ENTITY_PHANTOM_FLAP STATIC
+  FIELD ENTITY_LIGHTNING_BOLT_IMPACT STATIC
+  FIELD ENTITY_LIGHTNING_BOLT_THUNDER STATIC
+  FIELD BLOCK_ANVIL_PLACE STATIC
+  FIELD BLOCK_ANVIL_HIT STATIC
+  FIELD BLOCK_ANVIL_LAND STATIC
+  FIELD BLOCK_PISTON_EXTEND STATIC
+  FIELD BLOCK_PISTON_CONTRACT STATIC
+  FIELD BLOCK_DISPENSER_LAUNCH STATIC
+  FIELD BLOCK_DISPENSER_DISPENSE STATIC
+  FIELD BLOCK_LEVER_CLICK STATIC
+  FIELD BLOCK_STONE_BUTTON_CLICK_ON STATIC
+  FIELD ENTITY_ITEM_PICKUP STATIC
+  FIELD ENTITY_ITEM_BREAK STATIC
+  FIELD ENTITY_EGG_THROW STATIC
+  FIELD ENTITY_SNOWBALL_THROW STATIC
+  FIELD ENTITY_EXPERIENCE_ORB_PICKUP STATIC
+  FIELD ENTITY_VILLAGER_TRADE STATIC
+  FIELD ENTITY_VILLAGER_YES STATIC
+  FIELD ENTITY_VILLAGER_NO STATIC
+  FIELD BLOCK_NOTE_BLOCK_PLING STATIC
+  FIELD BLOCK_BELL_USE STATIC
+  FIELD BLOCK_AMETHYST_BLOCK_CHIME STATIC
+  FIELD BLOCK_SCULK_SHRIEKER_SHRIEK STATIC
+  FIELD BLOCK_SCULK_SENSOR_CLICKING STATIC
+  FIELD ENTITY_WARDEN_SONIC_BOOM STATIC
+  FIELD ENTITY_WARDEN_HEARTBEAT STATIC
+  FIELD UI_BUTTON_CLICK STATIC
+  FIELD UI_TOAST_CHALLENGE_COMPLETE STATIC
+  FIELD UI_TOAST_IN STATIC
+  FIELD UI_TOAST_OUT STATIC
+  FIELD ENTITY_BEE_LOOP STATIC
+  FIELD BLOCK_BEEHIVE_ENTER STATIC
+  FIELD ENTITY_SILVERFISH_AMBIENT STATIC
+  FIELD ENTITY_ENDERMITE_AMBIENT STATIC
+  FIELD MUSIC_MENU STATIC
+  FIELD ENTITY_ZOMBIE_ATTACK_WOODEN_DOOR STATIC
+  FIELD BLOCK_GRASS_BREAK STATIC
+  FIELD BLOCK_GRASS_STEP STATIC
+  FIELD BLOCK_GRASS_PLACE STATIC
+  FIELD BLOCK_STONE_BREAK STATIC
+  FIELD BLOCK_STONE_STEP STATIC
+  FIELD BLOCK_STONE_PLACE STATIC
+
+CLASS net/minecraft/sound/SoundCategory
+  FIELD MASTER STATIC
+  FIELD PLAYERS STATIC
+  FIELD HOSTILE STATIC
+  FIELD NEUTRAL STATIC
+  FIELD BLOCKS STATIC
+  FIELD AMBIENT STATIC
+
+# ---------------- particle ----------------
+CLASS net/minecraft/particle/ParticleTypes
+  FIELD POOF STATIC
+  FIELD CLOUD STATIC
+  FIELD SWEEP_ATTACK STATIC
+  FIELD CRIT STATIC
+  FIELD ENCHANTED_HIT STATIC
+  FIELD PORTAL STATIC
+  FIELD WITCH STATIC
+  FIELD HAPPY_VILLAGER STATIC
+  FIELD HEART STATIC
+  FIELD NOTE STATIC
+  FIELD FLAME STATIC
+  FIELD SMOKE STATIC
+  FIELD LARGE_SMOKE STATIC
+  FIELD BUBBLE STATIC
+  FIELD ELECTRIC_SPARK STATIC
+  FIELD SCRAPE STATIC
+  FIELD DUST STATIC
+  FIELD FALLING_DUST STATIC
+  FIELD BLOCK STATIC
+  FIELD ITEM_SLIME STATIC
+  FIELD ITEM_COBWEB STATIC
+  FIELD EXPLOSION STATIC
+  FIELD EXPLOSION_EMITTER STATIC
+  FIELD FIREWORK STATIC
+  FIELD FLASH STATIC
+  FIELD SONIC_BOOM STATIC
+  FIELD SCULK_SOUL STATIC
+  FIELD GUST STATIC
+  FIELD SMALL_GUST STATIC
+  FIELD INFESTED STATIC
+
+INTERFACE net/minecraft/particle/ParticleEffect
+
+CLASS net/minecraft/particle/SimpleParticleType IMPLEMENTS net/minecraft/particle/ParticleEffect
+
+CLASS net/minecraft/particle/ParticleType IMPLEMENTS net/minecraft/particle/ParticleEffect
+
+# ---------------- nbt ----------------
+INTERFACE net/minecraft/nbt/NbtElement
+  RAW byte END_TYPE = 0;
+  RAW byte BYTE_TYPE = 1;
+  RAW byte SHORT_TYPE = 2;
+  RAW byte INT_TYPE = 3;
+  RAW byte LONG_TYPE = 4;
+  RAW byte FLOAT_TYPE = 5;
+  RAW byte DOUBLE_TYPE = 6;
+  RAW byte BYTE_ARRAY_TYPE = 7;
+  RAW byte STRING_TYPE = 8;
+  RAW byte LIST_TYPE = 9;
+  RAW byte COMPOUND_TYPE = 10;
+  RAW byte INT_ARRAY_TYPE = 11;
+  RAW byte LONG_ARRAY_TYPE = 12;
+
+CLASS net/minecraft/nbt/NbtCompound IMPLEMENTS net/minecraft/nbt/NbtElement
+  CTOR ()V
+  METHOD putInt
+  METHOD getInt
+  METHOD putLong
+  METHOD getLong
+  METHOD putDouble
+  METHOD getDouble
+  METHOD putFloat
+  METHOD getFloat
+  METHOD putString
+  METHOD getString
+  METHOD putBoolean
+  METHOD getBoolean
+  METHOD putUuid
+  METHOD getUuid
+  METHOD put
+  METHOD getCompound
+  METHOD getList
+  METHOD contains ARGS (Ljava/lang/String;)
+  METHOD getKeys
+
+CLASS net/minecraft/nbt/NbtList IMPLEMENTS net/minecraft/nbt/NbtElement
+  METHOD getCompound
+  RAW public int size() { return 0; }
+
+CLASS net/minecraft/nbt/NbtSizeTracker
+  METHOD ofUnlimitedBytes STATIC
+CLASS net/minecraft/nbt/NbtIo
+  METHOD readCompressed STATIC ARGS (Ljava/nio/file/Path; THROWS java/io/IOException
+  METHOD writeCompressed STATIC ARGS (Lnet/minecraft/nbt/NbtCompound;Ljava/nio/file/Path;) THROWS java/io/IOException
+
+# ---------------- server ----------------
+CLASS net/minecraft/server/MinecraftServer
+  RAW public void execute(java.lang.Runnable r) {}
+  METHOD getPlayerManager
+  METHOD getAdvancementLoader
+  METHOD getSavePath
+
+CLASS net/minecraft/server/PlayerManager
+  RAW public java.util.List<net.minecraft.server.network.ServerPlayerEntity> getPlayerList() { return null; }
+
+CLASS net/minecraft/server/ServerAdvancementLoader
+  METHOD get
+
+CLASS net/minecraft/advancement/PlayerAdvancementTracker
+  METHOD grantCriterion
+
+CLASS net/minecraft/advancement/AdvancementEntry
+
+# ---------------- commands ----------------
+CLASS net/minecraft/server/command/CommandManager
+  METHOD literal STATIC
+  METHOD argument STATIC
+
+CLASS net/minecraft/server/command/CommandManager$RegistrationEnvironment
+
+CLASS net/minecraft/server/command/AbstractServerCommandSource
+  METHOD hasPermissionLevel
+
+CLASS net/minecraft/server/command/ServerCommandSource EXTENDS net/minecraft/server/command/AbstractServerCommandSource
+  METHOD sendMessage
+  METHOD sendFeedback
+  METHOD getPlayerOrThrow
+  METHOD getPlayer
+  METHOD getWorld
+  METHOD getEntity
+  METHOD getServer
+  METHOD getPosition
+  METHOD getRotation
+
+# ---------------- client ----------------
+CLASS net/minecraft/client/MinecraftClient
+  FIELD currentScreen
+  FIELD textRenderer
+  RAW public void execute(java.lang.Runnable r) {}
+  FIELD player
+  FIELD world
+  FIELD options
+  FIELD gameRenderer
+  FIELD crosshairTarget
+  METHOD getInstance STATIC
+  METHOD setScreen
+  METHOD isPaused
+
+CLASS net/minecraft/client/option/GameOptions
+  FIELD jumpKey
+  METHOD getFov
+
+CLASS net/minecraft/client/option/SimpleOption
+  METHOD getValue
+  METHOD setValue
+
+CLASS net/minecraft/client/option/KeyBinding
+  CTOR (Ljava/lang/String;Lnet/minecraft/client/util/InputUtil$Type;ILjava/lang/String;)V
+  METHOD isPressed
+  METHOD wasPressed
+  METHOD setPressed
+
+CLASS net/minecraft/client/util/InputUtil
+
+HOLDER net/minecraft/client/util/InputUtil$Type
+  FIELD KEYSYM STATIC
+  FIELD MOUSE STATIC
+
+CLASS net/minecraft/client/network/ClientPlayerEntity EXTENDS net/minecraft/entity/player/PlayerEntity
+  FIELD input
+
+CLASS net/minecraft/client/input/Input
+  FIELD pressingForward
+  FIELD pressingBack
+  FIELD pressingLeft
+  FIELD pressingRight
+  FIELD jumping
+  FIELD sneaking
+  FIELD movementForward
+  FIELD movementSideways
+
+CLASS net/minecraft/client/render/Camera
+  METHOD getPos
+  METHOD getYaw
+  METHOD getPitch
+  METHOD isThirdPerson
+
+CLASS net/minecraft/client/render/GameRenderer
+  METHOD getCamera
+  METHOD getFov
+  METHOD renderWorld
+
+CLASS net/minecraft/client/gui/screen/Screen ABSTRACT IMPLEMENTS net/minecraft/client/gui/Drawable
+  CTOR (Lnet/minecraft/text/Text;)V
+  FIELD width
+  FIELD height
+  FIELD client
+  FIELD textRenderer
+  METHOD init ARGS ()
+  METHOD close
+  METHOD shouldPause
+  RAW public boolean mouseClicked(double a, double b, int c) { return false; }
+  RAW public boolean mouseReleased(double a, double b, int c) { return false; }
+  RAW public boolean mouseDragged(double a, double b, int c, double d, double e) { return false; }
+  RAW public boolean mouseScrolled(double a, double b, double c, double d) { return false; }
+  RAW public boolean keyPressed(int a, int b, int c) { return false; }
+  RAW public boolean keyReleased(int a, int b, int c) { return false; }
+  RAW public boolean charTyped(char a, int b) { return false; }
+  RAW public void mouseMoved(double a, double b) {}
+  RAW public boolean isMouseOver(double a, double b) { return false; }
+  RAW public boolean isFocused() { return false; }
+  RAW public void setFocused(boolean a) {}
+  RAW public net.minecraft.client.gui.navigation.GuiNavigationPath getFocusedPath() { return null; }
+  RAW public net.minecraft.client.gui.navigation.GuiNavigationPath getNavigationPath(net.minecraft.client.gui.navigation.GuiNavigation a) { return null; }
+  RAW public net.minecraft.client.gui.ScreenRect getNavigationFocus() { return null; }
+
+CLASS net/minecraft/client/gui/navigation/GuiNavigationPath
+
+CLASS net/minecraft/client/gui/navigation/GuiNavigation
+
+CLASS net/minecraft/client/gui/ScreenRect
+
+INTERFACE net/minecraft/client/gui/Drawable
+  METHOD render
+
+INTERFACE net/minecraft/client/gui/Element
+  METHOD mouseClicked
+  METHOD mouseReleased
+  METHOD keyPressed
+  METHOD mouseMoved
+
+CLASS net/minecraft/client/gui/DrawContext
+  METHOD getScaledWindowWidth
+  METHOD getScaledWindowHeight
+  METHOD drawCenteredTextWithShadow ARGS text/Text;III)
+  METHOD drawTextWithShadow ARGS text/Text;III)
+  METHOD fill ARGS (IIIII)
+  METHOD drawGuiTexture ARGS (Lnet/minecraft/util/Identifier;IIII)
+  METHOD getMatrices
+
+CLASS net/minecraft/client/font/TextRenderer
+  FIELD fontHeight
+  METHOD getWidth ARGS (Ljava/lang/String;)
+  METHOD getWidth ARGS (Lnet/minecraft/text/StringVisitable;)
+
+CLASS net/minecraft/client/util/math/MatrixStack
+  METHOD push
+  METHOD pop
+  METHOD translate ARGS (DDD)
+  METHOD scale
+  METHOD multiply ARGS (Lorg/joml/Quaternionf;)
+
+CLASS net/minecraft/client/render/RenderLayer
+  METHOD getLines STATIC
+  METHOD getEntityCutout STATIC
+
+CLASS net/minecraft/client/render/VertexConsumerProvider
+  METHOD getBuffer
+
+INTERFACE net/minecraft/client/render/VertexConsumer
+
+CLASS net/minecraft/client/render/WorldRenderer
+  METHOD drawBox STATIC ARGS Box;FFFF)
+
+CLASS net/minecraft/client/render/OverlayTexture
+  FIELD DEFAULT_UV STATIC
+
+CLASS net/minecraft/client/render/RenderTickCounter
+  METHOD getTickDelta
+  METHOD getLastFrameDuration
+
+CLASS net/minecraft/client/model/ModelPart
+  CTOR (Ljava/util/List;Ljava/util/Map;)V
+  FIELD pitch
+  FIELD yaw
+  FIELD roll
+  METHOD setPivot
+  RAW public void render(net.minecraft.client.util.math.MatrixStack matrices, net.minecraft.client.render.VertexConsumer vertices, int light, int overlay) {}
+
+CLASS net/minecraft/client/model/ModelPart$Cuboid
+  CTOR (IIFFFFFFFFFZFFLjava/util/Set;)V
+
+CLASS net/minecraft/client/render/entity/model/BipedEntityModel
+
+CLASS net/minecraft/client/render/entity/model/EntityModelLayer
+  CTOR (Lnet/minecraft/util/Identifier;Ljava/lang/String;)V
+
+CLASS net/minecraft/client/render/entity/model/EntityModelLayers
+  FIELD SPIDER STATIC

@@ -1,0 +1,15 @@
+{
+  "parent": "spiderman:stage_1",
+  "display": {
+    "icon": { "item": "minecraft:string" },
+    "title": { "translate": "advancement.spiderman.stage_2.title" },
+    "description": { "translate": "advancement.spiderman.stage_2.description" },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "trigger": { "trigger": "minecraft:impossible" }
+  }
+}

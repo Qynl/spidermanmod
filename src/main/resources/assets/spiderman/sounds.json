@@ -1,0 +1,23 @@
+{
+  "web_shot": {
+    "sounds": [{ "name": "spiderman:web_shot", "stream": false }]
+  },
+  "web_splat": {
+    "sounds": [{ "name": "spiderman:web_splat", "stream": false }]
+  },
+  "web_zip": {
+    "sounds": [{ "name": "spiderman:web_zip", "stream": false }]
+  },
+  "sense_tingle": {
+    "sounds": [{ "name": "spiderman:sense_tingle", "stream": false }]
+  },
+  "stage_up": {
+    "sounds": [{ "name": "spiderman:stage_up", "stream": false }]
+  },
+  "transform": {
+    "sounds": [{ "name": "spiderman:transform", "stream": true }]
+  },
+  "wheel_tick": {
+    "sounds": [{ "name": "spiderman:wheel_tick", "stream": false }]
+  }
+}

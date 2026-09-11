@@ -60,9 +60,9 @@ See [`build-local/README.md`](build-local/README.md) for how the local toolchain
 ## 🧪 Testing
 
 - `javac` compile of every source against the declared API surface
-- Automated Yarn 1.21.1 mapping verification (`build-local/verify_yarn.py`) so every
-  vanilla reference is guaranteed to exist with the right descriptor
-- Pure-logic unit tests: swing physics, wheel math, progression, config
+- Automated remap + jar verification (`build-local/verify.py`) so every vanilla
+  reference is guaranteed to exist with the right Intermediary name/descriptor
+- Pure-logic unit tests: ability registry, client powers/progression, wheel math
   (`src/test/java`, run with `./build-local/test.sh`)
 - Jar integrity checks (mappings, refmap, assets, sounds, advancements, lang)
 

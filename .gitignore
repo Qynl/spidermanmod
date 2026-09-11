@@ -19,9 +19,17 @@ Thumbs.db
 
 # Local build outputs (kept out of git; release jars are attached to GitHub releases)
 /local-build/
+build-local/classes/
+build-local/classes-named/
+build-local/gen-stubs/
+build-local/jar-work/
+build-local/stub-classes/
+build-local/test-classes/
+build-local/spiderman-*.jar
 *.jar
 !gradle/wrapper/gradle-wrapper.jar
 
 # Python tooling caches
 __pycache__/
 *.pyc
+build-local/test-sources.txt

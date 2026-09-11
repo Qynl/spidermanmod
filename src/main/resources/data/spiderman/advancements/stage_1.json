@@ -1,0 +1,15 @@
+{
+  "parent": "spiderman:transformation",
+  "display": {
+    "icon": { "item": "minecraft:ladder" },
+    "title": { "translate": "advancement.spiderman.stage_1.title" },
+    "description": { "translate": "advancement.spiderman.stage_1.description" },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "trigger": { "trigger": "minecraft:impossible" }
+  }
+}

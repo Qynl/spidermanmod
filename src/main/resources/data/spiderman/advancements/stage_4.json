@@ -1,0 +1,15 @@
+{
+  "parent": "spiderman:stage_3",
+  "display": {
+    "icon": { "item": "minecraft:nether_star" },
+    "title": { "translate": "advancement.spiderman.stage_4.title" },
+    "description": { "translate": "advancement.spiderman.stage_4.description" },
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "trigger": { "trigger": "minecraft:impossible" }
+  }
+}

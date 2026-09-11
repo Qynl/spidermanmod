@@ -1,0 +1,15 @@
+{
+  "parent": "spiderman:stage_2",
+  "display": {
+    "icon": { "item": "minecraft:lead" },
+    "title": { "translate": "advancement.spiderman.stage_3.title" },
+    "description": { "translate": "advancement.spiderman.stage_3.description" },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "trigger": { "trigger": "minecraft:impossible" }
+  }
+}

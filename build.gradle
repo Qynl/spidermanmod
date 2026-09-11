@@ -11,14 +11,8 @@ base {
 }
 
 loom {
-    splitEnvironmentSourceSets()
-
-    mods {
-        "spiderman" {
-            sourceSet sourceSets.main
-            sourceSet sourceSets.client
-        }
-    }
+    // Single source set: client code lives under com.spiderman.mod.client and is
+    // only touched from the client entrypoint, so no splitEnvironmentSourceSets.
 }
 
 repositories {

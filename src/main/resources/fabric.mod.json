@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "id": "spiderman",
+  "version": "${version}",
+  "name": "Spider-Man",
+  "description": "Become a Spider-Man-like hero: a rare radioactive bite, staged power progression, organic wrist webs, momentum swinging, wall-crawling and directional spider-sense.",
+  "authors": ["Qynl"],
+  "license": "MIT",
+  "environment": "*",
+  "entrypoints": {
+    "main": ["com.spiderman.mod.SpiderManMod"],
+    "client": ["com.spiderman.mod.SpiderManClient"]
+  },
+  "mixins": ["spiderman.mixins.json"],
+  "depends": {
+    "fabricloader": ">=0.16.0",
+    "fabric-api": "*",
+    "minecraft": "~1.21.1",
+    "java": ">=21"
+  }
+}

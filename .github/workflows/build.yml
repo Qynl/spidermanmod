@@ -31,3 +31,31 @@ jobs:
           name: spiderman-jar
           path: build/libs/*.jar
           if-no-files-found: warn
+
+  # Validates the offline toolchain (build-local/): stub generation, named
+  # compile, Yarn -> Intermediary remap, refmap, jar checks, unit tests.
+  local-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Offline build + unit tests
+        run: |
+          chmod +x build-local/build.sh build-local/test.sh
+          export JAVAC="$JAVA_HOME/bin/javac"
+          ./build-local/build.sh
+          ./build-local/test.sh
+
+      - name: Upload offline jar
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: spiderman-jar-offline
+          path: build-local/spiderman-*.jar
+          if-no-files-found: warn
