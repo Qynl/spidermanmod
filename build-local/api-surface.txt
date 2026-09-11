@@ -240,6 +240,7 @@ CLASS net/minecraft/entity/Entity
   FIELD velocityModified
   METHOD getYaw ARGS ()
   METHOD getPitch ARGS ()
+  METHOD getHorizontalFacing
   METHOD squaredDistanceTo ARGS (Lnet/minecraft/entity/Entity;)
   METHOD squaredDistanceTo ARGS (Lnet/minecraft/util/math/Vec3d;)
   METHOD initDataTracker
