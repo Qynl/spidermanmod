@@ -17,7 +17,9 @@ public final class ClimbLogic {
     }
 
     public static void tick(ServerPlayerEntity player, PlayerPowers powers) {
-        if (!powers.hasPowers || powers.stage < 1 || powers.swinging || powers.zipTicks > 0) {
+        // Climbing works from stage 0: wall-crawling is the first thing a
+        // fresh spider-person can do, and its mastery feeds stage 1.
+        if (!powers.hasPowers || powers.swinging || powers.zipTicks > 0) {
             setClimbing(player, powers, false);
             return;
         }

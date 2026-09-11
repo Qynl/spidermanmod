@@ -68,8 +68,8 @@ There are five stages, represented internally as stages `0` through `4`:
 
 | Stage | Name | Main progression theme |
 |---:|---|---|
-| 0 | **Latent Senses** | Initial physical enhancement and the beginning of the spider transformation |
-| 1 | **Wall Crawler** | Wall/ceiling movement and stronger traversal |
+| 0 | **Latent Senses** | Initial physical enhancement; wall/ceiling crawling begins, feeding mastery toward stage 1 |
+| 1 | **Superhuman** | Enhanced strength, speed and fall resistance |
 | 2 | **Web Slinger** | Spider-Sense and the core web-slinging toolkit begins |
 | 3 | **Sky Dancer** | Higher-level web traversal and mobility |
 | 4 | **Spider Master** | Full progression and the highest-stage abilities |
@@ -83,9 +83,14 @@ Stage thresholds are configurable. The default configuration uses mastery thresh
 1400 → stage 4
 ```
 
-Mastery is earned by actually using the powers. Different systems award different amounts, including web abilities, swinging, wall traversal, Spider-Sense activity, and other successful power interactions.
+Mastery is earned by actually using the powers. Different systems award different amounts, including web abilities, swinging, wall traversal, Spider-Sense activity, and other successful power interactions. Freshly bitten players at stage 0 earn mastery by climbing walls and ceilings (about +1 per second of contact, plus bonuses for wall jumps).
 
 The progression is persistent per player and is synchronized to the client so the UI can represent the current power state.
+
+### Testing commands
+
+- `/spm give <player>`, `/spm reset <player>`, `/spm stage <player> <0-4>` — admin commands, require permission level 2 (OP/cheats).
+- `/spm stageup` — raises your own stage by one (granting powers first if needed). Usable only in creative mode, so survival progression stays earned.
 
 ---
 

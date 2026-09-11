@@ -12,14 +12,15 @@ import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 
+import com.spiderman.mod.ModSounds;
 import com.spiderman.mod.server.TransformLogic;
 import com.spiderman.mod.net.ServerNetworking;
 import com.spiderman.mod.state.PlayerPowers;
 import com.spiderman.mod.state.SpiderState;
 
 /**
- * Admin commands: {@code /spm give|reset|stage}. Everything else in the mod
- * is earned through play.
+ * Mod commands: {@code /spm give|reset|stage} for admins (permission level 2)
+ * plus {@code /spm stageup} for testing, usable only in creative mode.
  */
 public final class SpmCommands {
     private SpmCommands() {
@@ -31,10 +32,13 @@ public final class SpmCommands {
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     public static void build(CommandDispatcher<ServerCommandSource> dispatcher) {
+        // NOTE: the root carries no requires() so each branch keeps its own
+        // gate (brigadier hides children whose requirement fails): the admin
+        // branches stay OP-only while stageup is creative-only.
         LiteralArgumentBuilder root = CommandManager.literal("spm");
-        root.requires(src -> ((ServerCommandSource) src).hasPermissionLevel(2));
 
         LiteralArgumentBuilder give = CommandManager.literal("give");
+        give.requires(src -> ((ServerCommandSource) src).hasPermissionLevel(2));
         RequiredArgumentBuilder giveTarget =
                 CommandManager.argument("target", EntityArgumentType.player());
         giveTarget.executes(ctx -> {
@@ -47,6 +51,7 @@ public final class SpmCommands {
         root.then(give);
 
         LiteralArgumentBuilder reset = CommandManager.literal("reset");
+        reset.requires(src -> ((ServerCommandSource) src).hasPermissionLevel(2));
         RequiredArgumentBuilder resetTarget =
                 CommandManager.argument("target", EntityArgumentType.player());
         resetTarget.executes(ctx -> {
@@ -59,6 +64,7 @@ public final class SpmCommands {
         root.then(reset);
 
         LiteralArgumentBuilder stage = CommandManager.literal("stage");
+        stage.requires(src -> ((ServerCommandSource) src).hasPermissionLevel(2));
         RequiredArgumentBuilder stageTarget =
                 CommandManager.argument("target", EntityArgumentType.player());
         RequiredArgumentBuilder stageValue =
@@ -79,7 +85,37 @@ public final class SpmCommands {
         stage.then(stageTarget);
         root.then(stage);
 
+        LiteralArgumentBuilder stageup = CommandManager.literal("stageup");
+        stageup.requires(SpmCommands::isCreativePlayer);
+        stageup.executes(ctx -> {
+            if (!(ctx.getSource().getEntity() instanceof ServerPlayerEntity player)) {
+                return 0;
+            }
+            PlayerPowers powers = SpiderState.get(player.getUuid());
+            if (!powers.hasPowers) {
+                TransformLogic.grantBite(player);
+            }
+            if (powers.stage >= 4) {
+                feedback(ctx.getSource(), "Already at max stage (4).");
+                return Command.SINGLE_SUCCESS;
+            }
+            powers.stage++;
+            TransformLogic.applyStageAttributes(player, powers);
+            player.playSound(ModSounds.STAGE_UP, 1.0f, 1.0f);
+            ServerNetworking.sendPowers(player);
+            TransformLogic.grantAdvancement(player, "stage_" + powers.stage);
+            feedback(ctx.getSource(), "Stage set to " + powers.stage + ".");
+            return Command.SINGLE_SUCCESS;
+        });
+        root.then(stageup);
+
         dispatcher.register(root);
+    }
+
+    private static boolean isCreativePlayer(Object src) {
+        return src instanceof ServerCommandSource source
+                && source.getEntity() instanceof ServerPlayerEntity player
+                && player.isCreative();
     }
 
     private static void feedback(Object source, String message) {
