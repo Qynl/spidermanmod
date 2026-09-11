@@ -37,6 +37,7 @@ public class SpiderManMod implements ModInitializer {
         LOGGER.info("[spiderman] initializing (common)");
         SpiderConfig.load();
         ModEntities.register();
+        ModItems.register();
         ModSounds.register();
         ServerNetworking.register();
         SpmCommands.register();

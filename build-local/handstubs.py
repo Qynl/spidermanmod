@@ -92,6 +92,7 @@ stub("net/minecraft/registry/Registries.java", """package net.minecraft.registry
 public class Registries {
     public static DefaultedRegistry<net.minecraft.entity.EntityType<?>> ENTITY_TYPE;
     public static Registry<net.minecraft.sound.SoundEvent> SOUND_EVENT;
+    public static DefaultedRegistry<net.minecraft.item.Item> ITEM;
 }
 """)
 
@@ -894,6 +895,29 @@ stub("com/mojang/authlib/GameProfile.java", """package com.mojang.authlib;
 public class GameProfile {
     public java.util.UUID getId() { return null; }
     public String getName() { return null; }
+}
+""")
+
+stub("net/fabricmc/fabric/api/itemgroup/v1/ItemGroupEvents.java", """package net.fabricmc.fabric.api.itemgroup.v1;
+
+public class ItemGroupEvents {
+    public static net.fabricmc.fabric.api.event.Event<ModifyEntries> modifyEntriesEvent(
+            net.minecraft.registry.RegistryKey<net.minecraft.item.ItemGroup> groupKey) { return null; }
+
+    public interface ModifyEntries {
+        void modifyEntries(net.minecraft.item.ItemGroup.Entries entries);
+    }
+}
+""")
+
+# Same erasure as real (fabric-api 0.116): register(P provider, T... items).
+stub("net/fabricmc/fabric/api/client/rendering/v1/ColorProviderRegistry.java", """package net.fabricmc.fabric.api.client.rendering.v1;
+
+public class ColorProviderRegistry<T, P> {
+    public static ColorProviderRegistry<net.minecraft.item.ItemConvertible,
+            net.minecraft.client.color.item.ItemColorProvider> ITEM;
+
+    public void register(P provider, T... items) { }
 }
 """)
 

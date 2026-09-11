@@ -463,6 +463,25 @@ CLASS net/minecraft/item/Items
 CLASS net/minecraft/item/ItemStack
   CTOR (Lnet/minecraft/item/ItemConvertible;)V
   CTOR (Lnet/minecraft/item/ItemConvertible;I)V
+  METHOD getItem
+
+CLASS net/minecraft/item/SpawnEggItem EXTENDS net/minecraft/item/Item
+  CTOR (Lnet/minecraft/entity/EntityType;IILnet/minecraft/item/Item$Settings;)V
+  METHOD getColor
+
+CLASS net/minecraft/item/Item$Settings
+  CTOR ()V
+
+CLASS net/minecraft/item/ItemGroup
+
+INTERFACE net/minecraft/item/ItemGroup$Entries
+  METHOD add ARGS (Lnet/minecraft/item/ItemConvertible;)
+
+CLASS net/minecraft/item/ItemGroups
+  FIELD SPAWN_EGGS STATIC
+
+INTERFACE net/minecraft/client/color/item/ItemColorProvider
+  METHOD getColor
 
 # ---------------- attribute ----------------
 CLASS net/minecraft/entity/attribute/EntityAttributes

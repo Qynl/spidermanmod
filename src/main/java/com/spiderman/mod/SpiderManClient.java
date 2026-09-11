@@ -3,9 +3,12 @@ package com.spiderman.mod;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
+import net.fabricmc.fabric.api.client.rendering.v1.ColorProviderRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
+
+import net.minecraft.item.SpawnEggItem;
 
 import com.spiderman.mod.client.ClientTickHandler;
 import com.spiderman.mod.client.HudRenderer;
@@ -28,6 +31,10 @@ public class SpiderManClient implements ClientModInitializer {
         ClientNetworking.register();
         EntityRendererRegistry.register(ModEntities.RADIOACTIVE_SPIDER, RadioactiveSpiderRenderer::new);
         EntityRendererRegistry.register(ModEntities.WEB_SHOT, WebShotRenderer::new);
+        // Vanilla only tint-registers its own spawn eggs; ours needs it explicit.
+        ColorProviderRegistry.ITEM.register((stack, tintIndex) ->
+                ((SpawnEggItem) stack.getItem()).getColor(tintIndex),
+                ModItems.RADIOACTIVE_SPIDER_SPAWN_EGG);
         HudRenderCallback.EVENT.register(HudRenderer::onHudRender);
         WorldRenderEvents.AFTER_ENTITIES.register(StrandRenderer::afterEntities);
         ClientTickEvents.END_CLIENT_TICK.register(ClientTickHandler::onEndTick);
