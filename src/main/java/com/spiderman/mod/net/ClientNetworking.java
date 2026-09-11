@@ -1,7 +1,6 @@
 package com.spiderman.mod.net;
 
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
-import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.minecraft.client.network.ClientPlayerEntity;
 
 import com.spiderman.mod.ModSounds;
@@ -13,14 +12,9 @@ public final class ClientNetworking {
     }
 
     public static void register() {
-        PayloadTypeRegistry.playC2S().register(AbilityUseC2S.ID, AbilityUseC2S.CODEC);
-        PayloadTypeRegistry.playC2S().register(WheelSelectC2S.ID, WheelSelectC2S.CODEC);
-        PayloadTypeRegistry.playC2S().register(WallJumpC2S.ID, WallJumpC2S.CODEC);
-        PayloadTypeRegistry.playS2C().register(PowersSyncS2C.ID, PowersSyncS2C.CODEC);
-        PayloadTypeRegistry.playS2C().register(SwingStateS2C.ID, SwingStateS2C.CODEC);
-        PayloadTypeRegistry.playS2C().register(SensePingS2C.ID, SensePingS2C.CODEC);
-        PayloadTypeRegistry.playS2C().register(ComboS2C.ID, ComboS2C.CODEC);
-
+        // Payload types are registered once in ServerNetworking (main entrypoint,
+        // which runs on both sides). Registering them here too crashes the
+        // client with "already registered", since Fabric runs main, then client.
         ClientPlayNetworking.registerGlobalReceiver(PowersSyncS2C.ID, (payload, context) ->
                 context.client().execute(() -> {
                     boolean had = ClientPowers.has;
