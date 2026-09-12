@@ -153,13 +153,13 @@ public enum Archetype {
         survivor.equipStack(EquipmentSlot.MAINHAND, rollWeapon(random, enchantments));
         survivor.equipStack(EquipmentSlot.OFFHAND, ranged ? rangedStack() : new ItemStack(Items.SHIELD));
         equipSlot(survivor, random, EquipmentSlot.HEAD,
-                Items.LEATHER_HELMET, Items.CHAINMAIL_HELMET, Items.IRON_HELMET, Items.DIAMOND_HELMET, helmet);
+                Items.LEATHER_HELMET, Items.CHAINMAIL_HELMET, Items.IRON_HELMET, Items.DIAMOND_HELMET, helmet, enchantments);
         equipSlot(survivor, random, EquipmentSlot.CHEST,
-                Items.LEATHER_CHESTPLATE, Items.CHAINMAIL_CHESTPLATE, Items.IRON_CHESTPLATE, Items.DIAMOND_CHESTPLATE, chestplate);
+                Items.LEATHER_CHESTPLATE, Items.CHAINMAIL_CHESTPLATE, Items.IRON_CHESTPLATE, Items.DIAMOND_CHESTPLATE, chestplate, enchantments);
         equipSlot(survivor, random, EquipmentSlot.LEGS,
-                Items.LEATHER_LEGGINGS, Items.CHAINMAIL_LEGGINGS, Items.IRON_LEGGINGS, Items.DIAMOND_LEGGINGS, leggings);
+                Items.LEATHER_LEGGINGS, Items.CHAINMAIL_LEGGINGS, Items.IRON_LEGGINGS, Items.DIAMOND_LEGGINGS, leggings, enchantments);
         equipSlot(survivor, random, EquipmentSlot.FEET,
-                Items.LEATHER_BOOTS, Items.CHAINMAIL_BOOTS, Items.IRON_BOOTS, Items.DIAMOND_BOOTS, boots);
+                Items.LEATHER_BOOTS, Items.CHAINMAIL_BOOTS, Items.IRON_BOOTS, Items.DIAMOND_BOOTS, boots, enchantments);
         survivor.setEquipmentDropChance(EquipmentSlot.MAINHAND, 1.0f);
         survivor.setEquipmentDropChance(EquipmentSlot.OFFHAND, 1.0f);
         survivor.setEquipmentDropChance(EquipmentSlot.HEAD, 1.0f);
