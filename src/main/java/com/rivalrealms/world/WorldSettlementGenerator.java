@@ -57,7 +57,20 @@ public final class WorldSettlementGenerator {
 
         // Rare treasure shrines ignore biome borders: old gods had no borders.
         if (hash % 11L == 0L) {
-            return new SettlementPlan(BuildStyle.CUSTOM, SettlementVariant.TEMPLE);
+            state.markGeneratedSite(center);
+            UUID shrineOwner = UUID.nameUUIDFromBytes((RivalRealms.MOD_ID + ":generated:" + world.getSeed()
+                    + ":" + center.asLong()).getBytes(StandardCharsets.UTF_8));
+            try {
+                StructureBuilder.buildScattered(world, center, BuildStyle.CUSTOM, SettlementVariant.TEMPLE);
+                String shrineName = BuildStyle.CUSTOM.displayName() + " · "
+                        + SettlementVariant.TEMPLE.name().toLowerCase(Locale.ROOT);
+                state.claimGeneratedBase(center, shrineOwner, BuildStyle.CUSTOM, shrineName);
+                RealmEvents.populateSettlement(world, center, BuildStyle.CUSTOM, SettlementVariant.TEMPLE);
+                RivalRealms.LOGGER.info("Generated {} at {}", shrineName, center);
+            } catch (RuntimeException exception) {
+                RivalRealms.LOGGER.error("Failed to generate Rival Realms site at {}", center, exception);
+            }
+            return;
         }
         String biome = biomePath(world, center);
         SettlementPlan plan = planFor(biome, hash);
