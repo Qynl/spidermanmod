@@ -9,6 +9,11 @@ import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
 import net.minecraft.util.Identifier;
 
+/**
+ * Every Rival Realms entity is built from scratch: a piloted zeppelin, three
+ * sailing ships (merchant cog, pirate raider, player sloop), a cannonball and
+ * the humanoid survivor.
+ */
 public final class ModEntities {
     public static final EntityType<SurvivorEntity> SURVIVOR = register(
             "survivor",
@@ -21,23 +26,39 @@ public final class ModEntities {
     public static final EntityType<AirshipEntity> AIRSHIP = register(
             "airship",
             EntityType.Builder.create(AirshipEntity::new, SpawnGroup.MISC)
-                    .dimensions(1.4f, 0.7f)
-                    .maxTrackingRange(96)
+                    .dimensions(2.0f, 2.9f)
+                    .maxTrackingRange(160)
                     .trackingTickInterval(1)
     );
 
     public static final EntityType<MerchantShipEntity> MERCHANT_SHIP = register(
             "merchant_ship",
             EntityType.Builder.create(MerchantShipEntity::new, SpawnGroup.MISC)
-                    .dimensions(1.6f, 0.8f)
-                    .maxTrackingRange(96)
+                    .dimensions(2.2f, 2.3f)
+                    .maxTrackingRange(160)
                     .trackingTickInterval(1)
     );
 
     public static final EntityType<PirateShipEntity> PIRATE_SHIP = register(
             "pirate_ship",
             EntityType.Builder.create(PirateShipEntity::new, SpawnGroup.MISC)
-                    .dimensions(1.6f, 0.8f)
+                    .dimensions(2.2f, 2.3f)
+                    .maxTrackingRange(160)
+                    .trackingTickInterval(1)
+    );
+
+    public static final EntityType<SloopEntity> SLOOP = register(
+            "sloop",
+            EntityType.Builder.create(SloopEntity::new, SpawnGroup.MISC)
+                    .dimensions(1.3f, 1.6f)
+                    .maxTrackingRange(160)
+                    .trackingTickInterval(1)
+    );
+
+    public static final EntityType<CannonballEntity> CANNONBALL = register(
+            "cannonball",
+            EntityType.Builder.create(CannonballEntity::new, SpawnGroup.MISC)
+                    .dimensions(0.45f, 0.45f)
                     .maxTrackingRange(96)
                     .trackingTickInterval(1)
     );
@@ -52,6 +73,6 @@ public final class ModEntities {
 
     public static void register() {
         FabricDefaultAttributeRegistry.register(SURVIVOR, SurvivorEntity.createAttributes());
-        RivalRealms.LOGGER.info("Registered Rival Realms survivors, airships, merchant ships and pirate raiders.");
+        RivalRealms.LOGGER.info("Registered survivors, airships, sailing ships, sloops and cannonballs.");
     }
 }

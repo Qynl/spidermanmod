@@ -1,9 +1,0 @@
-{
-  "type": "minecraft:crafting_shaped",
-  "pattern": ["S S", "SSS", " B "],
-  "key": {
-    "S": {"item": "rivalrealms:ship_planks"},
-    "B": {"item": "minecraft:chest"}
-  },
-  "result": {"id": "rivalrealms:pirate_boat", "count": 1}
-}

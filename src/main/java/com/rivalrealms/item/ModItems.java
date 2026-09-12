@@ -4,32 +4,40 @@ import com.rivalrealms.RivalRealms;
 import com.rivalrealms.block.ModBlocks;
 import com.rivalrealms.entity.Archetype;
 import com.rivalrealms.entity.ModEntities;
-import net.minecraft.entity.vehicle.BoatEntity;
 import net.minecraft.item.BlockItem;
-import net.minecraft.item.BoatItem;
 import net.minecraft.item.Item;
 import net.minecraft.item.SwordItem;
 import net.minecraft.item.ToolMaterials;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
 
+/**
+ * Every Rival Realms item. Guns are distinct weapons (revolver = fast and
+ * precise, flintlock = heavy and piercing), the longsword has an active
+ * cleave, and the vehicles ship as craftable kits rather than repainted
+ * vanilla items.
+ */
 public final class ModItems {
     public static final Item RECRUITMENT_CONTRACT = register("recruitment_contract",
             new Item(new Item.Settings().maxCount(16)));
     public static final Item REVOLVER = register("revolver",
-            new RevolverItem(new Item.Settings().maxCount(1).maxDamage(160), 9.0f, 14, 28.0f));
+            new RevolverItem(new Item.Settings().maxCount(1).maxDamage(220), 7.5f, 12, 30.0f));
     public static final Item FLINTLOCK = register("flintlock",
-            new FlintlockItem(new Item.Settings().maxCount(1).maxDamage(80)));
-    public static final Item PIRATE_BOAT = register("pirate_boat",
-            new BoatItem(false, BoatEntity.Type.SPRUCE, new Item.Settings().maxCount(1)));
+            new FlintlockItem(new Item.Settings().maxCount(1).maxDamage(120)));
     public static final Item ROYAL_LONGSWORD = register("royal_longsword",
-            new SwordItem(ToolMaterials.DIAMOND, new Item.Settings().maxCount(1).maxDamage(720)));
+            new RoyalLongswordItem(ToolMaterials.DIAMOND, new Item.Settings().maxCount(1).maxDamage(860)));
     public static final Item ROYAL_COIN = register("royal_coin",
             new Item(new Item.Settings().maxCount(64)));
     public static final Item ROYAL_JEWELRY = register("royal_jewelry",
             new Item(new Item.Settings().maxCount(16)));
     public static final Item MEDIEVAL_MAP = register("medieval_map",
             new MedievalMapItem(new Item.Settings().maxCount(1)));
+    public static final Item CANNONBALL = register("cannonball",
+            new CannonballItem(new Item.Settings().maxCount(16)));
+    public static final Item SHIP_IN_A_BOTTLE = register("ship_in_a_bottle",
+            new ShipInBottleItem(new Item.Settings().maxCount(1), ModEntities.SLOOP));
+    public static final Item AIRSHIP_KIT = register("airship_kit",
+            new AirshipKitItem(new Item.Settings().maxCount(1)));
     public static final Item SURVIVOR_SPAWN_EGG = register("survivor_spawn_egg",
             new SurvivorSpawnEggItem(new Item.Settings().maxCount(16)));
     public static final Item KNIGHT_SPAWN_EGG = register("knight_spawn_egg",
@@ -40,12 +48,13 @@ public final class ModItems {
             new SurvivorSpawnEggItem(new Item.Settings().maxCount(16), Archetype.OUTLAW));
     public static final Item SKY_CAPTAIN_SPAWN_EGG = register("sky_captain_spawn_egg",
             new SurvivorSpawnEggItem(new Item.Settings().maxCount(16), Archetype.SKY_CAPTAIN));
-    public static final Item AIRSHIP_SPAWN_EGG = register("airship_spawn_egg",
-            new AirshipSpawnEggItem(new Item.Settings().maxCount(16)));
     public static final Item MERCHANT_SHIP_SPAWN_EGG = register("merchant_ship_spawn_egg",
             new ShipSpawnEggItem(new Item.Settings().maxCount(16), ModEntities.MERCHANT_SHIP));
     public static final Item PIRATE_SHIP_SPAWN_EGG = register("pirate_ship_spawn_egg",
-            new ShipSpawnEggItem(new Item.Settings().maxCount(16), ModEntities.PIRATE_SHIP));
+            new ShipSpawnEggItem(new Item.Settings().maxCount(16), ModEntities.PIRATE_SHIP, true));
+
+    /** Block item handle for airship metal; assigned during {@link #register()}. */
+    public static Item AIRSHIP_METAL;
 
     private ModItems() {
     }
@@ -65,9 +74,9 @@ public final class ModItems {
         registerBlockItem("royal_wood", ModBlocks.ROYAL_WOOD);
         registerBlockItem("ship_planks", ModBlocks.SHIP_PLANKS);
         registerBlockItem("frontier_planks", ModBlocks.FRONTIER_PLANKS);
-        registerBlockItem("airship_metal", ModBlocks.AIRSHIP_METAL);
+        ModItems.AIRSHIP_METAL = registerBlockItem("airship_metal", ModBlocks.AIRSHIP_METAL);
         registerBlockItem("realm_banner", ModBlocks.REALM_BANNER);
         ModItemGroups.register();
-        RivalRealms.LOGGER.info("Registered contracts, guns, boats, spawn eggs and settlement blocks.");
+        RivalRealms.LOGGER.info("Registered contracts, guns, ship kits, cannonballs, spawn eggs and settlement blocks.");
     }
 }

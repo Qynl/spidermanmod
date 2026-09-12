@@ -11,7 +11,10 @@ import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.text.Text;
 
-/** One obvious creative tab for every Rival Realms item and building piece. */
+/**
+ * One obvious creative tab for every Rival Realms item and building piece,
+ * ordered the way you would actually use them: blocks, gear, vehicles, crew.
+ */
 public final class ModItemGroups {
     private static final RegistryKey<ItemGroup> KEY = RegistryKey.of(
             RegistryKeys.ITEM_GROUP, RivalRealms.id("rival_realms"));
@@ -21,6 +24,7 @@ public final class ModItemGroups {
                     .displayName(Text.translatable("itemGroup.rivalrealms.rival_realms"))
                     .icon(() -> new ItemStack(ModBlocks.REALM_BANNER))
                     .entries((context, entries) -> {
+                        // Building palettes
                         entries.add(ModBlocks.CROWN_BRICK);
                         entries.add(ModBlocks.CASTLE_STONE);
                         entries.add(ModBlocks.CASTLE_TILES);
@@ -29,22 +33,27 @@ public final class ModItemGroups {
                         entries.add(ModBlocks.FRONTIER_PLANKS);
                         entries.add(ModBlocks.AIRSHIP_METAL);
                         entries.add(ModBlocks.REALM_BANNER);
-                        entries.add(ModItems.RECRUITMENT_CONTRACT);
+                        // Armory
+                        entries.add(ModItems.ROYAL_LONGSWORD);
                         entries.add(ModItems.REVOLVER);
                         entries.add(ModItems.FLINTLOCK);
-                        entries.add(ModItems.PIRATE_BOAT);
-                        entries.add(ModItems.ROYAL_LONGSWORD);
+                        entries.add(ModItems.CANNONBALL);
+                        // Vehicles
+                        entries.add(ModItems.AIRSHIP_KIT);
+                        entries.add(ModItems.SHIP_IN_A_BOTTLE);
+                        entries.add(ModItems.MERCHANT_SHIP_SPAWN_EGG);
+                        entries.add(ModItems.PIRATE_SHIP_SPAWN_EGG);
+                        // Trade & paperwork
                         entries.add(ModItems.ROYAL_COIN);
                         entries.add(ModItems.ROYAL_JEWELRY);
                         entries.add(ModItems.MEDIEVAL_MAP);
+                        entries.add(ModItems.RECRUITMENT_CONTRACT);
+                        // Crew
                         entries.add(ModItems.SURVIVOR_SPAWN_EGG);
                         entries.add(ModItems.KNIGHT_SPAWN_EGG);
                         entries.add(ModItems.PIRATE_SPAWN_EGG);
                         entries.add(ModItems.OUTLAW_SPAWN_EGG);
                         entries.add(ModItems.SKY_CAPTAIN_SPAWN_EGG);
-                        entries.add(ModItems.AIRSHIP_SPAWN_EGG);
-                        entries.add(ModItems.MERCHANT_SHIP_SPAWN_EGG);
-                        entries.add(ModItems.PIRATE_SHIP_SPAWN_EGG);
                     })
                     .build());
 
@@ -52,6 +61,6 @@ public final class ModItemGroups {
     }
 
     public static void register() {
-        RivalRealms.LOGGER.info("Registered the Rival Realms creative tab with all blocks, gear, vehicles and spawn items.");
+        RivalRealms.LOGGER.info("Registered the Rival Realms creative tab with blocks, gear, vehicles and crew.");
     }
 }

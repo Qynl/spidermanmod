@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "rivalrealms:item/ship_in_a_bottle"
+  }
+}

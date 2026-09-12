@@ -5,6 +5,7 @@ import com.rivalrealms.entity.Archetype;
 import com.rivalrealms.entity.MerchantShipEntity;
 import com.rivalrealms.entity.ModEntities;
 import com.rivalrealms.entity.PirateShipEntity;
+import com.rivalrealms.entity.SailingShipEntity;
 import com.rivalrealms.entity.SurvivorEntity;
 import net.minecraft.entity.Entity;
 import net.minecraft.server.MinecraftServer;
@@ -384,8 +385,10 @@ public final class RealmEvents {
         if (!world.spawnEntity(merchant)) {
             return null;
         }
-        spawnCrew(world, merchant.getBlockPos(), Archetype.KNIGHT,
-                new SettlementRole[]{SettlementRole.MERCHANT, SettlementRole.JEWELER, SettlementRole.SAILOR});
+        // The crew rides her deck from the first tick.
+        spawnCrew(world, merchant, Archetype.KNIGHT,
+                new SettlementRole[]{SettlementRole.MERCHANT, SettlementRole.JEWELER,
+                        SettlementRole.SAILOR, SettlementRole.SAILOR});
         return merchant;
     }
 
@@ -405,29 +408,36 @@ public final class RealmEvents {
             return null;
         }
         merchant.markUnderAttack();
-        spawnCrew(world, pirate.getBlockPos(), Archetype.PIRATE,
+        spawnCrew(world, pirate, Archetype.PIRATE,
                 new SettlementRole[]{SettlementRole.CAPTAIN, SettlementRole.GUNNER,
                         SettlementRole.QUARTERMASTER, SettlementRole.SAILOR});
         return pirate;
     }
 
-    private static void spawnCrew(ServerWorld world, BlockPos shipCenter, Archetype archetype,
+    /** Spawns a crew for {@code ship} and seats them on her deck immediately. */
+    private static void spawnCrew(ServerWorld world, SailingShipEntity ship, Archetype archetype,
                                   SettlementRole[] roles) {
+        BlockPos shipCenter = ship.getBlockPos();
+        List<SurvivorEntity> crew = new ArrayList<>(roles.length);
         for (int i = 0; i < roles.length; i++) {
-            SurvivorEntity crew = ModEntities.SURVIVOR.create(world);
-            if (crew == null) {
+            SurvivorEntity member = ModEntities.SURVIVOR.create(world);
+            if (member == null) {
                 continue;
             }
-            BlockPos spawn = shipCenter.add((i % 3) - 1, 1, (i / 3) - 1);
-            crew.refreshPositionAndAngles(spawn, world.random.nextFloat() * 360.0f, 0.0f);
-            crew.setArchetype(archetype);
-            crew.assignWorker(shipCenter, null, archetype.faction(), roles[i]);
-            crew.setCustomName(Text.literal(roles[i].displayName() + " · " + archetype.title()));
-            world.spawnEntity(crew);
+            member.refreshPositionAndAngles(shipCenter.getX() + 0.5, shipCenter.getY() + 1.0,
+                    shipCenter.getZ() + 0.5, world.random.nextFloat() * 360.0f, 0.0f);
+            member.setArchetype(archetype);
+            member.assignWorker(shipCenter, null, archetype.faction(), roles[i]);
+            member.setCustomName(Text.literal(roles[i].displayName() + " · " + archetype.title()));
+            if (!world.spawnEntity(member)) {
+                continue;
+            }
+            crew.add(member);
         }
+        ship.boardCrew(crew);
     }
 
-    private static BlockPos findWater(ServerWorld world, BlockPos origin, int radius) {
+    public static BlockPos findWater(ServerWorld world, BlockPos origin, int radius) {
         for (int attempt = 0; attempt < 36; attempt++) {
             int x = origin.getX() + world.random.nextInt(radius * 2 + 1) - radius;
             int z = origin.getZ() + world.random.nextInt(radius * 2 + 1) - radius;

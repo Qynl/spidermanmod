@@ -27,6 +27,9 @@ jobs:
         run: chmod +x ./gradlew
       - name: Validate assets and metadata
         run: python3 scripts/bughunt.py
+      - name: Advisory API cross-check against 1.21.1 stubs
+        continue-on-error: true
+        run: python3 scripts/apicheck.py
       - name: Compile, test and remap
         run: |
           set -o pipefail

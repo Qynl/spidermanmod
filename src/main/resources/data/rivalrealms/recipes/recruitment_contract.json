@@ -1,10 +1,9 @@
 {
   "type": "minecraft:crafting_shaped",
-  "pattern": ["GPG", "PIP", "GPG"],
+  "pattern": ["PP ", "PC ", "PP "],
   "key": {
-    "G": {"item": "minecraft:gold_nugget"},
     "P": {"item": "minecraft:paper"},
-    "I": {"item": "minecraft:ink_sac"}
+    "C": {"item": "rivalrealms:royal_coin"}
   },
   "result": {"id": "rivalrealms:recruitment_contract", "count": 2}
 }

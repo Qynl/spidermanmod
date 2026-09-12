@@ -1,76 +1,186 @@
 package com.rivalrealms.entity;
 
 import com.rivalrealms.item.ModItems;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.entity.vehicle.BoatEntity;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.sound.SoundCategory;
+import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
+import org.jetbrains.annotations.Nullable;
 
-/** A visible trade vessel carrying a valuable jewellery cargo. */
-public final class MerchantShipEntity extends BoatEntity {
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+
+/**
+ * The Royal Jewelry Trader. A fat-bellied merchant cog with white sails that
+ * hauls jewelry crates between realms. It minds its own route until attacked,
+ * then runs for open water while its crew man the decks. If pirates or
+ * players sink it, the cargo scatters across the waves.
+ */
+public final class MerchantShipEntity extends SailingShipEntity {
+    private static final double[][] SEATS = {
+            {0.0, 1.15, -1.35},
+            {0.7, 0.80, -0.60},
+            {-0.7, 0.80, -0.60},
+            {0.7, 0.80, 0.40},
+            {-0.7, 0.80, 0.40},
+            {0.0, 1.15, 1.45}
+    };
+
     private int cargoCrates = 4;
     private boolean underAttack;
+    private long attackTimer;
+    @Nullable
+    private UUID threatUuid;
+    @Nullable
+    private Vec3d routeTarget;
+    private long nextRouteCheck;
 
     public MerchantShipEntity(EntityType<? extends MerchantShipEntity> type, World world) {
         super(type, world);
-        setVariant(Type.SPRUCE);
-        setCustomName(Text.literal("Royal Jewellery Trader"));
+        setCustomName(Text.literal("Royal Jewelry Trader"));
         setCustomNameVisible(true);
     }
 
     public int cargoCrates() {
-        return cargoCrates;
+        return this.cargoCrates;
     }
 
     public boolean isUnderAttack() {
-        return underAttack;
+        return this.underAttack;
     }
 
     public void markUnderAttack() {
-        underAttack = true;
-        setCustomName(Text.literal("Royal Jewellery Trader · UNDER ATTACK"));
-        setCustomNameVisible(true);
+        if (!this.underAttack) {
+            this.underAttack = true;
+            this.attackTimer = this.getWorld().getTime();
+            setCustomName(Text.literal("Royal Jewelry Trader · UNDER ATTACK"));
+            setCustomNameVisible(true);
+        }
     }
 
-    /** Pirates call this once when they reach the merchant ship. */
-    public void raidCargo(ServerWorld world) {
-        if (cargoCrates <= 0) {
+    @Override
+    protected double[][] seats() {
+        return SEATS;
+    }
+
+    @Override
+    public void tick() {
+        super.tick();
+        World world = this.getWorld();
+        if (world.isClient) {
             return;
         }
-        BlockPos drop = getBlockPos().up();
-        for (int i = 0; i < cargoCrates; i++) {
-            dropStack(world, new ItemStack(ModItems.ROYAL_JEWELRY, 1), drop);
+        if (this.underAttack && world.getTime() - this.attackTimer > 600L) {
+            this.underAttack = false;
+            this.threatUuid = null;
+            setCustomName(Text.literal("Royal Jewelry Trader"));
         }
-        cargoCrates = 0;
-        setCustomName(Text.literal("Royal Jewellery Trader · PLUNDERED"));
+
+        if (world instanceof ServerWorld serverWorld) {
+            if (this.underAttack && this.threatUuid != null
+                    && serverWorld.getEntity(this.threatUuid) instanceof Entity threat) {
+                // Flee directly away from the last raider that touched the hull.
+                Vec3d away = new Vec3d(this.getX() - threat.getX(), 0.0, this.getZ() - threat.getZ());
+                if (away.lengthSquared() > 0.01) {
+                    Vec3d escape = this.getBlockPos().toCenterPos().add(away.normalize().multiply(30.0));
+                    this.sailToward(escape, 0.030);
+                }
+            } else if (this.isAfloat()) {
+                this.cruiseTick(world);
+            }
+            this.physicsTick();
+            this.playSailingAmbience(serverWorld);
+        }
+    }
+
+    /** Unhurried coastal trading route; picks a fresh heading when one runs out. */
+    private void cruiseTick(World world) {
+        long now = world.getTime();
+        if (this.routeTarget == null || now >= this.nextRouteCheck
+                || this.routeTarget.squaredDistanceTo(this.getX(), this.getY(), this.getZ()) < 25.0) {
+            double angle = world.random.nextFloat() * Math.PI * 2.0;
+            double reach = 28.0 + world.random.nextFloat() * 34.0;
+            this.routeTarget = new Vec3d(this.getX() + Math.cos(angle) * reach, this.getY(),
+                    this.getZ() + Math.sin(angle) * reach);
+            this.nextRouteCheck = now + 1200L;
+        }
+        this.sailToward(this.routeTarget, 0.022);
+    }
+
+    /** Pirates call this once boarding range is reached; the crates spill into the water. */
+    public void raidCargo(ServerWorld world) {
+        if (this.cargoCrates <= 0) {
+            return;
+        }
+        for (int i = 0; i < this.cargoCrates; i++) {
+            this.dropStack(new ItemStack(ModItems.ROYAL_JEWELRY, 1));
+            this.dropStack(new ItemStack(Items.GOLD_NUGGET, 2 + world.random.nextInt(3)));
+        }
+        this.cargoCrates = 0;
+        setCustomName(Text.literal("Royal Jewelry Trader · PLUNDERED"));
         setCustomNameVisible(true);
-    }
-
-    private void dropStack(ServerWorld world, ItemStack stack, BlockPos pos) {
-        net.minecraft.entity.ItemEntity item = new net.minecraft.entity.ItemEntity(
-                world, pos.getX() + 0.5, pos.getY() + 0.35, pos.getZ() + 0.5, stack);
-        item.setVelocity(world.random.nextGaussian() * 0.04, 0.12,
-                world.random.nextGaussian() * 0.04);
-        world.spawnEntity(item);
+        world.playSound(null, this.getBlockPos(), SoundEvents.ENTITY_ITEM_PICKUP,
+                SoundCategory.NEUTRAL, 0.9f, 0.7f);
     }
 
     @Override
-    public boolean damage(DamageSource source, float amount) {
-        if (!getWorld().isClient) {
-            underAttack = true;
+    protected void onDamaged(DamageSource source, float amount) {
+        this.markUnderAttack();
+        if (source.getAttacker() instanceof LivingEntity attacker) {
+            this.threatUuid = attacker.getUuid();
         }
-        return super.damage(source, amount);
     }
 
     @Override
-    public void kill() {
-        if (!getWorld().isClient && getWorld() instanceof ServerWorld serverWorld) {
-            raidCargo(serverWorld);
+    protected List<ItemStack> wreckLoot() {
+        List<ItemStack> loot = new ArrayList<>();
+        for (int i = 0; i < Math.max(1, this.cargoCrates); i++) {
+            loot.add(new ItemStack(ModItems.ROYAL_JEWELRY, 1));
+            loot.add(new ItemStack(ModItems.ROYAL_COIN, 1 + this.getWorld().random.nextInt(2)));
         }
-        super.kill();
+        loot.add(new ItemStack(Items.EMERALD, 2 + this.getWorld().random.nextInt(3)));
+        loot.add(planks(3));
+        this.cargoCrates = 0;
+        return loot;
+    }
+
+    @Override
+    protected void shipwreck(@Nullable LivingEntity cause) {
+        if (this.getWorld() instanceof ServerWorld serverWorld && this.cargoCrates > 0) {
+            this.raidCargo(serverWorld);
+        }
+        super.shipwreck(cause);
+    }
+
+    @Override
+    protected void readCustomDataFromNbt(NbtCompound nbt) {
+        super.readCustomDataFromNbt(nbt);
+        this.cargoCrates = Math.max(0, Math.min(6, nbt.getInt("CargoCrates")));
+        this.underAttack = nbt.getBoolean("UnderAttack");
+        this.attackTimer = nbt.getLong("AttackTimer");
+        if (nbt.containsUuid("Threat")) {
+            this.threatUuid = nbt.getUuid("Threat");
+        }
+    }
+
+    @Override
+    protected void writeCustomDataToNbt(NbtCompound nbt) {
+        super.writeCustomDataToNbt(nbt);
+        nbt.putInt("CargoCrates", this.cargoCrates);
+        nbt.putBoolean("UnderAttack", this.underAttack);
+        nbt.putLong("AttackTimer", this.attackTimer);
+        if (this.threatUuid != null) {
+            nbt.putUuid("Threat", this.threatUuid);
+        }
     }
 }

@@ -5,6 +5,7 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.rivalrealms.RivalRealms;
 import com.rivalrealms.entity.Archetype;
 import com.rivalrealms.entity.ModEntities;
+import com.rivalrealms.entity.SloopEntity;
 import com.rivalrealms.entity.SurvivorEntity;
 import com.rivalrealms.world.BuildStyle;
 import com.rivalrealms.world.RealmEvents;
@@ -22,7 +23,6 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.entity.SpawnReason;
 
 public final class ModCommands {
     private ModCommands() {
@@ -105,6 +105,8 @@ public final class ModCommands {
                                                         IntegerArgumentType.getInteger(context, "value")))))))
                 .then(CommandManager.literal("airship")
                         .executes(context -> spawnAirship(context.getSource())))
+                .then(CommandManager.literal("ship")
+                        .executes(context -> spawnSloop(context.getSource())))
                 .then(CommandManager.literal("convoy")
                         .executes(context -> spawnConvoy(context.getSource())))
                 .then(CommandManager.literal("info")
@@ -316,9 +318,33 @@ public final class ModCommands {
             return 0;
         }
         airship.refreshPositionAndAngles(player.getX(), player.getY() + 5.0, player.getZ(), player.getYaw(), 0.0f);
+        airship.setEnvelopeColor(world.random.nextInt(4));
         world.spawnEntity(airship);
         player.startRiding(airship);
-        source.sendFeedback(() -> Text.literal("Airship launched. Look where you want to travel; the vessel keeps moving while crewed."), true);
+        source.sendFeedback(() -> Text.literal("Airship launched. W/S thrust, A/D strafe, Space/Shift altitude; "
+                + "the hull banks as you turn."), true);
+        return 1;
+    }
+
+    private static int spawnSloop(ServerCommandSource source) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
+        ServerPlayerEntity player = source.getPlayer();
+        ServerWorld world = player.getServerWorld();
+        BlockPos water = RealmEvents.findWater(world, player.getBlockPos(), 48);
+        SloopEntity sloop = ModEntities.SLOOP.create(world);
+        if (sloop == null) {
+            return 0;
+        }
+        if (water != null) {
+            sloop.refreshPositionAndAngles(water.getX() + 0.5, water.getY() + 0.6, water.getZ() + 0.5,
+                    player.getYaw(), 0.0f);
+        } else {
+            sloop.refreshPositionAndAngles(player.getX(), player.getY() + 1.0, player.getZ(), player.getYaw(), 0.0f);
+        }
+        world.spawnEntity(sloop);
+        boolean onWater = water != null;
+        source.sendFeedback(() -> Text.literal(onWater
+                ? "Sloop launched on the water. Right-click to board; W/S to sail, A/D to steer."
+                : "Sloop launched on land. Carry it to water before sailing."), true);
         return 1;
     }
 
@@ -339,7 +365,7 @@ public final class ModCommands {
         source.sendFeedback(() -> Text.literal("Rival Realms: /rivalrealms spawn <culture> [count], /rivalrealms build <style>, "
                 + "/rivalrealms landmark <fortress|citadel|town|royal_city|harbor|shipyard|skyport|airship_yard|outpost>, /rivalrealms claim, "
                 + "/rivalrealms bases, /rivalrealms locate, /rivalrealms jobs, /rivalrealms assign <role> <survivor>, "
-                + "/rivalrealms diplomacy <a> <b> <value>, /rivalrealms airship, /rivalrealms convoy"), false);
+                + "/rivalrealms diplomacy <a> <b> <value>, /rivalrealms airship, /rivalrealms ship, /rivalrealms convoy"), false);
         return 1;
     }
 }

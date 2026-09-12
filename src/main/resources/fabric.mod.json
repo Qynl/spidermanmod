@@ -3,8 +3,11 @@
   "id": "rivalrealms",
   "version": "${version}",
   "name": "Rival Realms",
-  "description": "Player-like survivor cultures, living settlements, betrayal, custom fortresses, pirate harbors, frontier towns and airships.",
-  "authors": ["Qynl", "Rival Realms contributors"],
+  "description": "Hand-built zeppelins, sailing ships with live cannon duels, four warring survivor cultures, terrain-adaptive fortresses, harbors, frontier towns and skyports. Rival Realms 2.0 \u2014 nothing here is a repainted vanilla boat.",
+  "authors": [
+    "Qynl",
+    "Rival Realms contributors"
+  ],
   "contact": {
     "sources": "https://github.com/Qynl/spidermanmod"
   },
@@ -12,8 +15,12 @@
   "icon": "assets/rivalrealms/icon.png",
   "environment": "*",
   "entrypoints": {
-    "main": ["com.rivalrealms.RivalRealms"],
-    "client": ["com.rivalrealms.client.RivalRealmsClient"]
+    "main": [
+      "com.rivalrealms.RivalRealms"
+    ],
+    "client": [
+      "com.rivalrealms.client.RivalRealmsClient"
+    ]
   },
   "depends": {
     "fabricloader": ">=0.16.5",

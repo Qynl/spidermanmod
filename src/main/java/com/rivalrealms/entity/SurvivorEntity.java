@@ -1,6 +1,9 @@
 package com.rivalrealms.entity;
 
 import com.rivalrealms.item.ModItems;
+import com.rivalrealms.world.RealmState;
+import com.rivalrealms.world.SettlementRole;
+import net.minecraft.entity.EntityType;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.ai.RangedAttackMob;
@@ -11,31 +14,30 @@ import net.minecraft.entity.ai.goal.ProjectileAttackGoal;
 import net.minecraft.entity.ai.goal.RevengeGoal;
 import net.minecraft.entity.ai.goal.SwimGoal;
 import net.minecraft.entity.ai.goal.WanderAroundFarGoal;
-import net.minecraft.entity.attribute.DefaultAttributeContainer;
+import net.minecraft.entity.attribute.DefaultAttributeContainer.Builder;
 import net.minecraft.entity.attribute.EntityAttributes;
+import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.data.DataTracker;
 import net.minecraft.entity.data.TrackedData;
 import net.minecraft.entity.data.TrackedDataHandlerRegistry;
-import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.mob.PathAwareEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.projectile.ArrowEntity;
-import net.minecraft.entity.EntityType;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
+import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.sound.SoundCategory;
+import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
+import net.minecraft.util.Formatting;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Box;
 import net.minecraft.world.World;
-
-import com.rivalrealms.world.RealmState;
-import com.rivalrealms.world.SettlementRole;
 
 import java.util.List;
 import java.util.UUID;
@@ -45,27 +47,38 @@ import java.util.UUID;
  * persistent relationships, and a culture that changes the way it looks and
  * fights. The same server-authoritative entity works in singleplayer and on a
  * dedicated server.
+ *
+ * <h2>Improvements in this rework</h2>
+ * <ul>
+ *   <li>Culture is chosen exactly once (the old code re-rolled knights 75% of
+ *       the time at random); explicit spawns keep their archetype.</li>
+ *   <li>Culture-specific name pools with epithets instead of 16 shared names.</li>
+ *   <li>Gun cultures fire with muzzle smoke and a gunshot crack; sky captains
+ *       loose bolts with crossbow sounds.</li>
+ *   <li>Recruited companions actively defend their owner against their last
+ *       attacker, can be fed more foods, and can be released (sneak + empty
+ *       hand) without betraying the crew.</li>
+ *   <li>Crew riding ships stay seated instead of fighting their own vehicle's
+ *       navigation.</li>
+ * </ul>
  */
 public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
     private static final TrackedData<String> ARCHETYPE = DataTracker.registerData(
             SurvivorEntity.class, TrackedDataHandlerRegistry.STRING);
-
-    private static final String[] NAMES = {
-            "Mara", "Rowan", "Vera", "Jules", "Iris", "Tomas", "Nell", "Corin",
-            "Sable", "Hugo", "Mae", "Bram", "Rook", "Lena", "Otto", "Ash"
-    };
 
     private UUID ownerUuid;
     private int trust;
     private boolean recruited;
     private boolean guarding;
     private boolean loadoutApplied;
+    private boolean archetypeLocked;
     private UUID guardOwnerUuid;
     private BlockPos guardCenter;
     private String guardFaction;
     private SettlementRole settlementRole = SettlementRole.NONE;
     private long nextTargetScan;
     private long nextWorkMove;
+    private long nextOwnerDefenseScan;
 
     public SurvivorEntity(EntityType<? extends SurvivorEntity> entityType, World world) {
         super(entityType, world);
@@ -74,7 +87,7 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
         this.experiencePoints = 10;
     }
 
-    public static DefaultAttributeContainer.Builder createAttributes() {
+    public static Builder createAttributes() {
         return PathAwareEntity.createMobAttributes()
                 .add(EntityAttributes.GENERIC_MAX_HEALTH, 24.0)
                 .add(EntityAttributes.GENERIC_MOVEMENT_SPEED, 0.33)
@@ -107,6 +120,12 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
             return;
         }
 
+        // Crew seated on a sailing ship are cargo, not pathfinders; their ship
+        // owns the movement until they are ejected.
+        if (this.hasVehicle()) {
+            return;
+        }
+
         ensureLoadout();
         PlayerEntity owner = ownerUuid == null ? null : getWorld().getPlayerByUuid(ownerUuid);
 
@@ -120,6 +139,7 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
                 if (getTarget() == owner) {
                     setTarget(null);
                 }
+                defendOwner(owner);
                 if (guarding) {
                     getNavigation().stop();
                 } else if (squaredDistanceTo(owner.getX(), owner.getY(), owner.getZ()) > 7.0 * 7.0) {
@@ -141,11 +161,24 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
             acquireRivalTarget();
         }
 
-        // Outlaws occasionally reload a damaged weapon by swapping back to
-        // their culture's ranged weapon. It also makes their inventories feel
-        // alive instead of being a cosmetic skin only.
+        // Ranged cultures keep their offhand weapon stocked so their pose reads
+        // correctly at a glance.
         if (getWorld().getTime() % 80L == 0 && isRanged() && getOffHandStack().isEmpty()) {
             setStackInHand(Hand.OFF_HAND, getArchetype().rangedStack());
+        }
+    }
+
+    /** Companions actively avenge their owner's last attacker. */
+    private void defendOwner(PlayerEntity owner) {
+        long now = getWorld().getTime();
+        if (now < nextOwnerDefenseScan) {
+            return;
+        }
+        nextOwnerDefenseScan = now + 20L;
+        LivingEntity attacker = owner.getAttacker();
+        if (attacker != null && attacker.isAlive() && attacker != this && attacker != owner
+                && !(attacker instanceof SurvivorEntity ally && ally.isRecruited())) {
+            setTarget(attacker);
         }
     }
 
@@ -153,14 +186,16 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
         if (loadoutApplied) {
             return;
         }
-        if (getArchetype() == Archetype.KNIGHT && random.nextInt(4) != 0) {
+        if (!archetypeLocked) {
+            // No one picked a culture for this survivor: roll one, once.
             Archetype[] cultures = Archetype.values();
             setArchetype(cultures[random.nextInt(cultures.length)]);
+            archetypeLocked = true;
         } else {
             setArchetype(getArchetype());
         }
         if (!hasCustomName()) {
-            setCustomName(Text.literal(NAMES[random.nextInt(NAMES.length)] + " · " + getArchetype().title()));
+            setCustomName(Text.literal(getArchetype().randomName(random)));
         }
     }
 
@@ -247,6 +282,7 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
     public void setArchetype(Archetype archetype) {
         dataTracker.set(ARCHETYPE, archetype.id());
         loadoutApplied = true;
+        archetypeLocked = true;
         if (!getWorld().isClient) {
             if (getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH) != null) {
                 getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH).setBaseValue(archetype.health());
@@ -306,7 +342,10 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
         ownerUuid = null;
         guarding = false;
         setTarget(null);
-        setCustomName(Text.literal(role.displayName() + " · " + getArchetype().title()));
+        String nameBase = guardFaction != null && guardFaction.equals("Freebooters")
+                ? Archetype.pirateShipTitle(random)
+                : role.displayName();
+        setCustomName(Text.literal(nameBase + " · " + getArchetype().title()));
     }
 
     public UUID guardOwnerUuid() {
@@ -335,7 +374,7 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
         ownerUuid = null;
         trust = 0;
         setTarget(owner);
-        setCustomName(Text.literal("Betrayer · " + getArchetype().title()));
+        setCustomName(Text.literal("Betrayer · " + getArchetype().title()).formatted(Formatting.RED));
         if (owner instanceof ServerPlayerEntity serverPlayer) {
             serverPlayer.sendMessage(Text.literal(getName().getString() + " has betrayed you!"), false);
         }
@@ -359,7 +398,10 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
                 if (!player.isCreative()) {
                     held.decrement(1);
                 }
-                player.sendMessage(Text.literal(getName().getString() + " joined your crew. Trust: " + trust + "/100"), false);
+                getWorld().playSound(null, getBlockPos(), SoundEvents.ENTITY_VILLAGER_YES,
+                        SoundCategory.NEUTRAL, 1.0f, 1.0f);
+                player.sendMessage(Text.literal(getName().getString() + " joined your crew. Trust: "
+                        + trust + "/100"), false);
                 return ActionResult.SUCCESS;
             }
             player.sendMessage(Text.literal("This survivor already belongs to another crew."), true);
@@ -367,22 +409,49 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
         }
 
         if (isOwner(player)) {
-            if (held.isOf(Items.GOLDEN_CARROT) || held.isOf(Items.COOKED_BEEF)) {
+            if (isPreferredFood(held)) {
                 trust = Math.min(100, trust + 8);
                 if (!player.isCreative()) {
                     held.decrement(1);
                 }
+                getWorld().playSound(null, getBlockPos(), SoundEvents.ENTITY_GENERIC_EAT,
+                        SoundCategory.NEUTRAL, 0.8f, 1.0f);
                 player.sendMessage(Text.literal("Trust increased to " + trust + "/100."), true);
                 return ActionResult.SUCCESS;
             }
             if (held.isEmpty()) {
+                if (player.shouldCancelInteraction()) {
+                    // Sneak + empty hand releases the companion honourably.
+                    released(player);
+                    return ActionResult.SUCCESS;
+                }
                 guarding = !guarding;
-                player.sendMessage(Text.literal(guarding ? "Companion is holding this position." : "Companion is following you."), true);
+                player.sendMessage(Text.literal(guarding ? "Companion is holding this position."
+                        : "Companion is following you."), true);
                 return ActionResult.SUCCESS;
             }
         }
 
         return ActionResult.PASS;
+    }
+
+    private static boolean isPreferredFood(ItemStack stack) {
+        return stack.isOf(Items.GOLDEN_CARROT) || stack.isOf(Items.COOKED_BEEF)
+                || stack.isOf(Items.BREAD) || stack.isOf(Items.COOKED_SALMON)
+                || stack.isOf(Items.APPLE);
+    }
+
+    private void released(PlayerEntity player) {
+        recruited = false;
+        guarding = false;
+        ownerUuid = null;
+        trust = 0;
+        setTarget(null);
+        setCustomName(Text.literal(getArchetype().randomName(random)));
+        if (!player.isCreative()) {
+            this.dropStack(new ItemStack(ModItems.RECRUITMENT_CONTRACT, 1));
+        }
+        player.sendMessage(Text.literal(getName().getString() + " waves goodbye and returns to the frontier."), true);
     }
 
     @Override
@@ -406,23 +475,59 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
 
     @Override
     public void shootAt(LivingEntity target, float pullProgress) {
-        if (!isRanged() || !target.isAlive()) {
+        if (!isRanged() || !target.isAlive() || getWorld().isClient) {
             return;
         }
-        ArrowEntity arrow = new ArrowEntity(getWorld(), this, new ItemStack(Items.ARROW), null);
+        Archetype archetype = getArchetype();
+        if (archetype == Archetype.OUTLAW || archetype == Archetype.PIRATE) {
+            fireGunshot(target, archetype);
+        } else {
+            fireBolt(target, archetype);
+        }
+    }
+
+    /** Outlaws and pirates shoot loud, smoky gunshots instead of silent arrows. */
+    private void fireGunshot(LivingEntity target, Archetype archetype) {
+        ServerWorld serverWorld = (ServerWorld) getWorld();
+        ArrowEntity bullet = new ArrowEntity(getWorld(), this, new ItemStack(Items.ARROW), null);
         double dx = target.getX() - getX();
-        double dy = target.getY() + target.getStandingEyeHeight() * 0.55 - arrow.getY();
+        double dy = target.getY() + target.getStandingEyeHeight() * 0.55 - bullet.getY();
         double dz = target.getZ() - getZ();
         double horizontal = Math.sqrt(dx * dx + dz * dz);
-        arrow.setVelocity(dx, dy + horizontal * 0.16, dz, 1.6f, 10.0f);
-        arrow.setDamage(getArchetype().rangedDamage());
-        getWorld().spawnEntity(arrow);
+        bullet.setVelocity(dx, dy + horizontal * 0.10, dz, 2.1f, 4.0f);
+        bullet.setDamage((float) archetype.rangedDamage());
+        getWorld().spawnEntity(bullet);
+
+        serverWorld.playSound(null, getBlockPos(), SoundEvents.ENTITY_GENERIC_EXPLODE,
+                SoundCategory.NEUTRAL, 0.5f, 1.7f);
+        serverWorld.playSound(null, getBlockPos(), SoundEvents.ENTITY_WITHER_SHOOT,
+                SoundCategory.NEUTRAL, 0.35f, 1.8f);
+        serverWorld.spawnParticles(ParticleTypes.POOF,
+                getX() + dx * 0.08, getEyeY(), getZ() + dz * 0.08, 5, 0.12, 0.08, 0.12, 0.01);
+        serverWorld.spawnParticles(ParticleTypes.FLAME,
+                getX() + dx * 0.08, getEyeY(), getZ() + dz * 0.08, 2, 0.05, 0.03, 0.05, 0.01);
+    }
+
+    /** Sky captains keep the classic crossbow bolt. */
+    private void fireBolt(LivingEntity target, Archetype archetype) {
+        ServerWorld serverWorld = (ServerWorld) getWorld();
+        ArrowEntity bolt = new ArrowEntity(getWorld(), this, new ItemStack(Items.ARROW), null);
+        double dx = target.getX() - getX();
+        double dy = target.getY() + target.getStandingEyeHeight() * 0.55 - bolt.getY();
+        double dz = target.getZ() - getZ();
+        double horizontal = Math.sqrt(dx * dx + dz * dz);
+        bolt.setVelocity(dx, dy + horizontal * 0.16, dz, 1.6f, 10.0f);
+        bolt.setDamage((float) archetype.rangedDamage());
+        getWorld().spawnEntity(bolt);
+        serverWorld.playSound(null, getBlockPos(), SoundEvents.ITEM_CROSSBOW_SHOOT,
+                SoundCategory.NEUTRAL, 0.9f, 1.0f);
     }
 
     @Override
     public void writeCustomDataToNbt(NbtCompound nbt) {
         super.writeCustomDataToNbt(nbt);
         nbt.putString("Archetype", getArchetype().id());
+        nbt.putBoolean("ArchetypeLocked", archetypeLocked);
         nbt.putBoolean("Recruited", recruited);
         nbt.putBoolean("Guarding", guarding);
         nbt.putInt("Trust", trust);
@@ -446,6 +551,8 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
     public void readCustomDataFromNbt(NbtCompound nbt) {
         super.readCustomDataFromNbt(nbt);
         dataTracker.set(ARCHETYPE, nbt.getString("Archetype"));
+        // A persisted archetype always wins; only brand-new survivors may roll one.
+        archetypeLocked = nbt.contains("Archetype", NbtElement.STRING_TYPE);
         recruited = nbt.getBoolean("Recruited");
         guarding = nbt.getBoolean("Guarding");
         trust = Math.max(0, Math.min(100, nbt.getInt("Trust")));

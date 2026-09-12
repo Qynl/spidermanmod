@@ -1,10 +1,11 @@
 {
   "type": "minecraft:crafting_shaped",
-  "pattern": [" IG", "FI ", "  I"],
+  "pattern": [" IG", "FI ", "W  "],
   "key": {
     "I": {"item": "minecraft:iron_ingot"},
     "G": {"item": "minecraft:gold_nugget"},
-    "F": {"item": "minecraft:flint"}
+    "F": {"item": "minecraft:flint"},
+    "W": {"item": "minecraft:dark_oak_planks"}
   },
   "result": {"id": "rivalrealms:flintlock", "count": 1}
 }

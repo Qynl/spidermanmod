@@ -47,7 +47,7 @@ public final class SurvivorSpawnEggItem extends Item {
         survivor.refreshPositionAndAngles(spawnPos.getX() + 0.5, spawnPos.getY(),
                 spawnPos.getZ() + 0.5, context.getPlayerYaw(), 0.0f);
         survivor.setArchetype(selected);
-        survivor.setCustomName(Text.literal(selected.title()));
+        survivor.setCustomName(Text.literal(selected.randomName(world.random)));
         if (!world.spawnEntity(survivor)) {
             return ActionResult.FAIL;
         }
