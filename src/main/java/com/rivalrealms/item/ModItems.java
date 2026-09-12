@@ -22,8 +22,6 @@ public final class ModItems {
             new BoatItem(false, BoatEntity.Type.SPRUCE, new Item.Settings().maxCount(1)));
     public static final Item SURVIVOR_SPAWN_EGG = register("survivor_spawn_egg",
             new SpawnEggItem(ModEntities.SURVIVOR, 0x6f4b3e, 0xd0a75b, new Item.Settings()));
-    public static final Item AIRSHIP_SPAWN_EGG = register("airship_spawn_egg",
-            new SpawnEggItem(ModEntities.AIRSHIP, 0x4f5d75, 0xd6b15f, new Item.Settings()));
 
     private ModItems() {
     }

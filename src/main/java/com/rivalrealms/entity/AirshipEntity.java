@@ -14,7 +14,7 @@ import net.minecraft.world.World;
 public class AirshipEntity extends BoatEntity {
     public AirshipEntity(EntityType<? extends AirshipEntity> type, World world) {
         super(type, world);
-        setBoatType(Type.SPRUCE);
+        setVariant(Type.SPRUCE);
         setNoGravity(true);
     }
 

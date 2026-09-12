@@ -68,7 +68,7 @@ public final class ModCommands {
         Archetype culture = Archetype.byId(cultureId);
         int spawned = 0;
         for (int i = 0; i < count; i++) {
-            SurvivorEntity survivor = ModEntities.SURVIVOR.create(world, SpawnReason.COMMAND);
+            SurvivorEntity survivor = ModEntities.SURVIVOR.create(world);
             if (survivor == null) {
                 continue;
             }

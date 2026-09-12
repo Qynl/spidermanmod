@@ -46,7 +46,7 @@ public final class RealmEvents {
         BlockPos center = player.getBlockPos().add(12 + world.random.nextInt(12), 0, 12 + world.random.nextInt(12));
         Archetype culture = Archetype.values()[world.random.nextInt(Archetype.values().length)];
         for (int i = 0; i < 3; i++) {
-            SurvivorEntity survivor = ModEntities.SURVIVOR.create(world, SpawnReason.EVENT);
+            SurvivorEntity survivor = ModEntities.SURVIVOR.create(world);
             if (survivor == null) {
                 continue;
             }

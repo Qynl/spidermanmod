@@ -22,7 +22,7 @@ public final class ModBlocks {
     public static final Block AIRSHIP_METAL = register("airship_metal", new Block(AbstractBlock.Settings.copy(Blocks.CUT_COPPER)
             .mapColor(MapColor.COLOR_LIGHT_BLUE).strength(5.0f).requiresTool()));
     public static final Block REALM_BANNER = register("realm_banner", new Block(AbstractBlock.Settings.copy(Blocks.WHITE_WOOL)
-            .mapColor(MapColor.COLOR_PURPLE).strength(1.0f).sounds(BlockSoundGroup.WOOL)));
+            .mapColor(MapColor.PURPLE).strength(1.0f).sounds(BlockSoundGroup.WOOL)));
 
     private ModBlocks() {
     }
@@ -33,5 +33,7 @@ public final class ModBlocks {
 
     public static void register() {
         RivalRealms.LOGGER.info("Registered settlement palettes and realm banner.");
+    }
+}
     }
 }

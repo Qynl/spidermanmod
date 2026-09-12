@@ -209,7 +209,7 @@ public final class StructureBuilder {
     private static void spawnWorkingBoat(ServerWorld world, BlockPos pos) {
         BoatEntity boat = EntityType.BOAT.create(world);
         if (boat != null) {
-            boat.setBoatType(BoatEntity.Type.SPRUCE);
+            boat.setVariant(BoatEntity.Type.SPRUCE);
             boat.refreshPositionAndAngles(pos, 0.0f, 0.0f);
             world.spawnEntity(boat);
         }
