@@ -3,7 +3,7 @@ package com.rivalrealms.client;
 import com.rivalrealms.entity.ModEntities;
 import net.fabricmc.api.ClientModInitializer;
 import net.minecraft.client.render.entity.BoatEntityRenderer;
-import net.minecraft.client.render.entity.EntityRendererRegistry;
+import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
 
 public final class RivalRealmsClient implements ClientModInitializer {
     @Override
