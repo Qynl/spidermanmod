@@ -57,7 +57,7 @@ public final class ModEntities {
 
     public static final EntityType<CannonballEntity> CANNONBALL = register(
             "cannonball",
-            EntityType.Builder.create(CannonballEntity::new, SpawnGroup.MISC)
+            EntityType.Builder.<CannonballEntity>create(CannonballEntity::new, SpawnGroup.MISC)
                     .dimensions(0.45f, 0.45f)
                     .maxTrackingRange(96)
                     .trackingTickInterval(1)

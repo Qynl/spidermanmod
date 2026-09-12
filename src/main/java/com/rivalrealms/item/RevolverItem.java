@@ -58,7 +58,7 @@ public class RevolverItem extends Item {
                 if (target instanceof LivingEntity living) {
                     living.damage(world.getDamageSources().playerAttack(user), damage);
                     living.takeKnockback(0.55, -direction.x, -direction.z);
-                    world.playSound(null, target.getBlockPos(), SoundEvents.ENTITY_ARROW_HIT_PLAYER,
+                    world.playSound(null, target.getX(), target.getY(), target.getZ(), SoundEvents.ENTITY_ARROW_HIT_PLAYER,
                             SoundCategory.PLAYERS, 0.7f, 0.9f);
                 }
             }
@@ -96,9 +96,9 @@ public class RevolverItem extends Item {
                     point.x, point.y, point.z, 1, 0.0, 0.0, 0.0, 0.0);
         }
 
-        serverWorld.playSound(null, user.getBlockPos(), SoundEvents.ENTITY_GENERIC_EXPLODE,
+        serverWorld.playSound(null, user.getX(), user.getY(), user.getZ(), SoundEvents.ENTITY_GENERIC_EXPLODE,
                 SoundCategory.PLAYERS, 0.32f, 1.75f + world.random.nextFloat() * 0.2f);
-        serverWorld.playSound(null, user.getBlockPos(), SoundEvents.ENTITY_WITHER_SHOOT,
+        serverWorld.playSound(null, user.getX(), user.getY(), user.getZ(), SoundEvents.ENTITY_WITHER_SHOOT,
                 SoundCategory.PLAYERS, 0.30f, 1.9f);
     }
 }

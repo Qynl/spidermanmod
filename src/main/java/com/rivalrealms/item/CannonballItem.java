@@ -28,7 +28,7 @@ public final class CannonballItem extends Item {
     @Override
     public TypedActionResult<ItemStack> use(World world, PlayerEntity user, Hand hand) {
         ItemStack stack = user.getStackInHand(hand);
-        world.playSound(null, user.getBlockPos(), SoundEvents.ENTITY_WITHER_SHOOT,
+        world.playSound(null, user.getX(), user.getY(), user.getZ(), SoundEvents.ENTITY_WITHER_SHOOT,
                 SoundCategory.PLAYERS, 0.7f, 1.35f);
         user.getItemCooldownManager().set(this, 14);
         if (!world.isClient) {

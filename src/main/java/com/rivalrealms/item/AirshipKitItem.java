@@ -41,9 +41,9 @@ public final class AirshipKitItem extends Item {
         if (!world.spawnEntity(airship)) {
             return ActionResult.FAIL;
         }
-        world.playSound(null, airship.getBlockPos(), SoundEvents.BLOCK_PISTON_EXTEND,
+        world.playSound(null, airship.getX(), airship.getY(), airship.getZ(), SoundEvents.BLOCK_PISTON_EXTEND,
                 SoundCategory.NEUTRAL, 0.9f, 0.8f);
-        world.playSound(null, airship.getBlockPos(), SoundEvents.ENTITY_GENERIC_EXPLODE,
+        world.playSound(null, airship.getX(), airship.getY(), airship.getZ(), SoundEvents.ENTITY_GENERIC_EXPLODE,
                 SoundCategory.NEUTRAL, 0.3f, 1.8f);
         if (world instanceof ServerWorld serverWorld) {
             serverWorld.spawnParticles(ParticleTypes.CLOUD,

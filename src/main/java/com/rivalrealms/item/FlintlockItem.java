@@ -90,9 +90,9 @@ public final class FlintlockItem extends Item {
                         point.x, point.y, point.z, 1, 0.0, 0.0, 0.0, 0.0);
             }
 
-            serverWorld.playSound(null, user.getBlockPos(), SoundEvents.ENTITY_GENERIC_EXPLODE,
+            serverWorld.playSound(null, user.getX(), user.getY(), user.getZ(), SoundEvents.ENTITY_GENERIC_EXPLODE,
                     SoundCategory.PLAYERS, 0.6f, 1.1f + world.random.nextFloat() * 0.15f);
-            serverWorld.playSound(null, user.getBlockPos(), SoundEvents.ENTITY_WITHER_SHOOT,
+            serverWorld.playSound(null, user.getX(), user.getY(), user.getZ(), SoundEvents.ENTITY_WITHER_SHOOT,
                     SoundCategory.PLAYERS, 0.55f, 1.3f);
 
             user.getItemCooldownManager().set(this, COOLDOWN);

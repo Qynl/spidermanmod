@@ -48,7 +48,7 @@ public final class StructureBuilder {
             case SKY -> buildSkyDock(world, base);
             case CUSTOM -> buildCommonExpansion(world, base, 1);
         }
-        world.playSound(null, base, SoundEvents.BLOCK_ANVIL_LAND, SoundCategory.BLOCKS, 0.65f, 1.15f);
+        world.playSound(null, base.getX() + 0.5, base.getY(), base.getZ() + 0.5, SoundEvents.BLOCK_ANVIL_LAND, SoundCategory.BLOCKS, 0.65f, 1.15f);
     }
 
     /**
@@ -64,7 +64,7 @@ public final class StructureBuilder {
             case SKY -> expandSky(world, center, level);
             case CUSTOM -> buildCommonExpansion(world, center, level);
         }
-        world.playSound(null, center, SoundEvents.BLOCK_ANVIL_LAND, SoundCategory.BLOCKS, 0.45f, 1.35f);
+        world.playSound(null, center.getX() + 0.5, center.getY(), center.getZ() + 0.5, SoundEvents.BLOCK_ANVIL_LAND, SoundCategory.BLOCKS, 0.45f, 1.35f);
     }
 
     public static void buildScattered(ServerWorld world, BlockPos center, BuildStyle style, SettlementVariant variant) {
@@ -79,7 +79,7 @@ public final class StructureBuilder {
             case AIRSHIP_YARD -> buildAirshipYard(world, center);
             case OUTPOST -> buildScatteredOutpost(world, center, style);
         }
-        world.playSound(null, center, SoundEvents.BLOCK_ANVIL_LAND, SoundCategory.BLOCKS, 0.55f, 0.9f);
+        world.playSound(null, center.getX() + 0.5, center.getY(), center.getZ() + 0.5, SoundEvents.BLOCK_ANVIL_LAND, SoundCategory.BLOCKS, 0.55f, 0.9f);
     }
 
     // ------------------------------------------------------- variant builds
@@ -743,9 +743,8 @@ public final class StructureBuilder {
         set(world, base.add(4, y + 2, 7), Blocks.LANTERN);
     }
 
-    private static void saloon(ServerWorld world, BlockPos base, int sizeX, int sizeZ) {
-        house(world, base, sizeX, sizeZ, ModBlocks.FRONTIER_PLANKS, Blocks.OAK_LOG,
-                Blocks.ACACIA_STAIRS, ModBlocks.FRONTIER_PLANKS);
+    private static void saloon(ServerWorld world, BlockPos base, int sizeX, int sizeZ, Block wood, Block log) {
+        house(world, base, sizeX, sizeZ, wood, log, Blocks.ACACIA_STAIRS, wood);
         int y = groundAt(world, base.getX() + sizeX / 2, base.getZ() + sizeZ / 2);
         set(world, base.add(sizeX / 2, y + 1, sizeZ), Blocks.OAK_FENCE);
         set(world, base.add(sizeX / 2, y + 2, sizeZ), Blocks.OAK_FENCE);

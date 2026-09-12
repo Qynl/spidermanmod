@@ -40,7 +40,7 @@ public final class ShipInBottleItem extends Item {
         if (!world.spawnEntity(ship)) {
             return ActionResult.FAIL;
         }
-        world.playSound(null, ship.getBlockPos(), SoundEvents.ENTITY_GENERIC_SPLASH,
+        world.playSound(null, ship.getX(), ship.getY(), ship.getZ(), SoundEvents.ENTITY_GENERIC_SPLASH,
                 SoundCategory.NEUTRAL, 1.0f, 0.9f);
         if (world instanceof net.minecraft.server.world.ServerWorld serverWorld) {
             serverWorld.spawnParticles(net.minecraft.particle.ParticleTypes.SPLASH,

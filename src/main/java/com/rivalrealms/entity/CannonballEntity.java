@@ -38,7 +38,7 @@ public class CannonballEntity extends ThrownItemEntity {
     public CannonballEntity(EntityType<? extends CannonballEntity> type, World world, @Nullable Entity owner) {
         super(type, world);
         if (owner != null) {
-            this.setPosition(owner.getX(), owner.getEyeHeight() + owner.getY(), owner.getZ());
+            this.setPosition(owner.getX(), owner.getEyeY(), owner.getZ());
             this.setOwner(owner);
         }
     }
@@ -78,7 +78,7 @@ public class CannonballEntity extends ThrownItemEntity {
         if (world.isClient) {
             return;
         }
-        world.playSound(null, this.getBlockPos(), SoundEvents.ENTITY_GENERIC_EXPLODE,
+        world.playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.ENTITY_GENERIC_EXPLODE,
                 SoundCategory.NEUTRAL, 1.0f, 1.05f);
         if (world instanceof ServerWorld serverWorld) {
             serverWorld.spawnParticles(ParticleTypes.EXPLOSION,

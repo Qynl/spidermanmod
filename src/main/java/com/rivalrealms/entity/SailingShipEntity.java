@@ -65,7 +65,7 @@ public abstract class SailingShipEntity extends Entity {
     /** Sound played while the ship is under sail. */
     protected void playSailingAmbience(ServerWorld world) {
         if (world.getTime() % 42L == 0) {
-            world.playSound(null, this.getBlockPos(), SoundEvents.ENTITY_BOAT_PADDLE_WATER,
+            world.playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.ENTITY_BOAT_PADDLE_WATER,
                     SoundCategory.NEUTRAL, 0.7f, 0.75f + world.random.nextFloat() * 0.2f);
         }
     }
@@ -226,7 +226,7 @@ public abstract class SailingShipEntity extends Entity {
         World world = this.getWorld();
         this.hull = Math.max(0.0f, this.hull - amount);
         this.dataTracker.set(HULL_FRACTION, this.hullFraction());
-        world.playSound(null, this.getBlockPos(), SoundEvents.ENTITY_BOAT_BREAK,
+        world.playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.BLOCK_WOOD_BREAK,
                 SoundCategory.NEUTRAL, 0.9f, 0.6f + world.random.nextFloat() * 0.25f);
         if (world instanceof ServerWorld serverWorld) {
             serverWorld.spawnParticles(ParticleTypes.CRIT,
@@ -250,7 +250,7 @@ public abstract class SailingShipEntity extends Entity {
             this.discard();
             return;
         }
-        world.playSound(null, this.getBlockPos(), SoundEvents.ENTITY_GENERIC_EXPLODE,
+        world.playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.ENTITY_GENERIC_EXPLODE,
                 SoundCategory.NEUTRAL, 1.0f, 0.8f);
         serverWorld.spawnParticles(ParticleTypes.EXPLOSION,
                 this.getX(), this.getY() + 0.8, this.getZ(), 1, 0.2, 0.2, 0.2, 0.0);

@@ -129,7 +129,7 @@ public final class MerchantShipEntity extends SailingShipEntity {
         this.cargoCrates = 0;
         setCustomName(Text.literal("Royal Jewelry Trader · PLUNDERED"));
         setCustomNameVisible(true);
-        world.playSound(null, this.getBlockPos(), SoundEvents.ENTITY_ITEM_PICKUP,
+        world.playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.ENTITY_ITEM_PICKUP,
                 SoundCategory.NEUTRAL, 0.9f, 0.7f);
     }
 

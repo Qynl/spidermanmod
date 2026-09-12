@@ -398,7 +398,7 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
                 if (!player.isCreative()) {
                     held.decrement(1);
                 }
-                getWorld().playSound(null, getBlockPos(), SoundEvents.ENTITY_VILLAGER_YES,
+                getWorld().playSound(null, getX(), getY(), getZ(), SoundEvents.ENTITY_VILLAGER_YES,
                         SoundCategory.NEUTRAL, 1.0f, 1.0f);
                 player.sendMessage(Text.literal(getName().getString() + " joined your crew. Trust: "
                         + trust + "/100"), false);
@@ -414,7 +414,7 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
                 if (!player.isCreative()) {
                     held.decrement(1);
                 }
-                getWorld().playSound(null, getBlockPos(), SoundEvents.ENTITY_GENERIC_EAT,
+                getWorld().playSound(null, getX(), getY(), getZ(), SoundEvents.ENTITY_GENERIC_EAT,
                         SoundCategory.NEUTRAL, 0.8f, 1.0f);
                 player.sendMessage(Text.literal("Trust increased to " + trust + "/100."), true);
                 return ActionResult.SUCCESS;
@@ -498,9 +498,9 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
         bullet.setDamage((float) archetype.rangedDamage());
         getWorld().spawnEntity(bullet);
 
-        serverWorld.playSound(null, getBlockPos(), SoundEvents.ENTITY_GENERIC_EXPLODE,
+        serverWorld.playSound(null, getX(), getY(), getZ(), SoundEvents.ENTITY_GENERIC_EXPLODE,
                 SoundCategory.NEUTRAL, 0.5f, 1.7f);
-        serverWorld.playSound(null, getBlockPos(), SoundEvents.ENTITY_WITHER_SHOOT,
+        serverWorld.playSound(null, getX(), getY(), getZ(), SoundEvents.ENTITY_WITHER_SHOOT,
                 SoundCategory.NEUTRAL, 0.35f, 1.8f);
         serverWorld.spawnParticles(ParticleTypes.POOF,
                 getX() + dx * 0.08, getEyeY(), getZ() + dz * 0.08, 5, 0.12, 0.08, 0.12, 0.01);
@@ -519,7 +519,7 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
         bolt.setVelocity(dx, dy + horizontal * 0.16, dz, 1.6f, 10.0f);
         bolt.setDamage((float) archetype.rangedDamage());
         getWorld().spawnEntity(bolt);
-        serverWorld.playSound(null, getBlockPos(), SoundEvents.ITEM_CROSSBOW_SHOOT,
+        serverWorld.playSound(null, getX(), getY(), getZ(), SoundEvents.ITEM_CROSSBOW_SHOOT,
                 SoundCategory.NEUTRAL, 0.9f, 1.0f);
     }
 

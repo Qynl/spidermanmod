@@ -18,6 +18,13 @@ def add(fqcn, supers=(), members=(), iface=False):
     CLASSES.setdefault((pkg, name), {'supers': list(supers), 'members': list(members), 'iface': iface})
 
 
+# ---- registry entries & pose (1.21.1 sound constants are split across these types)
+add('net.minecraft.registry.entry.RegistryEntry', [], [], iface=True)
+add('net.minecraft.registry.entry.RegistryEntry.Reference', ['net.minecraft.registry.entry.RegistryEntry'], [
+    'public T value();',
+])
+add('net.minecraft.entity.EntityPose', [], [])
+
 # ---- net.minecraft.util
 add('net.minecraft.util.Identifier', [], [
     'public static net.minecraft.util.Identifier of(String namespace, String path);',
@@ -127,17 +134,19 @@ add('net.minecraft.sound.SoundCategory', [], [
 ])
 add('net.minecraft.sound.SoundEvent', [], [])
 add('net.minecraft.sound.SoundEvents', [], [
-    'public static final net.minecraft.sound.SoundEvent ENTITY_GENERIC_EXPLODE;',
+    # RegistryEntry.Reference constants (registerReference in 1.21.1)
+    'public static final net.minecraft.registry.entry.RegistryEntry.Reference<net.minecraft.sound.SoundEvent> ENTITY_GENERIC_EXPLODE;',
+    'public static final net.minecraft.registry.entry.RegistryEntry.Reference<net.minecraft.sound.SoundEvent> ENTITY_GENERIC_EAT;',
+    # plain SoundEvent constants
     'public static final net.minecraft.sound.SoundEvent ENTITY_WITHER_SHOOT;',
     'public static final net.minecraft.sound.SoundEvent ENTITY_BOAT_PADDLE_WATER;',
-    'public static final net.minecraft.sound.SoundEvent ENTITY_BOAT_BREAK;',
     'public static final net.minecraft.sound.SoundEvent BLOCK_ANVIL_LAND;',
     'public static final net.minecraft.sound.SoundEvent BLOCK_CHAIN_HIT;',
+    'public static final net.minecraft.sound.SoundEvent BLOCK_WOOD_BREAK;',
     'public static final net.minecraft.sound.SoundEvent ENTITY_FIREWORK_ROCKET_LAUNCH;',
     'public static final net.minecraft.sound.SoundEvent ENTITY_VILLAGER_YES;',
     'public static final net.minecraft.sound.SoundEvent ENTITY_VILLAGER_CELEBRATE;',
     'public static final net.minecraft.sound.SoundEvent ENTITY_ITEM_PICKUP;',
-    'public static final net.minecraft.sound.SoundEvent ENTITY_GENERIC_EAT;',
     'public static final net.minecraft.sound.SoundEvent ENTITY_PLAYER_ATTACK_SWEEP;',
     'public static final net.minecraft.sound.SoundEvent ENTITY_ARROW_HIT_PLAYER;',
     'public static final net.minecraft.sound.SoundEvent ITEM_CROSSBOW_SHOOT;',
@@ -362,6 +371,8 @@ add('net.minecraft.entity.Entity', [], [
     'public void setPosition(double x, double y, double z);',
     'public float getEyeHeight();',
     'public boolean startRiding(net.minecraft.entity.Entity vehicle);',
+    'public boolean hasPassenger(net.minecraft.entity.Entity passenger);',
+    'public net.minecraft.entity.Entity getVehicle();',
     'public net.minecraft.world.World getWorld();',
     'public double getX();', 'public double getY();', 'public double getZ();',
     'public net.minecraft.util.math.Vec3d getPos();',
@@ -389,6 +400,8 @@ add('net.minecraft.entity.Entity', [], [
     'public void takeKnockback(double strength, double x, double z);',
     'public net.minecraft.entity.damage.DamageSources getDamageSources();',
     'public net.minecraft.item.ItemStack getPickBlockStack();',
+    'public double getEyeY();',
+    'public float getEyeHeight(net.minecraft.entity.EntityPose pose);',
     'protected void updatePassengerPosition(net.minecraft.entity.Entity passenger, net.minecraft.entity.Entity.PositionUpdater positionUpdater);',
     'protected boolean canAddPassenger(net.minecraft.entity.Entity passenger);',
     'protected void initDataTracker(net.minecraft.entity.data.DataTracker.Builder builder);',
@@ -427,7 +440,7 @@ add('net.minecraft.entity.LivingEntity', ['net.minecraft.entity.Entity'], [
     'public float getStandingEyeHeight();',
     'public net.minecraft.util.math.Vec3d getRotationVec(float tickDelta);',
     'public net.minecraft.item.ItemStack getOffHandStack();',
-    'public double getEyeY();',
+
     'public boolean canHit();',
 ])
 add('net.minecraft.entity.mob.PathAwareEntity', ['net.minecraft.entity.mob.MobEntity'], [
@@ -597,8 +610,9 @@ add('net.minecraft.world.World', [], [
     'public long getTime();',
     'public net.minecraft.util.math.random.Random random;',
     'public net.minecraft.entity.damage.DamageSources getDamageSources();',
-    'public void playSound(net.minecraft.entity.player.PlayerEntity except, net.minecraft.util.math.BlockPos pos, net.minecraft.sound.SoundEvent sound, net.minecraft.sound.SoundCategory category, float volume, float pitch);',
+    'public void playSound(net.minecraft.entity.Entity source, net.minecraft.util.math.BlockPos pos, net.minecraft.sound.SoundEvent sound, net.minecraft.sound.SoundCategory category, float volume, float pitch);',
     'public void playSound(net.minecraft.entity.player.PlayerEntity except, double x, double y, double z, net.minecraft.sound.SoundEvent sound, net.minecraft.sound.SoundCategory category, float volume, float pitch);',
+    'public void playSound(net.minecraft.entity.player.PlayerEntity except, double x, double y, double z, net.minecraft.registry.entry.RegistryEntry<net.minecraft.sound.SoundEvent> sound, net.minecraft.sound.SoundCategory category, float volume, float pitch);',
     'public boolean spawnEntity(net.minecraft.entity.Entity entity);',
     'public net.minecraft.entity.player.PlayerEntity getClosestPlayer(net.minecraft.entity.Entity entity, double maxDistance);',
     'public java.util.List<net.minecraft.entity.Entity> getOtherEntities(net.minecraft.entity.Entity except, net.minecraft.util.math.Box box, java.util.function.Predicate<? super net.minecraft.entity.Entity> predicate);',
@@ -606,6 +620,7 @@ add('net.minecraft.world.World', [], [
     'public net.minecraft.entity.player.PlayerEntity getPlayerByUuid(java.util.UUID uuid);',
     'public net.minecraft.fluid.FluidState getFluidState(net.minecraft.util.math.BlockPos pos);',
     'public net.minecraft.block.BlockState getBlockState(net.minecraft.util.math.BlockPos pos);',
+    'public net.minecraft.block.entity.BlockEntity getBlockEntity(net.minecraft.util.math.BlockPos pos);',
     'public boolean setBlockState(net.minecraft.util.math.BlockPos pos, net.minecraft.block.BlockState state, int flags);',
     'public int getBottomY();', 'public int getTopY();',
     'public net.minecraft.util.math.BlockPos getTopPosition(net.minecraft.world.Heightmap.Type type, net.minecraft.util.math.BlockPos pos);',

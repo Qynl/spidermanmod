@@ -116,10 +116,12 @@ public final class PirateShipEntity extends SailingShipEntity {
     }
 
     private void scanForPrey(ServerWorld world) {
-        List<MerchantShipEntity> prey = world.getEntitiesByClass(
-                MerchantShipEntity.class,
-                this.getBoundingBox().expand(CHASE_RANGE),
-                merchant -> merchant.isAlive() && merchant.cargoCrates() > 0);
+        List<MerchantShipEntity> prey = new ArrayList<>();
+        for (Entity candidate : world.getOtherEntities(this, this.getBoundingBox().expand(CHASE_RANGE),
+                entity -> entity instanceof MerchantShipEntity merchant
+                        && merchant.isAlive() && merchant.cargoCrates() > 0)) {
+            prey.add((MerchantShipEntity) candidate);
+        }
         if (!prey.isEmpty()) {
             MerchantShipEntity target = prey.get(world.random.nextInt(prey.size()));
             this.targetUuid = target.getUuid();
@@ -155,7 +157,7 @@ public final class PirateShipEntity extends SailingShipEntity {
                 this.plundered = true;
                 setCustomName(Text.literal("Freebooter Raider · LOADED WITH PLUNDER"));
                 setCustomNameVisible(true);
-                world.playSound(null, this.getBlockPos(), SoundEvents.ENTITY_VILLAGER_CELEBRATE,
+                world.playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.ENTITY_VILLAGER_CELEBRATE,
                         SoundCategory.NEUTRAL, 1.0f, 0.8f);
             }
             return;
@@ -185,9 +187,9 @@ public final class PirateShipEntity extends SailingShipEntity {
         ball.setVelocity(flat.x, arc, flat.z);
         world.spawnEntity(ball);
 
-        world.playSound(null, this.getBlockPos(), SoundEvents.ENTITY_WITHER_SHOOT,
+        world.playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.ENTITY_WITHER_SHOOT,
                 SoundCategory.NEUTRAL, 1.1f, 0.75f);
-        world.playSound(null, this.getBlockPos(), SoundEvents.ENTITY_GENERIC_EXPLODE,
+        world.playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.ENTITY_GENERIC_EXPLODE,
                 SoundCategory.NEUTRAL, 0.45f, 1.4f);
         world.spawnParticles(ParticleTypes.LARGE_SMOKE,
                 muzzle.x, muzzle.y, muzzle.z, 10, 0.25, 0.1, 0.25, 0.02);

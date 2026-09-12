@@ -193,7 +193,7 @@ public class AirshipEntity extends Entity implements VehicleInput {
 
         // Align the hull with the pilot's heading and bank into the turn.
         this.setYaw(MathHelper.lerpAngleDegrees(0.18f, this.getYaw(), pilot.getYaw()));
-        float targetBank = MathHelper.clamp(-strafe * MAX_BANK + (float) horizontal * 8.0f, -MAX_BANK, MAX_BANK);
+        float targetBank = (float) MathHelper.clamp(-strafe * MAX_BANK + horizontal * 8.0, -MAX_BANK, MAX_BANK);
         this.bank += (targetBank - this.bank) * 0.12f;
     }
 
@@ -201,7 +201,7 @@ public class AirshipEntity extends Entity implements VehicleInput {
         World world = this.getWorld();
         if (piloted) {
             if (world.getTime() % 26L == 0) {
-                world.playSound(null, this.getBlockPos(), SoundEvents.ENTITY_FIREWORK_ROCKET_LAUNCH,
+                world.playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.ENTITY_FIREWORK_ROCKET_LAUNCH,
                         SoundCategory.NEUTRAL, 0.22f, 1.15f);
             }
             if (world instanceof ServerWorld serverWorld && world.getTime() % 10L == 0
@@ -268,7 +268,7 @@ public class AirshipEntity extends Entity implements VehicleInput {
             return false;
         }
         World world = this.getWorld();
-        world.playSound(null, this.getBlockPos(), SoundEvents.BLOCK_CHAIN_HIT,
+        world.playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.BLOCK_CHAIN_HIT,
                 SoundCategory.NEUTRAL, 0.9f, 0.7f + world.random.nextFloat() * 0.3f);
         if (world instanceof ServerWorld serverWorld) {
             serverWorld.spawnParticles(ParticleTypes.CRIT,
@@ -287,7 +287,7 @@ public class AirshipEntity extends Entity implements VehicleInput {
             this.discard();
             return;
         }
-        world.playSound(null, this.getBlockPos(), SoundEvents.ENTITY_GENERIC_EXPLODE,
+        world.playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.ENTITY_GENERIC_EXPLODE,
                 SoundCategory.NEUTRAL, 1.2f, 0.9f);
         serverWorld.spawnParticles(ParticleTypes.EXPLOSION,
                 this.getX(), this.getY() + 1.2, this.getZ(), 1, 0.1, 0.1, 0.1, 0.0);

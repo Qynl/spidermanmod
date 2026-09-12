@@ -65,9 +65,9 @@ public final class RoyalLongswordItem extends SwordItem {
                 serverWorld.spawnParticles(ParticleTypes.SWEEP_ATTACK,
                         center.x, center.y + 0.6, center.z, hitCount > 0 ? 3 : 1,
                         0.6, 0.2, 0.6, 0.0);
-                serverWorld.playSound(null, user.getBlockPos(), SoundEvents.ENTITY_PLAYER_ATTACK_SWEEP,
+                serverWorld.playSound(null, user.getX(), user.getY(), user.getZ(), SoundEvents.ENTITY_PLAYER_ATTACK_SWEEP,
                         SoundCategory.PLAYERS, 1.0f, 1.0f);
-                serverWorld.playSound(null, user.getBlockPos(), SoundEvents.BLOCK_FIRE_EXTINGUISH,
+                serverWorld.playSound(null, user.getX(), user.getY(), user.getZ(), SoundEvents.BLOCK_FIRE_EXTINGUISH,
                         SoundCategory.PLAYERS, 0.6f, 1.5f);
             }
 

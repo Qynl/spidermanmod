@@ -95,7 +95,7 @@ public final class ShipSpawnEggItem extends Item {
             crew.add(member);
         }
         ship.boardCrew(crew);
-        world.playSound(null, ship.getBlockPos(), SoundEvents.ENTITY_BOAT_PADDLE_WATER,
+        world.playSound(null, ship.getX(), ship.getY(), ship.getZ(), SoundEvents.ENTITY_BOAT_PADDLE_WATER,
                 SoundCategory.NEUTRAL, 0.8f, 1.0f);
     }
 }
