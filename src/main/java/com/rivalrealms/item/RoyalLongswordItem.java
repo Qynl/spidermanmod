@@ -47,8 +47,11 @@ public final class RoyalLongswordItem extends SwordItem {
 
             // Sweep the arc in front of the wielder. Recruited crew are spared.
             Vec3d center = user.getPos().add(look.multiply(2.0));
+            Box sweep = new Box(
+                    center.add(-CLEAVE_RANGE, -CLEAVE_RANGE, -CLEAVE_RANGE),
+                    center.add(CLEAVE_RANGE, CLEAVE_RANGE, CLEAVE_RANGE));
             int hitCount = 0;
-            for (var target : world.getOtherEntities(user, new Box(center).expand(CLEAVE_RANGE),
+            for (var target : world.getOtherEntities(user, sweep,
                     entity -> entity instanceof LivingEntity living && living.isAlive() && living.canHit()
                             && !(entity instanceof com.rivalrealms.entity.SurvivorEntity survivor
                             && survivor.isRecruited()))) {

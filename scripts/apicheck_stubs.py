@@ -61,6 +61,7 @@ add('net.minecraft.util.math.Vec3d', [], [
 ])
 add('net.minecraft.util.math.Box', [], [
     'public Box(double x0, double y0, double z0, double x1, double y1, double z1);',
+    'public Box(net.minecraft.util.math.Vec3d min, net.minecraft.util.math.Vec3d max);',
     'public Box(net.minecraft.util.math.BlockPos pos);',
     'public net.minecraft.util.math.Box expand(double d);',
     'public net.minecraft.util.math.Box stretch(net.minecraft.util.math.Vec3d v);',
