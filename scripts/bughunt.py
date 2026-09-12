@@ -118,6 +118,11 @@ def check_mod_json() -> None:
             class_path = ROOT / "src" / source_set / "java" / Path(entrypoint.replace('.', '/')).with_suffix('.java')
             if not class_path.exists():
                 fail(f"entrypoint source is missing: {entrypoint}")
+            source = class_path.read_text(encoding="utf-8")
+            class_name = entrypoint.rsplit(".", 1)[-1]
+            constructors = re.findall(r"\b(public|protected|private)\s+" + re.escape(class_name) + r"\s*\(", source)
+            if constructors and "public" not in constructors:
+                fail(f"Fabric entrypoint is not publicly constructible: {entrypoint}")
 
 
 def check_runtime_safety() -> None:
