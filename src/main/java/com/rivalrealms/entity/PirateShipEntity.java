@@ -43,7 +43,7 @@ public class PirateShipEntity extends SailingShipEntity {
     @Nullable
     private UUID targetUuid;
     private boolean plundered;
-    private int cannonCooldown = 60;
+    protected int cannonCooldown = 60;
     private Vec3d patrolTarget;
     private long nextPatrolCheck;
 
