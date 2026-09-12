@@ -9,7 +9,6 @@ import net.minecraft.entity.vehicle.BoatEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
-import net.minecraft.util.DyeColor;
 import net.minecraft.util.math.BlockPos;
 
 /**
@@ -46,7 +45,7 @@ public final class StructureBuilder {
         tower(world, base.add(10, 1, 7), stone, brick);
         keep(world, base.add(-4, 1, -2), brick, stone);
         roof(world, base.add(-4, 8, -2), 9, 7, brick);
-        flag(world, base.add(0, 9, 0), DyeColor.BLUE, brick);
+        flag(world, base.add(0, 9, 0), Blocks.BLUE_WOOL, brick);
 
         house(world, base.add(-17, 0, -4), Blocks.OAK_PLANKS, Blocks.DARK_OAK_LOG, Blocks.DARK_OAK_STAIRS);
         house(world, base.add(15, 0, -4), Blocks.SPRUCE_PLANKS, Blocks.SPRUCE_LOG, Blocks.SPRUCE_STAIRS);
@@ -176,9 +175,9 @@ public final class StructureBuilder {
         }
     }
 
-    private static void flag(ServerWorld world, BlockPos base, DyeColor color, Block pole) {
+    private static void flag(ServerWorld world, BlockPos base, Block flagBlock, Block pole) {
         fill(world, base, 1, FLAG_HEIGHT, 1, pole);
-        fill(world, base.add(1, FLAG_HEIGHT - 2, 0), 4, 2, 1, color.getBlock());
+        fill(world, base.add(1, FLAG_HEIGHT - 2, 0), 4, 2, 1, flagBlock);
     }
 
     private static void wall(ServerWorld world, BlockPos base, int width, int height, int depth, Block block) {
