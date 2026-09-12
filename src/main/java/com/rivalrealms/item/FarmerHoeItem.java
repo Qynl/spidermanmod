@@ -1,12 +1,14 @@
 package com.rivalrealms.item;
 
 import net.minecraft.block.Blocks;
+import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.item.HoeItem;
 import net.minecraft.item.ToolMaterials;
 import net.minecraft.item.ItemUsageContext;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.ActionResult;
+import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
@@ -18,7 +20,7 @@ import net.minecraft.world.World;
  */
 public class FarmerHoeItem extends HoeItem {
     public FarmerHoeItem(Settings settings) {
-        super(ToolMaterials.IRON, 1.0f, -2.0f, settings);
+        super(ToolMaterials.IRON, settings);
     }
 
     @Override
@@ -40,7 +42,9 @@ public class FarmerHoeItem extends HoeItem {
                 }
             }
             if (tilled > 0 && context.getPlayer() != null && !context.getPlayer().isCreative()) {
-                context.getStack().damage(1, context.getPlayer(), p -> p.sendToolBreakStatus(context.getHand()));
+                EquipmentSlot slot = context.getHand() == Hand.OFF_HAND
+                        ? EquipmentSlot.OFFHAND : EquipmentSlot.MAINHAND;
+                context.getStack().damage(1, context.getPlayer(), slot);
             }
         }
         return result;

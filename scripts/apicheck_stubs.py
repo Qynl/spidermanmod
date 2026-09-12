@@ -383,7 +383,7 @@ add('net.minecraft.item.SwordItem', ['net.minecraft.item.Item'], [
 ])
 add('net.minecraft.item.ToolMaterial', [], [], iface=True)
 add('net.minecraft.item.HoeItem', ['net.minecraft.item.MiningToolItem'], [
-    'public HoeItem(net.minecraft.item.ToolMaterial material, float attackDamage, float attackSpeed, net.minecraft.item.Item.Settings settings);',
+    'public HoeItem(net.minecraft.item.ToolMaterial material, net.minecraft.item.Item.Settings settings);',
     'public net.minecraft.util.ActionResult useOnBlock(net.minecraft.item.ItemUsageContext context);',
 ])
 add('net.minecraft.item.MiningToolItem', ['net.minecraft.item.ToolItem'], [])
