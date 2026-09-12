@@ -14,7 +14,7 @@ import net.minecraft.util.shape.VoxelShape;
 import net.minecraft.util.shape.VoxelShapes;
 import net.minecraft.world.BlockView;
 import net.minecraft.world.World;
-import net.minecraft.entity.ShapeContext;
+import net.minecraft.block.ShapeContext;
 
 /** A visible, interactable claim marker for a player settlement. */
 public final class RealmBannerBlock extends Block {
