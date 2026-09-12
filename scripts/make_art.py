@@ -456,6 +456,57 @@ def bottle_texture(path):
     png(path, 16, 16, p)
 
 
+def war_weapon_textures():
+    """16x16 icons: blunderbuss, halberd, warhorn."""
+    # --- blunderbuss: short flared barrel, brass bell, heavy stock
+    p = canvas(16, 16)
+    iron, iron_l, iron_d = (176, 178, 184, 255), (214, 216, 220, 255), (120, 122, 130, 255)
+    brass = (196, 158, 74, 255)
+    wood, wood_d = (118, 82, 46, 255), (86, 58, 32, 255)
+    for y in range(3, 9):                       # barrel
+        px(p, 16, 6, y, iron); px(p, 16, 7, y, iron_l); px(p, 16, 8, y, iron_d)
+    for y in range(2, 10):                      # flared bell
+        px(p, 16, 4, y, brass); px(p, 16, 5, y, brass)
+    px(p, 16, 4, 2, (226, 190, 100, 255)); px(p, 16, 5, 2, brass)
+    px(p, 16, 3, 5, brass); px(p, 16, 4, 5, (226, 190, 100, 255))
+    for i in range(7):                          # stock
+        px(p, 16, 7 + i, 9 + (i * 2) // 3, wood); px(p, 16, 8 + i, 10 + (i * 2) // 3, wood_d)
+    px(p, 16, 7, 10, (52, 38, 24, 255))         # trigger guard
+    jitter(p, 16, 21, 3)
+    png(TEX / "item/blunderbuss.png", 16, 16, p)
+
+    # --- halberd: long ash shaft, crescent blade, top spike
+    p = canvas(16, 16)
+    steel, steel_l, steel_d = (188, 192, 198, 255), (226, 228, 232, 255), (128, 132, 140, 255)
+    ash, ash_d = (140, 104, 60, 255), (104, 76, 42, 255)
+    for i in range(13):                         # shaft
+        px(p, 16, 7, 3 + i, ash); px(p, 16, 8, 3 + i, ash_d)
+    for x in range(3, 9):                       # crescent blade
+        px(p, 16, x, 2, steel_l if x in (3, 4) else steel)
+        px(p, 16, x, 3, steel_d if x > 5 else steel)
+    px(p, 16, 2, 3, steel); px(p, 16, 2, 4, steel_d)
+    px(p, 16, 9, 2, steel); px(p, 16, 10, 3, steel); px(p, 16, 10, 4, steel_d)
+    px(p, 16, 7, 0, steel_l); px(p, 16, 8, 0, steel); px(p, 16, 7, 1, steel); px(p, 16, 8, 1, steel)  # spike
+    px(p, 16, 6, 4, (72, 52, 30, 255)); px(p, 16, 9, 4, (72, 52, 30, 255))  # collar
+    jitter(p, 16, 22, 3)
+    png(TEX / "item/halberd.png", 16, 16, p)
+
+    # --- warhorn: curved ox horn with mouthpiece and cord
+    p = canvas(16, 16)
+    horn, horn_l, horn_d = (196, 158, 92, 255), (226, 196, 132, 255), (150, 116, 62, 255)
+    cord = (150, 60, 48, 255)
+    for i in range(9):                          # body arc
+        x, y = 3 + i, 12 - i
+        px(p, 16, x, y, horn); px(p, 16, x, y + 1, horn_d)
+    px(p, 16, 2, 13, horn_l); px(p, 16, 3, 12, horn_l)      # mouthpiece glint
+    px(p, 16, 11, 4, horn_d); px(p, 16, 12, 3, horn_d)      # bell shadow
+    px(p, 16, 12, 2, horn)
+    for (cx, cy) in ((6, 9), (8, 8)):           # cord wraps
+        px(p, 16, cx, cy, cord); px(p, 16, cx + 1, cy, cord)
+    jitter(p, 16, 23, 3)
+    png(TEX / "item/warhorn.png", 16, 16, p)
+
+
 def cannon_block_textures(folder):
     """Two 16x16 block textures: dark bronze barrel + oak-and-iron carriage."""
     barrel = canvas(16, 16)
@@ -660,6 +711,19 @@ def skin_texture(name, face, hair, shirt, trim, pants, hat, hat_kind="cap", eye=
         for gx in (42, 46):
             px(p, 64, gx, 9, (36, 40, 48, 255)); px(p, 64, gx + 1, 9, (36, 40, 48, 255))
             px(p, 64, gx, 10, (110, 220, 235, 255)); px(p, 64, gx + 1, 10, (140, 235, 248, 255))
+    elif hat_kind == "mohawk":
+        # war-paint face + a bone/feather crest strip
+        rect(p, 64, 40, 4, 48, 8, (206, 196, 170, 255))       # crest band
+        for x in (41, 43, 45, 47):
+            px(p, 64, x, 3, (190, 60, 46, 255))               # war plume
+        hline(p, 64, 40, 48, 10, (150, 40, 36, 255))          # paint band
+        px(p, 64, 42, 12, (150, 40, 36, 255)); px(p, 64, 46, 12, (150, 40, 36, 255))
+    elif hat_kind == "straw":
+        head(32, 0, hat, hat_l, hat, hat_l, hat_d, hat_d)
+        rect(p, 64, 34, 10, 62, 12, hat)                      # wide straw brim
+        hline(p, 64, 36, 60, 11, hat_d)
+        rect(p, 64, 40, 0, 48, 8, hat)                        # crown
+        hline(p, 64, 40, 48, 7, (120, 96, 52, 255))
     else:  # simple cap
         head(32, 0, hat, hat, hat, hat, hat_d, hat_d)
 
@@ -752,6 +816,15 @@ def skin_texture(name, face, hair, shirt, trim, pants, hat, hat_kind="cap", eye=
         rect(p, 64, 20, 36, 28, 40, trim)             # scarf wrap
         rect(p, 64, 34, 38, 38, 50, trim_d)           # scarf tail
         hline(p, 64, 20, 28, 36, brighten(trim, 1.2))
+    elif name == "marauder":
+        rect(p, 64, 16, 36, 20, 48, trim_d)           # bone necklace band
+        rect(p, 64, 36, 36, 40, 48, trim_d)
+        for x in (22, 24, 26):                        # bone beads
+            px(p, 64, x, 38, (222, 212, 184, 255))
+        rect(p, 64, 32, 36, 40, 48, darken(shirt, 0.85))
+    elif name == "hearthfolk":
+        rect(p, 64, 20, 36, 28, 44, trim)             # linen apron
+        hline(p, 64, 22, 26, 40, hat_d)               # apron pocket seam
 
     png(TEX / "entity/survivor" / f"{name}.png", 64, 64, p)
 
@@ -1148,6 +1221,7 @@ def main():
     bottle_texture(TEX / "item/ship_in_a_bottle.png")
     cannonball_texture(TEX / "item/cannonball.png")
     farmer_hoe_texture(TEX / "item/farmer_hoe.png")
+    war_weapon_textures()
     cannon_block_textures(TEX / "block")
     airship_kit_texture(TEX / "item/airship_kit.png")
 
@@ -1190,6 +1264,18 @@ def main():
                sail=(226, 234, 232, 255), sail_dark=(198, 210, 208, 255),
                trim=(64, 142, 134, 255), flag=(64, 142, 134, 255), emblem="gull")
     paint_galleon(TEX / "entity/galleon.png")
+
+    # war & glory cultures
+    skin_texture("marauder", face=(198, 148, 118, 255), hair=(28, 24, 24, 255),
+                 shirt=(94, 44, 38, 255), trim=(212, 190, 150, 255),
+                 pants=(58, 42, 34, 255), hat=(0, 0, 0, 0), hat_kind="mohawk")
+    skin_texture("hearthfolk", face=(228, 190, 158, 255), hair=(150, 108, 62, 255),
+                 shirt=(122, 155, 78, 255), trim=(214, 200, 168, 255),
+                 pants=(96, 74, 52, 255), hat=(206, 178, 96, 255), hat_kind="straw")
+
+    # war & glory eggs
+    spawn_egg_texture(TEX / "item/marauder_spawn_egg.png", (148, 43, 43, 255), (24, 22, 20, 255))
+    spawn_egg_texture(TEX / "item/hearthfolk_spawn_egg.png", (122, 155, 78, 255), (228, 190, 158, 255))
 
     # mod icon (both the fabric.mod.json icon and the legacy item icon slot)
     icon_texture(ROOT / "icon.png")

@@ -39,7 +39,19 @@ public enum Archetype {
             Items.GOLDEN_HELMET, Items.IRON_CHESTPLATE, Items.IRON_LEGGINGS, Items.GOLDEN_BOOTS,
             true, 26.0, 0.31, 3.0, 0x7f4da8,
             new String[]{"Aurelia", "Vesper", "Cyrus", "Altaira", "Corvus", "Lumen", "Petra", "Skylar", "Zephyr", "Nimbus"},
-            new String[]{"of the Skybound", "Cloudwright", "the Highmoor", "Stormrider", "of Dock Nine"});
+            new String[]{"of the Skybound", "Cloudwright", "the Highmoor", "Stormrider", "of Dock Nine"}),
+    MARAUDER("marauder", "Marauders", "Raider", Items.IRON_AXE, Items.CROSSBOW,
+            Items.CHAINMAIL_HELMET, Items.LEATHER_CHESTPLATE, Items.CHAINMAIL_LEGGINGS, Items.LEATHER_BOOTS,
+            false, 26.0, 0.30, 2.5, 0x8a2b2b,
+            new String[]{"Gorehand", "Krag", "Skullcracker", "Old Bone-Nose", "Thraag", "Wartooth",
+                "Blight", "Hacksaw", "Split-Lip", "Red-Maw"},
+            new String[]{"the Red-Handed", "Bone-Chewer", "of the Ashen Hoard", "Warpaint", "the Unforgiven"}),
+    HEARTHFOLK("hearthfolk", "Hearthfolk", "Villager", Items.IRON_SWORD, Items.CROSSBOW,
+            Items.LEATHER_HELMET, Items.LEATHER_CHESTPLATE, Items.IRON_LEGGINGS, Items.LEATHER_BOOTS,
+            false, 22.0, 0.28, 2.5, 0x7a9b4e,
+            new String[]{"Bartholomew", "Marigold", "Old Cobb", "Poppy", "Whitfield", "Dora",
+                "Fennel", "Goodman Reed", "Aldwin", "Bramble"},
+            new String[]{"of the Hearth", "Honeywine", "the Kind", "Fivefields", "of Mill Lane"});
 
     private static final String[] PIRATE_SHIP_TITLES = {
             "Captain", "Quartermaster", "Gunner", "Sailor", "Bosun", "Lookout"
@@ -174,6 +186,8 @@ public enum Archetype {
             case KNIGHT -> 0.60;
             case SKY_CAPTAIN -> 0.50;
             case PIRATE -> 0.40;
+            case MARAUDER -> 0.45;
+            case HEARTHFOLK -> 0.25;
             case OUTLAW -> 0.30;
         };
     }

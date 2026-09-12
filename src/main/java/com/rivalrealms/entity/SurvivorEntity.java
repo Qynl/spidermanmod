@@ -99,6 +99,11 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
     private ItemStack savedHand = ItemStack.EMPTY;
     private BlockPos farmTarget;
     private long nextFarmAction;
+    private UUID grudgeUuid;
+    private long grudgeUntil;
+    private int suspicion;
+    private int forgeTimer;
+    private long nextPatrol;
 
     public SurvivorEntity(EntityType<? extends SurvivorEntity> entityType, World world) {
         super(entityType, world);
@@ -158,6 +163,7 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
 
         eatTick();
         farmTick();
+        suspicionTick();
 
         if (recruited) {
             if (owner == null) {
@@ -400,11 +406,32 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
         // a stranger. Settlement guards are not hostile to players. Guards
         // and wary survivors only select rival NPCs when diplomacy says the
         // factions are at war; chill souls sit the wars out.
-        if (guardCenter == null && temperament == Temperament.HOSTILE) {
+        if ((guardCenter == null || "Marauders".equals(effectiveFaction()))
+                && temperament == Temperament.HOSTILE) {
             PlayerEntity player = getWorld().getClosestPlayer(this, 16.0);
             if (player != null && !player.isCreative() && !player.isSpectator()) {
                 setTarget(player);
                 return;
+            }
+        }
+
+        // Grudges: someone who wronged me (attacked me, aimed at me, stole
+        // from the fields) is hunted on sight until the memory fades. Even
+        // settlement folk will pick a fight over an old score.
+        if (grudgeUuid != null) {
+            if (getWorld().getTime() >= grudgeUntil) {
+                expireGrudge();
+            } else {
+                for (PlayerEntity candidate : getWorld().getPlayers()) {
+                    if (candidate.getUuid().equals(grudgeUuid) && candidate.isAlive()
+                            && !candidate.isCreative() && !candidate.isSpectator()
+                            && this.squaredDistanceTo(candidate) < 20.0 * 20.0) {
+                        if (temperament != Temperament.CHILL) {
+                            setTarget(candidate);
+                            return;
+                        }
+                    }
+                }
             }
         }
 
@@ -460,8 +487,52 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
                         guardCenter.getY(), guardCenter.getZ() + random.nextInt(13) - 6, 0.75);
             }
         }
+        if (settlementRole == SettlementRole.GUARD && now >= nextPatrol) {
+            // Guards walk their rounds instead of standing like statues.
+            nextPatrol = now + 200L + random.nextInt(200);
+            getNavigation().startMovingTo(guardCenter.getX() + random.nextInt(17) - 8,
+                    guardCenter.getY(), guardCenter.getZ() + random.nextInt(17) - 8, 0.8);
+        }
         if (settlementRole.isCombatant()) {
             acquireRivalTarget();
+        }
+        if (settlementRole == SettlementRole.BLACKSMITH && now % 20L == 0L) {
+            forgeTick();
+        }
+    }
+
+    /**
+     * The village smith actually makes weapons: hammer sparks at the forge,
+     * anvil rings, and every few sessions a finished blade clatters onto the
+     * ground - occasionally a good one. The settlement arms itself.
+     */
+    private void forgeTick() {
+        BlockPos forge = worksite();
+        if (squaredDistanceTo(forge.getX() + 0.5, forge.getY(), forge.getZ() + 0.5) > 7.0 * 7.0
+                || !getMainHandStack().isEmpty()) {
+            return;
+        }
+        forgeTimer++;
+        swingHand(Hand.MAIN_HAND);
+        ServerWorld serverWorld = (ServerWorld) getWorld();
+        serverWorld.playSound(null, forge.getX() + 0.5, forge.getY() + 1.0, forge.getZ() + 0.5,
+                SoundEvents.BLOCK_ANVIL_USE, SoundCategory.BLOCKS, 0.6f, 1.1f + random.nextFloat() * 0.2f);
+        serverWorld.spawnParticles(ParticleTypes.LAVA,
+                forge.getX() + 0.5, forge.getY() + 1.1, forge.getZ() + 0.5, 2, 0.2, 0.1, 0.2, 0.0);
+        if (forgeTimer >= 6) {
+            forgeTimer = 0;
+            ItemStack crafted = random.nextInt(10) == 0
+                    ? new ItemStack(Items.IRON_SWORD)
+                    : random.nextBoolean() ? new ItemStack(Items.IRON_SWORD) : new ItemStack(Items.IRON_AXE);
+            if (random.nextInt(10) == 0) {
+                var enchantments = getWorld().getRegistryManager()
+                        .get(net.minecraft.registry.RegistryKeys.ENCHANTMENT);
+                crafted.addEnchantment(enchantments.entryOf(net.minecraft.enchantment.Enchantments.SHARPNESS),
+                        1 + random.nextInt(2));
+            }
+            this.dropStack(crafted);
+            serverWorld.playSound(null, forge.getX() + 0.5, forge.getY() + 1.0, forge.getZ() + 0.5,
+                    SoundEvents.ENTITY_ITEM_PICKUP, SoundCategory.BLOCKS, 0.8f, 0.8f);
         }
     }
 
@@ -603,6 +674,15 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
     public ActionResult interactMob(PlayerEntity player, Hand hand) {
         ItemStack held = player.getStackInHand(hand);
 
+        // Grudges close hearts: someone you wronged wants nothing from you.
+        if (grudgeAgainst(player) && !isRecruited() && !isOwner(player) && !held.isOf(ModItems.RECRUITMENT_CONTRACT)) {
+            if (!getWorld().isClient) {
+                player.sendMessage(Text.literal(getName().getString()
+                        + " turns away from you coldly."), true);
+            }
+            return ActionResult.PASS;
+        }
+
         // Good-natured survivors open their trade satchel for a friendly face.
         if (temperament == Temperament.CHILL && !isRecruited() && held.isEmpty()
                 && !player.shouldCancelInteraction()) {
@@ -731,6 +811,16 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
                     new ItemStack(Items.LEATHER, 4), 8, 2, 0.05f));
             case SKY_CAPTAIN -> offers.add(new TradeOffer(new TradedItem(Items.EMERALD, 4), Optional.empty(),
                     new ItemStack(Items.EXPERIENCE_BOTTLE, 3), 6, 4, 0.05f));
+            case HEARTHFOLK -> {
+                offers.add(new TradeOffer(new TradedItem(Items.EMERALD, 1), Optional.empty(),
+                        new ItemStack(Items.CARROT, 5), 12, 2, 0.05f));
+                offers.add(new TradeOffer(new TradedItem(Items.EMERALD, 2), Optional.empty(),
+                        new ItemStack(Items.APPLE, 4), 12, 2, 0.05f));
+                offers.add(new TradeOffer(new TradedItem(Items.EMERALD, 1), Optional.empty(),
+                        new ItemStack(Items.WHEAT_SEEDS, 9), 12, 2, 0.05f));
+            }
+            case MARAUDER -> offers.add(new TradeOffer(new TradedItem(Items.EMERALD, 6), Optional.empty(),
+                    new ItemStack(Items.BONE, 4), 4, 2, 0.05f));
         }
     }
 
@@ -790,6 +880,7 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
                 }
             }
             if (source.getAttacker() instanceof PlayerEntity player) {
+                witnessAttack(player);
                 if (guardCenter != null && guardOwnerUuid != null && guardOwnerUuid.equals(player.getUuid())) {
                     // Settlement staff are protected from accidental friendly fire;
                     // RevengeGoal must never turn an owner's mistake into a revolt.
@@ -865,6 +956,10 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
         nbt.putString("Temperament", temperament.id());
         nbt.putBoolean("TemperamentChosen", temperamentChosen);
         nbt.putBoolean("LoadoutApplied", loadoutApplied);
+        if (grudgeUuid != null) {
+            nbt.putUuid("Grudge", grudgeUuid);
+            nbt.putLong("GrudgeUntil", grudgeUntil);
+        }
         nbt.putBoolean("Recruited", recruited);
         nbt.putBoolean("Guarding", guarding);
         nbt.putInt("Trust", trust);
@@ -892,6 +987,8 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
         archetypeLocked = nbt.contains("Archetype", NbtElement.STRING_TYPE);
         temperament = Temperament.byId(nbt.getString("Temperament"));
         temperamentChosen = nbt.getBoolean("TemperamentChosen");
+        grudgeUuid = nbt.containsUuid("Grudge") ? nbt.getUuid("Grudge") : null;
+        grudgeUntil = nbt.getLong("GrudgeUntil");
         recruited = nbt.getBoolean("Recruited");
         guarding = nbt.getBoolean("Guarding");
         trust = Math.max(0, Math.min(100, nbt.getInt("Trust")));
@@ -1003,6 +1100,100 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
             }
         }
         return best;
+    }
+
+    // ------------------------------------------------------------------ grudges
+
+    /** Remembers a player for {@code ticks}. Grudges survive saves. */
+    public void holdGrudge(PlayerEntity player, long ticks) {
+        this.grudgeUuid = player.getUuid();
+        this.grudgeUntil = getWorld().getTime() + ticks;
+    }
+
+    public boolean grudgeAgainst(PlayerEntity player) {
+        return player != null && grudgeUuid != null && grudgeUuid.equals(player.getUuid())
+                && getWorld().getTime() < grudgeUntil;
+    }
+
+    private void expireGrudge() {
+        grudgeUuid = null;
+        suspicion = 0;
+    }
+
+    /**
+     * The social brain, not just revenge: NPCs who SAW you attack one of
+     * their own remember your face and drag their friends into it. Chill
+     * souls never fight, but they remember too.
+     */
+    private void witnessAttack(PlayerEntity attacker) {
+        holdGrudge(attacker, 72000L); // an hour of in-game time
+        for (net.minecraft.entity.Entity witness : getWorld().getOtherEntities(this,
+                getBoundingBox().expand(14.0), e -> e instanceof SurvivorEntity ally
+                        && ally.isAlive() && !ally.isRecruited()
+                        && ally.effectiveFaction().equals(effectiveFaction()))) {
+            SurvivorEntity ally = (SurvivorEntity) witness;
+            ally.holdGrudge(attacker, 72000L);
+            if (ally.temperament != Temperament.CHILL) {
+                ally.setTarget(attacker);
+            }
+        }
+    }
+
+    /**
+     * Static hook fired by the block-break listener when a player harvests a
+     * mature crop inside a settlement's fields: farm folk call that theft.
+     */
+    public static void onCropTheft(ServerWorld world, PlayerEntity thief, String faction, BlockPos pos) {
+        com.rivalrealms.world.RealmState realms = com.rivalrealms.world.RealmState.get(world);
+        realms.adjustReputation(thief.getUuid(), faction, -4);
+        for (net.minecraft.entity.Entity witness : world.getOtherEntities(null,
+                new net.minecraft.util.math.Box(pos).expand(16.0), e -> e instanceof SurvivorEntity folk
+                        && !folk.isRecruited()
+                        && folk.effectiveFaction().equals(faction))) {
+            SurvivorEntity folk = (SurvivorEntity) witness;
+            folk.holdGrudge(thief, 108000L);
+            if (folk.temperament != Temperament.CHILL && folk.isSettlementWorker()) {
+                folk.setTarget(thief);
+            }
+        }
+    }
+
+    /**
+     * Aiming a drawn crossbow straight at someone is as good as attacking
+     * them. Aim long enough and even the patient ones decide you meant it.
+     */
+    private void suspicionTick() {
+        long now = getWorld().getTime();
+        if (now % 30L != 0L || !(getWorld() instanceof ServerWorld serverWorld)) {
+            return;
+        }
+        if (grudgeUuid == null) {
+            suspicion = Math.max(0, suspicion - 1);
+        }
+        PlayerEntity player = getWorld().getClosestPlayer(this, 5.0);
+        if (player == null || player.isCreative() || player.isSpectator() || isOwner(player)) {
+            return;
+        }
+        ItemStack held = player.getMainHandStack();
+        if (!held.isOf(net.minecraft.item.Items.CROSSBOW)
+                || !net.minecraft.item.CrossbowItem.isCharged(held)) {
+            return;
+        }
+        Vec3d toMe = getPos().add(0.0, getStandingEyeHeight(), 0.0)
+                .subtract(player.getPos().add(0.0, player.getStandingEyeHeight(), 0.0)).normalize();
+        Vec3d look = player.getRotationVec(1.0f).normalize();
+        if (look.dotProduct(toMe) < 0.93) {
+            return;
+        }
+        suspicion++;
+        if (suspicion >= 2 && !grudgeAgainst(player)) {
+            holdGrudge(player, 48000L);
+            player.sendMessage(Text.literal(getName().getString()
+                    + " does not like the way you are aiming that.").formatted(Formatting.GOLD), true);
+            if (temperament != Temperament.CHILL) {
+                setTarget(player);
+            }
+        }
     }
 
     /** Wary and hostile survivors repay attacks; good-natured ones run instead. */

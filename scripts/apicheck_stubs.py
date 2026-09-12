@@ -28,6 +28,29 @@ add('net.minecraft.registry.entry.RegistryEntry.Reference', ['net.minecraft.regi
 add('net.minecraft.entity.EntityPose', [], [])
 
 add('net.minecraft.enchantment.Enchantment', [], [])
+add('net.minecraft.item.CrossbowItem', ['net.minecraft.item.RangedWeaponItem'], [
+    'public static boolean isCharged(net.minecraft.item.ItemStack stack);',
+])
+add('net.minecraft.item.RangedWeaponItem', ['net.minecraft.item.Item'], [])
+add('net.minecraft.entity.effect.StatusEffect', [], [])
+add('net.minecraft.entity.effect.StatusEffects', [], [
+    'public static final net.minecraft.registry.entry.RegistryEntry.Reference<net.minecraft.entity.effect.StatusEffect> SPEED;',
+    'public static final net.minecraft.registry.entry.RegistryEntry.Reference<net.minecraft.entity.effect.StatusEffect> STRENGTH;',
+    'public static final net.minecraft.registry.entry.RegistryEntry.Reference<net.minecraft.entity.effect.StatusEffect> WEAKNESS;',
+    'public static final net.minecraft.registry.entry.RegistryEntry.Reference<net.minecraft.entity.effect.StatusEffect> RESISTANCE;',
+])
+add('net.minecraft.entity.effect.StatusEffectInstance', [], [
+    'public StatusEffectInstance(net.minecraft.registry.entry.RegistryEntry<net.minecraft.entity.effect.StatusEffect> effect, int duration, int amplifier);',
+])
+add('net.minecraft.component.type.AttributeModifiersComponent', [], [
+    'public static net.minecraft.component.type.AttributeModifiersComponent.Builder builder();',
+])
+add('net.minecraft.component.type.AttributeModifiersComponent.Builder', [], [
+    'public net.minecraft.component.type.AttributeModifiersComponent.Builder add(net.minecraft.registry.entry.RegistryEntry<net.minecraft.entity.attribute.EntityAttribute> attribute, net.minecraft.entity.attribute.EntityAttributeModifier modifier, net.minecraft.component.type.AttributeModifierSlot slot);',
+    'public net.minecraft.component.type.AttributeModifiersComponent build();',
+])
+add('net.minecraft.component.type.AttributeModifierSlot', [], [])
+add('net.minecraft.item.equipment.ArmorMaterials', [], [])
 add('net.minecraft.registry.RegistryEntryLookup', [], [
     'public net.minecraft.registry.entry.RegistryEntry.Reference getOrThrow(net.minecraft.registry.RegistryKey key);',
 ], iface=True)
@@ -48,6 +71,10 @@ add('net.minecraft.enchantment.Enchantments', [], [
     'public static final net.minecraft.registry.RegistryKey<net.minecraft.enchantment.Enchantment> UNBREAKING;',
 ])
 
+add('net.fabricmc.fabric.api.event.player.ServerBlockBreakEvents', [], [
+    'public static final net.fabricmc.fabric.api.event.Event AFTER;',
+])
+add('net.fabricmc.fabric.api.event.Event', [], [], iface=True)
 add('net.minecraft.village.TradedItem', [], [
     'public TradedItem(net.minecraft.item.ItemLike item);',
     'public TradedItem(net.minecraft.item.ItemLike item, int count);',
@@ -190,7 +217,7 @@ add('net.minecraft.sound.SoundEvents', [], [
     'public static final net.minecraft.sound.SoundEvent ENTITY_PLAYER_ATTACK_SWEEP;',
     'public static final net.minecraft.sound.SoundEvent ENTITY_ARROW_HIT_PLAYER;',
     'public static final net.minecraft.sound.SoundEvent ITEM_CROSSBOW_SHOOT;',
-    'public static final net.minecraft.sound.SoundEvent BLOCK_PISTON_EXTEND;', 'public static final net.minecraft.sound.SoundEvent ITEM_HOE_TILL;', 'public static final net.minecraft.sound.SoundEvent BLOCK_METAL_PLACE;',
+    'public static final net.minecraft.sound.SoundEvent BLOCK_PISTON_EXTEND;', 'public static final net.minecraft.sound.SoundEvent ITEM_HOE_TILL;', 'public static final net.minecraft.sound.SoundEvent BLOCK_ANVIL_USE;', 'public static final net.minecraft.sound.SoundEvent ENTITY_RAVAGER_ROAR;', 'public static final net.minecraft.sound.SoundEvent ENTITY_RAVAGER_ATTACK;', 'public static final net.minecraft.sound.SoundEvent BLOCK_METAL_PLACE;',
     'public static final net.minecraft.sound.SoundEvent ENTITY_GENERIC_SPLASH;',
     'public static final net.minecraft.sound.SoundEvent BLOCK_FIRE_EXTINGUISH;',
 ])
@@ -249,7 +276,7 @@ add('net.minecraft.block.Blocks', [], [
     'public static final net.minecraft.block.Block WHITE_WOOL;', 'public static final net.minecraft.block.Block RED_WOOL;',
     'public static final net.minecraft.block.Block BLUE_WOOL;', 'public static final net.minecraft.block.Block YELLOW_WOOL;',
     'public static final net.minecraft.block.Block ORANGE_WOOL;', 'public static final net.minecraft.block.Block LIME_WOOL;',
-    'public static final net.minecraft.block.Block BLACK_WOOL;',
+    'public static final net.minecraft.block.Block BLACK_WOOL;', 'public static final net.minecraft.block.Block GRAY_WOOL;',
     'public static final net.minecraft.block.Block SPRUCE_LOG;', 'public static final net.minecraft.block.Block OAK_LOG;',
     'public static final net.minecraft.block.Block DARK_OAK_LOG;',
     'public static final net.minecraft.block.Block SPRUCE_STAIRS;', 'public static final net.minecraft.block.Block OAK_STAIRS;',
@@ -561,7 +588,15 @@ add('net.minecraft.entity.EquipmentSlot', [], [
     'public static final net.minecraft.entity.EquipmentSlot FEET;',
     'public static net.minecraft.entity.EquipmentSlot getSlotForHand(net.minecraft.util.Hand hand);',
 ])
+add('net.minecraft.entity.attribute.EntityAttributeModifier', [], [
+    'public EntityAttributeModifier(net.minecraft.util.Identifier id, double value, net.minecraft.entity.attribute.EntityAttributeModifier.Operation operation);',
+])
+add('net.minecraft.entity.attribute.EntityAttributeModifier.Operation', [], [], iface=True)
 add('net.minecraft.entity.attribute.EntityAttributes', [], [
+    'public static final net.minecraft.registry.entry.RegistryEntry<net.minecraft.entity.attribute.EntityAttribute> GENERIC_ATTACK_DAMAGE;',
+    'public static final net.minecraft.registry.entry.RegistryEntry<net.minecraft.entity.attribute.EntityAttribute> GENERIC_ATTACK_SPEED;',
+    'public static final net.minecraft.registry.entry.RegistryEntry<net.minecraft.entity.attribute.EntityAttribute> GENERIC_ARMOR;',
+    'public static final net.minecraft.registry.entry.RegistryEntry<net.minecraft.entity.attribute.EntityAttribute> PLAYER_ENTITY_INTERACTION_RANGE;',
     'public static final net.minecraft.entity.attribute.EntityAttribute GENERIC_MAX_HEALTH;',
     'public static final net.minecraft.entity.attribute.EntityAttribute GENERIC_MOVEMENT_SPEED;',
     'public static final net.minecraft.entity.attribute.EntityAttribute GENERIC_ATTACK_DAMAGE;',
@@ -671,10 +706,10 @@ add('net.minecraft.particle.ParticleTypes', [], [
     'public static final net.minecraft.particle.ParticleType CLOUD;',
     'public static final net.minecraft.particle.ParticleType EXPLOSION;',
     'public static final net.minecraft.particle.ParticleType LARGE_SMOKE;',
-    'public static final net.minecraft.particle.ParticleType SMOKE;',
+    'public static final net.minecraft.particle.ParticleType SMOKE;', 'public static final net.minecraft.particle.ParticleType LAVA;', 'public static final net.minecraft.particle.ParticleType ANGRY_VILLAGER;', 'public static final net.minecraft.particle.ParticleType NOTE;', 'public static final net.minecraft.particle.ParticleType HAPPY_VILLAGER;',
     'public static final net.minecraft.particle.ParticleType POOF;',
     'public static final net.minecraft.particle.ParticleType FLAME;',
-    'public static final net.minecraft.particle.ParticleType CRIT;', 'public static final net.minecraft.particle.ParticleType HEART;', 'public static final net.minecraft.particle.ParticleType SMOKE;',
+    'public static final net.minecraft.particle.ParticleType CRIT;', 'public static final net.minecraft.particle.ParticleType HEART;', 'public static final net.minecraft.particle.ParticleType SMOKE;', 'public static final net.minecraft.particle.ParticleType LAVA;', 'public static final net.minecraft.particle.ParticleType ANGRY_VILLAGER;', 'public static final net.minecraft.particle.ParticleType NOTE;', 'public static final net.minecraft.particle.ParticleType HAPPY_VILLAGER;',
     'public static final net.minecraft.particle.ParticleType SPLASH;',
     'public static final net.minecraft.particle.ParticleType SWEEP_ATTACK;',
 ])

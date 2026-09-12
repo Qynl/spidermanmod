@@ -155,6 +155,27 @@ Claimed settlements recruit guards and workers up to their level. Jobs (guard, b
 
 ---
 
+## Realms at war
+
+### Marauders — the fifth faction
+Red-handed raiders at war with the **entire world** (-75 with every faction, in writing). **Every Marauder is Bloodthirsty** — the red name-tag is a promise. They pitch warcamps in the wastes (skull totems, hide tents, bone-fires), march in **wanderer warbands**, and man camps with a champion-rolled **Warlord** and roaming raiders. `/realm build marauder` raises a camp anywhere.
+
+### The Hearthfolk — the quiet folk
+A sixth culture of farm-and-forge villagers who **never start fights**: mostly Good-natured (green) with the rest merely wary. Hamlets of three cottages, gardens, a well and a **smith who forges real weapons** (anvil rings, sparks, occasional Sharpness blade). Cross them — attack, aim at them, or steal from their fields — and grudges form like everywhere else. `/realm build hearthfolk`.
+
+### Social AI: grudges, witnesses, suspicion
+- **Witnesses**: attacking an NPC in sight of their faction-mates drags everyone into the fight — they all remember your face for **an hour**
+- **Grudges close hearts**: marked players are hunted on sight (20 blocks), refused trades ("turns away from you coldly"), and grudges **survive world saves**
+- **Aim suspicion**: hold a drawn crossbow on someone and they'll warn you once — keep aiming and even patient folk decide you meant it
+- **Crop theft**: harvesting mature crops inside a settlement's fields costs reputation (-4) and turns farm folk hostile — someone always sees
+
+### New arsenal
+- **Blunderbuss** — six-pellet scattergun, devastating up close, kicks hard
+- **Halberd** — true 1.5-block reach via attribute modifiers, heavy damage, active sweeping thrust that knocks a rank back and weakens it
+- **Warhorn** — rallies allies in 24 blocks with Speed + Strength (recruited crews and all non-hostile folk answer)
+
+Guards now **walk patrols** instead of standing post like statues; blacksmiths in any settlement forge weapons at their worksite.
+
 ## War & glory
 
 ### Reputation

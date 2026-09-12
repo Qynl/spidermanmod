@@ -74,6 +74,32 @@ public final class RealmEvents {
     }
 
     /**
+     * Crop theft detection: a player who breaks a MATURE crop inside a
+     * settlement's fields gets caught by anyone working nearby. Reputation
+     * drops and farm folk hold a grudge — warcamps don't care.
+     */
+    public static void onBlockBroken(net.minecraft.world.World world, BlockPos pos,
+                                     net.minecraft.block.BlockState state, net.minecraft.entity.Entity breaker) {
+        if (!(world instanceof ServerWorld serverWorld) || !(breaker instanceof ServerPlayerEntity player)) {
+            return;
+        }
+        if (!(state.getBlock() instanceof net.minecraft.block.CropBlock)
+                || !state.contains(net.minecraft.block.CropBlock.AGE)
+                || state.get(net.minecraft.block.CropBlock.AGE) < 7) {
+            return;
+        }
+        RealmState realms = RealmState.get(serverWorld);
+        for (RealmState.BaseRecord base : realms.bases()) {
+            if (base.center().isWithinDistance(pos, base.radius() + 6.0)) {
+                SurvivorEntity.onCropTheft(serverWorld, player, base.faction(), pos);
+                player.sendMessage(Text.literal("Someone saw you take from "
+                        + base.name() + "'s fields.").formatted(net.minecraft.util.Formatting.GOLD), true);
+                break;
+            }
+        }
+    }
+
+    /**
      * Initial population for a freshly generated site. The world should feel
      * inhabited the moment the player first crests the hill: a guard on the
      * wall and the first workers already about their trade — farmsteads
@@ -85,6 +111,28 @@ public final class RealmEvents {
         UUID owner = UUID.nameUUIDFromBytes(("rivalrealms:population:" + center.asLong())
                 .getBytes(java.nio.charset.StandardCharsets.UTF_8));
 
+        if (style == BuildStyle.MARAUDER) {
+            // A full warband: the warlord holds the camp, the rest roam the
+            // roads looking for caravans, farms and throats.
+            SurvivorEntity warlord = spawnSettler(world, center, owner, faction,
+                    SettlementRole.WARLORD, true);
+            if (warlord != null && world.random.nextFloat() < 0.5f) {
+                makeChampion(world, warlord);
+            }
+            spawnSettler(world, center, owner, faction, SettlementRole.RAIDER, true);
+            spawnSettler(world, center, owner, faction, SettlementRole.RAIDER, false);
+            spawnSettler(world, center, owner, faction, SettlementRole.RAIDER, false);
+            return;
+        }
+        if (style == BuildStyle.HEARTHFOLK) {
+            // Quiet folk: a hearth guard, two farmhands and a smith who keeps
+            // the village armed.
+            spawnSettler(world, center, owner, faction, SettlementRole.GUARD, true);
+            spawnSettler(world, center, owner, faction, SettlementRole.FARMER, false);
+            spawnSettler(world, center, owner, faction, SettlementRole.FARMER, false);
+            spawnSettler(world, center, owner, faction, SettlementRole.BLACKSMITH, false);
+            return;
+        }
         if (variant == SettlementVariant.FARMSTEAD) {
             spawnSettler(world, center, owner, faction, SettlementRole.GUARD, true);
             spawnSettler(world, center, owner, faction, SettlementRole.FARMER, false);
@@ -127,12 +175,12 @@ public final class RealmEvents {
                 enchantments.entryOf(Enchantments.PROTECTION), 1 + world.random.nextInt(2));
     }
 
-    /** Spawns one permanent resident near the settlement heart. */
-    private static void spawnSettler(ServerWorld world, BlockPos center, UUID owner,
-                                     String faction, SettlementRole role, boolean guard) {
+    /** Spawns one permanent resident near the settlement heart; {@code null} if it failed. */
+    private static SurvivorEntity spawnSettler(ServerWorld world, BlockPos center, UUID owner,
+                                               String faction, SettlementRole role, boolean guard) {
         SurvivorEntity settler = ModEntities.SURVIVOR.create(world);
         if (settler == null) {
-            return;
+            return null;
         }
         BlockPos spawn = surfacePosition(world,
                 center.add(world.random.nextInt(15) - 7, 0, world.random.nextInt(15) - 7));
@@ -142,6 +190,10 @@ public final class RealmEvents {
         settler.refreshPositionAndAngles(spawn.getX() + 0.5, spawn.getY(), spawn.getZ() + 0.5,
                 world.random.nextFloat() * 360.0f, 0.0f);
         settler.setArchetype(Archetype.byFaction(faction));
+        if (role == SettlementRole.RAIDER || role == SettlementRole.WARLORD) {
+            settler.setCustomName(Text.literal(role.displayName() + " · "
+                    + Archetype.byFaction(faction).title()));
+        }
         if (guard || role == SettlementRole.GUARD) {
             settler.assignGuard(center, owner, faction);
         } else {
@@ -149,7 +201,9 @@ public final class RealmEvents {
         }
         if (!world.spawnEntity(settler)) {
             RivalRealms.LOGGER.error("Rival Realms failed to spawn a {} at {}", role.displayName(), center);
+            return null;
         }
+        return settler;
     }
 
     private static void tickSettlements(ServerWorld world) {
@@ -281,6 +335,14 @@ public final class RealmEvents {
             case KNIGHT, CUSTOM -> new SettlementRole[]{
                     SettlementRole.MASON, SettlementRole.BLACKSMITH,
                     SettlementRole.JEWELER, SettlementRole.MINER
+            };
+            case MARAUDER -> new SettlementRole[]{
+                    SettlementRole.RAIDER, SettlementRole.RAIDER,
+                    SettlementRole.WARLORD, SettlementRole.GUNNER
+            };
+            case HEARTHFOLK -> new SettlementRole[]{
+                    SettlementRole.FARMER, SettlementRole.BAKER,
+                    SettlementRole.BLACKSMITH, SettlementRole.TRADER
             };
         };
         for (SettlementRole role : specialists) {
@@ -569,8 +631,13 @@ public final class RealmEvents {
             return;
         }
         BlockPos center = surfacePosition(world, requested);
-        Archetype culture = Archetype.values()[world.random.nextInt(Archetype.values().length)];
-        for (int i = 0; i < 3; i++) {
+        // One group in four is a Marauder warband prowling for trouble; the
+        // rest are the old mix of frontier wanderers.
+        Archetype culture = world.random.nextInt(4) == 0
+                ? Archetype.MARAUDER
+                : Archetype.values()[world.random.nextInt(Archetype.values().length)];
+        int band = culture == Archetype.MARAUDER ? 3 : 3;
+        for (int i = 0; i < band; i++) {
             SurvivorEntity survivor = ModEntities.SURVIVOR.create(world);
             if (survivor == null) {
                 continue;

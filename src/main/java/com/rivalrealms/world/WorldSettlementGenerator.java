@@ -86,6 +86,10 @@ public final class WorldSettlementGenerator {
                     (hash & 8L) == 0L ? SettlementVariant.HARBOR : SettlementVariant.SHIPYARD);
         }
         if (name.contains("desert") || name.contains("badlands") || name.contains("savanna")) {
+            if ((hash & 32L) != 0L) {
+                // The wastes belong to nobody: warcamps pitch where towns won't.
+                return new SettlementPlan(BuildStyle.MARAUDER, SettlementVariant.OUTPOST);
+            }
             return new SettlementPlan(BuildStyle.WESTERN,
                     (hash & 2L) == 0L ? SettlementVariant.TOWN : SettlementVariant.OUTPOST);
         }
@@ -97,17 +101,20 @@ public final class WorldSettlementGenerator {
             return new SettlementPlan(BuildStyle.KNIGHT,
                     (hash & 8L) == 0L ? SettlementVariant.FORTRESS : SettlementVariant.CITADEL);
         }
-        return new SettlementPlan(BuildStyle.KNIGHT,
-                switch ((int) (hash & 7L)) {
-                    case 0 -> SettlementVariant.TOWN;
-                    case 1 -> SettlementVariant.ROYAL_CITY;
-                    case 2 -> SettlementVariant.FORTRESS;
-                    case 3 -> SettlementVariant.CITADEL;
-                    case 4 -> SettlementVariant.MILL;
-                    case 5 -> SettlementVariant.RUIN;
-                    case 6 -> SettlementVariant.GRAVEYARD;
-                    default -> SettlementVariant.FARMSTEAD;
-                });
+        // Temperate lands roll the full table: civilized sites, quiet folk
+        // hamlets, and the camps of those who prey on both.
+        return switch ((int) (hash & 15L)) {
+            case 0 -> new SettlementPlan(BuildStyle.KNIGHT, SettlementVariant.TOWN);
+            case 1 -> new SettlementPlan(BuildStyle.KNIGHT, SettlementVariant.ROYAL_CITY);
+            case 2 -> new SettlementPlan(BuildStyle.KNIGHT, SettlementVariant.FORTRESS);
+            case 3 -> new SettlementPlan(BuildStyle.KNIGHT, SettlementVariant.CITADEL);
+            case 4 -> new SettlementPlan(BuildStyle.KNIGHT, SettlementVariant.MILL);
+            case 5 -> new SettlementPlan(BuildStyle.KNIGHT, SettlementVariant.RUIN);
+            case 6 -> new SettlementPlan(BuildStyle.KNIGHT, SettlementVariant.GRAVEYARD);
+            case 8 -> new SettlementPlan(BuildStyle.HEARTHFOLK, SettlementVariant.FARMSTEAD);
+            case 9 -> new SettlementPlan(BuildStyle.MARAUDER, SettlementVariant.OUTPOST);
+            default -> new SettlementPlan(BuildStyle.KNIGHT, SettlementVariant.FARMSTEAD);
+        };
     }
 
     private static boolean terrainAllows(ServerWorld world, BlockPos center, BuildStyle style) {

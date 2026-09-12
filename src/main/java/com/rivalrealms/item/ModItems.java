@@ -26,6 +26,12 @@ public final class ModItems {
             new FlintlockItem(new Item.Settings().maxCount(1).maxDamage(120)));
     public static final Item FARMER_HOE = register("farmer_hoe",
             new FarmerHoeItem(new Item.Settings().maxCount(1).maxDamage(320)));
+    public static final Item BLUNDERBUSS = register("blunderbuss",
+            new BlunderbussItem(new Item.Settings().maxCount(1).maxDamage(90)));
+    public static final Item HALBERD = register("halberd",
+            new HalberdItem(new Item.Settings().maxCount(1).maxDamage(420)));
+    public static final Item WARHORN = register("warhorn",
+            new WarhornItem(new Item.Settings().maxCount(1)));
     public static final Item ROYAL_LONGSWORD = register("royal_longsword",
             new RoyalLongswordItem(ToolMaterials.DIAMOND, new Item.Settings().maxCount(1).maxDamage(860)));
     public static final Item ROYAL_COIN = register("royal_coin",
@@ -49,6 +55,10 @@ public final class ModItems {
             new SurvivorSpawnEggItem(new Item.Settings().maxCount(16), Archetype.PIRATE));
     public static final Item OUTLAW_SPAWN_EGG = register("outlaw_spawn_egg",
             new SurvivorSpawnEggItem(new Item.Settings().maxCount(16), Archetype.OUTLAW));
+    public static final Item MARAUDER_SPAWN_EGG = register("marauder_spawn_egg",
+            new SurvivorSpawnEggItem(new Item.Settings().maxCount(16), Archetype.MARAUDER));
+    public static final Item HEARTHFOLK_SPAWN_EGG = register("hearthfolk_spawn_egg",
+            new SurvivorSpawnEggItem(new Item.Settings().maxCount(16), Archetype.HEARTHFOLK));
     public static final Item SKY_CAPTAIN_SPAWN_EGG = register("sky_captain_spawn_egg",
             new SurvivorSpawnEggItem(new Item.Settings().maxCount(16), Archetype.SKY_CAPTAIN));
     public static final Item MERCHANT_SHIP_SPAWN_EGG = register("merchant_ship_spawn_egg",

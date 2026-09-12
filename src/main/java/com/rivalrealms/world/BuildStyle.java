@@ -7,6 +7,8 @@ public enum BuildStyle {
     PIRATE("pirate", "Freebooter Harbor", "Freebooters"),
     WESTERN("western", "Dustwalker Town", "Dustwalkers"),
     SKY("sky", "Skybound Airship Dock", "Skybound"),
+    MARAUDER("marauder", "Marauder Warcamp", "Marauders"),
+    HEARTHFOLK("hearthfolk", "Hearthfolk Hamlet", "Hearthfolk"),
     CUSTOM("custom", "Claimed Settlement", "Independent");
 
     private final String id;

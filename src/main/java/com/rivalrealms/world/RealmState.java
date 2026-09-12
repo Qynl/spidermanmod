@@ -316,6 +316,14 @@ public final class RealmState extends PersistentState {
             case "crownlands|dustwalkers" -> -45;
             case "freebooters|skybound" -> -30;
             case "crownlands|skybound", "dustwalkers|skybound" -> 20;
+            // Marauders are at war with the entire world, without exception.
+            case "crownlands|marauders", "dustwalkers|marauders",
+                 "freebooters|marauders", "hearthfolk|marauders",
+                 "independent|marauders", "skybound|marauders" -> -75;
+            // Hearthfolk are quiet friends to everyone who leaves them be.
+            case "crownlands|hearthfolk", "dustwalkers|hearthfolk" -> 15;
+            case "freebooters|hearthfolk", "hearthfolk|independent" -> 0;
+            case "hearthfolk|skybound" -> 5;
             default -> -20;
         };
     }

@@ -46,6 +46,8 @@ public final class StructureBuilder {
             case PIRATE -> buildPirateHarbor(world, base);
             case WESTERN -> buildWesternTown(world, base);
             case SKY -> buildSkyDock(world, base);
+            case MARAUDER -> buildMarauderCamp(world, base);
+            case HEARTHFOLK -> buildHearthHamlet(world, base);
             case CUSTOM -> buildCommonExpansion(world, base, 1);
         }
         world.playSound(null, base.getX() + 0.5, base.getY(), base.getZ() + 0.5, SoundEvents.BLOCK_ANVIL_LAND, SoundCategory.BLOCKS, 0.65f, 1.15f);
@@ -62,6 +64,7 @@ public final class StructureBuilder {
             case PIRATE -> expandPirate(world, center, level);
             case WESTERN -> expandWestern(world, center, level);
             case SKY -> expandSky(world, center, level);
+            case MARAUDER, HEARTHFOLK -> buildCommonExpansion(world, center, level);
             case CUSTOM -> buildCommonExpansion(world, center, level);
         }
         world.playSound(null, center.getX() + 0.5, center.getY(), center.getZ() + 0.5, SoundEvents.BLOCK_ANVIL_LAND, SoundCategory.BLOCKS, 0.45f, 1.35f);
@@ -1349,6 +1352,69 @@ public final class StructureBuilder {
                 new ItemStack(Items.BREAD, 5), new ItemStack(Items.WHEAT_SEEDS, 8),
                 new ItemStack(ModItems.FARMER_HOE), new ItemStack(ModItems.ROYAL_COIN, 1));
         spawnGuard(world, base, y, BuildStyle.CUSTOM);
+    }
+
+    /** A Marauder warcamp: hide tents around a bone-fire, skull totems, loot. */
+    private static void buildMarauderCamp(ServerWorld world, BlockPos base) {
+        int y = plateau(world, base, 19, 17, Blocks.COARSE_DIRT);
+
+        // The bone-fire: campfire ringed with hay and bones of old feasts.
+        campfire(world, base.add(-1, 0, -1));
+        for (int[] off : new int[][]{{-3, -3}, {3, -3}, {-3, 2}, {3, 2}, {0, -4}}) {
+            haystack(world, base.add(off[0], 0, off[1]));
+        }
+
+        // Two hide tents: wool A-frames on fence poles.
+        for (int[] tent : new int[][]{{-7, -6}, {4, -4}}) {
+            BlockPos t = base.add(tent[0], 0, tent[1]);
+            int ty = groundAt(world, t.getX(), t.getZ());
+            set(world, t.add(0, ty - t.getY() + 1, 0), Blocks.OAK_FENCE);
+            set(world, t.add(3, ty - t.getY() + 1, 0), Blocks.OAK_FENCE);
+            for (int step = 0; step < 3; step++) {
+                fill(world, t.add(0, ty - t.getY() + 1 + step, step), 4, 1, 1,
+                        step == 1 ? Blocks.GRAY_WOOL : Blocks.WHITE_WOOL);
+                fill(world, t.add(0, ty - t.getY() + 1 + step, 4 - step), 4, 1, 1,
+                        step == 1 ? Blocks.GRAY_WOOL : Blocks.WHITE_WOOL);
+            }
+            set(world, t.add(1, ty - t.getY() + 2, 0), Blocks.WHITE_WOOL);
+            set(world, t.add(1, ty - t.getY() + 2, 4), Blocks.WHITE_WOOL);
+        }
+
+        // Skull totems announce whose ground this is.
+        for (int[] totem : new int[][]{{-8, 3}, {7, 2}}) {
+            BlockPos tp = base.add(totem[0], 0, totem[1]);
+            int py = groundAt(world, tp.getX(), tp.getZ());
+            set(world, tp.add(0, py - tp.getY() + 1, 0), Blocks.OAK_FENCE);
+            set(world, tp.add(0, py - tp.getY() + 2, 0), Blocks.OAK_FENCE);
+            set(world, tp.add(0, py - tp.getY() + 3, 0), Blocks.CARVED_PUMPKIN);
+        }
+
+        // Loot pile and a grim banner.
+        stockChest(world, base.add(2, y + 1, 1), new ItemStack(Items.BONE, 6),
+                new ItemStack(ModItems.ROYAL_COIN, 2), new ItemStack(Items.GOLD_NUGGET, 8),
+                new ItemStack(ModItems.FLINTLOCK));
+        set(world, base.add(0, y + 1, 5), ModBlocks.REALM_BANNER);
+        lightYard(world, base, y, 8);
+    }
+
+    /** A Hearthfolk hamlet: three cottages, gardens, a well, warm lanterns. */
+    private static void buildHearthHamlet(ServerWorld world, BlockPos base) {
+        int y = plateau(world, base, 25, 21, Blocks.GRASS_BLOCK);
+        fill(world, base.add(-2, y, -10), 5, 1, 21, Blocks.COARSE_DIRT);
+
+        farmhouse(world, base.add(-11, 0, -8));
+        farmhouse(world, base.add(6, 0, -8));
+        farmhouse(world, base.add(-3, 0, 7));
+        farmPlot(world, base.add(-12, 0, 2), 8, 6);
+        vegPlot(world, base.add(5, 0, 1), 7, 6);
+        well(world, base.add(0, 0, -2));
+        scarecrow(world, base.add(-8, 0, 5));
+        haystack(world, base.add(3, 0, -5));
+        lampPost(world, base.add(-6, 0, -1));
+        lampPost(world, base.add(6, 0, -1));
+        set(world, base.add(0, y + 1, 10), ModBlocks.REALM_BANNER);
+        stockChest(world, base.add(-2, y + 1, 2), new ItemStack(Items.BREAD, 8),
+                new ItemStack(Items.WHEAT_SEEDS, 10), new ItemStack(ModItems.ROYAL_COIN, 2));
     }
 
     private static void spawnGuard(ServerWorld world, BlockPos base, int y, BuildStyle style) {

@@ -39,6 +39,11 @@ public final class ModItemGroups {
                         entries.add(ModItems.FLINTLOCK);
                         entries.add(ModItems.FARMER_HOE);
                         entries.add(ModItems.CANNON);
+                        entries.add(ModItems.BLUNDERBUSS);
+                        entries.add(ModItems.HALBERD);
+                        entries.add(ModItems.WARHORN);
+                        entries.add(ModItems.MARAUDER_SPAWN_EGG);
+                        entries.add(ModItems.HEARTHFOLK_SPAWN_EGG);
                         entries.add(ModItems.CANNONBALL);
                         // Vehicles
                         entries.add(ModItems.AIRSHIP_KIT);

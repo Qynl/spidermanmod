@@ -66,6 +66,8 @@ public enum Temperament {
             case OUTLAW -> roll < 45 ? HOSTILE : roll < 95 ? GUARDED : CHILL;
             case KNIGHT -> roll < 25 ? HOSTILE : roll < 85 ? GUARDED : CHILL;
             case SKY_CAPTAIN -> roll < 22 ? HOSTILE : roll < 88 ? GUARDED : CHILL;
+            case MARAUDER -> HOSTILE;
+            case HEARTHFOLK -> roll < 70 ? CHILL : GUARDED;
         };
     }
 }

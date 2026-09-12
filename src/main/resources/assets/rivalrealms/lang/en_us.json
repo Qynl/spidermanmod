@@ -34,5 +34,10 @@
   "item.rivalrealms.galleon_ship_spawn_egg": "Freebooter Flagship Crew Kit",
   "entity.rivalrealms.galleon": "Freebooter Flagship",
   "item.rivalrealms.farmer_hoe": "Farmhand's Hoe",
-  "block.rivalrealms.cannon": "Field Cannon"
+  "block.rivalrealms.cannon": "Field Cannon",
+  "item.rivalrealms.blunderbuss": "Blunderbuss",
+  "item.rivalrealms.halberd": "Halberd",
+  "item.rivalrealms.warhorn": "Warhorn",
+  "item.rivalrealms.marauder_spawn_egg": "Marauder Spawn Egg",
+  "item.rivalrealms.hearthfolk_spawn_egg": "Hearthfolk Spawn Egg"
 }

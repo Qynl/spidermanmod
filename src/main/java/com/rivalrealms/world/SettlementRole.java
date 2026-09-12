@@ -9,6 +9,8 @@ import java.util.Locale;
 public enum SettlementRole {
     NONE("none", "Unassigned", false),
     GUARD("guard", "Guard", true),
+    RAIDER("raider", "Raider", true),
+    WARLORD("warlord", "Warlord", true),
     BUILDER("builder", "Builder", false),
     FARMER("farmer", "Farmer", false),
     BAKER("baker", "Baker", false),
@@ -49,7 +51,7 @@ public enum SettlementRole {
     }
 
     public boolean isWorkRole() {
-        return this != NONE && this != GUARD;
+        return this != NONE && this != GUARD && this != RAIDER && this != WARLORD;
     }
 
     public static SettlementRole byId(String value) {
