@@ -43,6 +43,7 @@ public final class ModItemGroups {
                         entries.add(ModItems.SHIP_IN_A_BOTTLE);
                         entries.add(ModItems.MERCHANT_SHIP_SPAWN_EGG);
                         entries.add(ModItems.PIRATE_SHIP_SPAWN_EGG);
+                        entries.add(ModItems.GALLEON_SHIP_SPAWN_EGG);
                         // Trade & paperwork
                         entries.add(ModItems.ROYAL_COIN);
                         entries.add(ModItems.ROYAL_JEWELRY);

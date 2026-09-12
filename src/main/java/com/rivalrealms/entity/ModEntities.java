@@ -47,6 +47,14 @@ public final class ModEntities {
                     .trackingTickInterval(1)
     );
 
+    public static final EntityType<GalleonEntity> GALLEON = register(
+            "galleon",
+            EntityType.Builder.<GalleonEntity>create(GalleonEntity::new, SpawnGroup.MISC)
+                    .dimensions(2.8f, 4.2f)
+                    .maxTrackingRange(160)
+                    .trackingTickInterval(1)
+    );
+
     public static final EntityType<SloopEntity> SLOOP = register(
             "sloop",
             EntityType.Builder.create(SloopEntity::new, SpawnGroup.MISC)

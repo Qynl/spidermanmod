@@ -39,13 +39,13 @@ public final class PirateShipEntity extends SailingShipEntity {
     };
 
     private static final double CHASE_RANGE = 72.0;
-    private static final double CANNON_RANGE = 16.0;
-    private static final int CANNON_COOLDOWN = 70;
 
     @Nullable
     private UUID targetUuid;
     private boolean plundered;
     private int cannonCooldown = 60;
+    private Vec3d patrolTarget;
+    private long nextPatrolCheck;
 
     public PirateShipEntity(EntityType<? extends PirateShipEntity> type, World world) {
         super(type, world);
@@ -83,9 +83,13 @@ public final class PirateShipEntity extends SailingShipEntity {
             this.cannonCooldown--;
         }
 
-        MerchantShipEntity target = this.resolveTarget(serverWorld);
-        if (target != null) {
-            hunt(serverWorld, target);
+        SailingShipEntity prey = this.resolvePrey(serverWorld);
+        if (prey != null) {
+            if (prey instanceof MerchantShipEntity merchant) {
+                hunt(serverWorld, merchant);
+            } else {
+                huntShip(serverWorld, prey);
+            }
         } else if (!this.plundered) {
             // Scanning every tick would burn server time on empty oceans;
             // a five-second sweep is plenty for a 72-block horizon.
@@ -94,28 +98,62 @@ public final class PirateShipEntity extends SailingShipEntity {
             }
         }
 
-        if (target != null || this.plundered) {
+        if (prey != null || this.plundered) {
             this.physicsTick();
             this.playSailingAmbience(serverWorld);
         } else {
-            this.idleSails();
+            patrolTick(serverWorld);
             this.physicsTick();
+            this.playSailingAmbience(serverWorld);
         }
     }
 
+    /** Raiders never drift: with no prey they sail a slow hunting patrol. */
+    private void patrolTick(ServerWorld world) {
+        long now = world.getTime();
+        boolean reached = this.patrolTarget != null
+                && this.patrolTarget.squaredDistanceTo(this.getX(), this.getY(), this.getZ()) < 36.0;
+        if (this.patrolTarget == null || reached || now >= this.nextPatrolCheck || !this.isAfloat()) {
+            double angle = world.random.nextFloat() * Math.PI * 2.0;
+            double reach = 40.0 + world.random.nextFloat() * 55.0;
+            this.patrolTarget = new Vec3d(this.getX() + Math.cos(angle) * reach, this.getY(),
+                    this.getZ() + Math.sin(angle) * reach);
+            this.nextPatrolCheck = now + 1600L;
+        }
+        this.sailToward(this.patrolTarget, this.huntSpeed() * 0.7);
+    }
+
+    /** Speed used while running down prey; the flagship is heavier and slower. */
+    protected double huntSpeed() {
+        return 0.028;
+    }
+
+    protected double cannonRange() {
+        return 16.0;
+    }
+
+    protected int cannonCooldownTicks() {
+        return 70;
+    }
+
     @Nullable
-    private MerchantShipEntity resolveTarget(ServerWorld world) {
+    private SailingShipEntity resolvePrey(ServerWorld world) {
         if (this.targetUuid == null) {
             return null;
         }
         if (world.getEntity(this.targetUuid) instanceof MerchantShipEntity merchant && merchant.isAlive()) {
             return merchant;
         }
+        if (world.getEntity(this.targetUuid) instanceof SloopEntity sloop && sloop.isAlive()
+                && !sloop.getPassengerList().isEmpty()) {
+            return sloop;
+        }
         this.targetUuid = null;
         return null;
     }
 
     private void scanForPrey(ServerWorld world) {
+        // Merchants first: that is the classic prize.
         List<MerchantShipEntity> prey = new ArrayList<>();
         for (Entity candidate : world.getOtherEntities(this, this.getBoundingBox().expand(CHASE_RANGE),
                 entity -> entity instanceof MerchantShipEntity merchant
@@ -126,6 +164,18 @@ public final class PirateShipEntity extends SailingShipEntity {
             MerchantShipEntity target = prey.get(world.random.nextInt(prey.size()));
             this.targetUuid = target.getUuid();
             target.markUnderAttack();
+            return;
+        }
+        // Player crews are fair game too: an occupied sloop on the horizon
+        // draws the raider's eye.
+        List<SloopEntity> sloops = new ArrayList<>();
+        for (Entity candidate : world.getOtherEntities(this, this.getBoundingBox().expand(CHASE_RANGE),
+                entity -> entity instanceof SloopEntity sloop && sloop.isAlive()
+                        && !sloop.getPassengerList().isEmpty())) {
+            sloops.add((SloopEntity) candidate);
+        }
+        if (!sloops.isEmpty()) {
+            this.targetUuid = sloops.get(world.random.nextInt(sloops.size())).getUuid();
         }
     }
 
@@ -145,12 +195,12 @@ public final class PirateShipEntity extends SailingShipEntity {
         double desiredRange = this.plundered ? 40.0 : (mercy ? 12.0 : 10.0);
 
         if (distance > desiredRange) {
-            this.sailToward(target.getPos(), this.plundered ? 0.020 : 0.028);
+            this.sailToward(target.getPos(), this.plundered ? this.huntSpeed() * 0.7 : this.huntSpeed());
         } else {
             this.idleSails();
         }
 
-        if (this.plundered || distance > CANNON_RANGE || this.cannonCooldown > 0 || mercy) {
+        if (this.plundered || distance > cannonRange() || this.cannonCooldown > 0 || mercy) {
             if (!this.plundered && !mercy && distance <= 4.5 && target.cargoCrates() > 0) {
                 // Grappling range: steal the cargo directly.
                 target.raidCargo(world);
@@ -166,8 +216,25 @@ public final class PirateShipEntity extends SailingShipEntity {
         this.fireBroadside(world, target);
     }
 
-    private void fireBroadside(ServerWorld world, MerchantShipEntity target) {
-        this.cannonCooldown = CANNON_COOLDOWN;
+    /** Player-sailor duel: run the sloop down and bombard it like any prize. */
+    private void huntShip(ServerWorld world, SailingShipEntity prey) {
+        double dx = prey.getX() - this.getX();
+        double dz = prey.getZ() - this.getZ();
+        double distance = Math.sqrt(dx * dx + dz * dz);
+        boolean mercy = prey.hullFraction() < 0.30;
+        if (distance > (mercy ? 26.0 : 11.0)) {
+            this.sailToward(prey.getPos(), mercy ? this.huntSpeed() * 0.7 : this.huntSpeed());
+        } else {
+            this.idleSails();
+        }
+        if (distance > cannonRange() || this.cannonCooldown > 0 || mercy) {
+            return;
+        }
+        this.fireBroadside(world, prey);
+    }
+
+    private void fireBroadside(ServerWorld world, Entity target) {
+        this.cannonCooldown = cannonCooldownTicks();
         Vec3d muzzle = this.getPos().add(0.0, 1.6, 0.0);
 
         // Lead the moving target so the duel feels gunnery-real, not hitscan-cheap.

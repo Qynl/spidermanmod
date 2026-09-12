@@ -17,12 +17,14 @@ public final class RivalRealmsClient implements ClientModInitializer {
         EntityModelLayerRegistry.registerModelLayer(ModModelLayers.AIRSHIP, AirshipEntityModel::getTexturedModelData);
         EntityModelLayerRegistry.registerModelLayer(ModModelLayers.SAILING_SHIP, SailingShipEntityModel::getTexturedModelData);
         EntityModelLayerRegistry.registerModelLayer(ModModelLayers.SLOOP, SailingShipEntityModel::getTexturedModelData);
+        EntityModelLayerRegistry.registerModelLayer(ModModelLayers.GALLEON, GalleonEntityModel::getTexturedModelData);
 
         EntityRendererRegistry.register(ModEntities.SURVIVOR, SurvivorRenderer::new);
         EntityRendererRegistry.register(ModEntities.AIRSHIP, AirshipRenderer::new);
         EntityRendererRegistry.register(ModEntities.MERCHANT_SHIP, MerchantShipRenderer::new);
         EntityRendererRegistry.register(ModEntities.PIRATE_SHIP, PirateShipRenderer::new);
         EntityRendererRegistry.register(ModEntities.SLOOP, SloopRenderer::new);
+        EntityRendererRegistry.register(ModEntities.GALLEON, GalleonRenderer::new);
         EntityRendererRegistry.register(ModEntities.CANNONBALL, FlyingItemEntityRenderer::new);
 
         VehicleInputProxy.register();

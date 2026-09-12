@@ -397,7 +397,12 @@ public final class RealmEvents {
         if (position == null) {
             return null;
         }
-        PirateShipEntity pirate = ModEntities.PIRATE_SHIP.create(world);
+        // Three raids in ten send the actual flagship: a galleon with a
+        // full gun deck, tough enough to trade broadsides with anyone.
+        boolean flagship = world.random.nextFloat() < 0.30f;
+        PirateShipEntity pirate = flagship
+                ? ModEntities.GALLEON.create(world)
+                : ModEntities.PIRATE_SHIP.create(world);
         if (pirate == null) {
             return null;
         }
@@ -408,9 +413,13 @@ public final class RealmEvents {
             return null;
         }
         merchant.markUnderAttack();
-        spawnCrew(world, pirate, Archetype.PIRATE,
-                new SettlementRole[]{SettlementRole.CAPTAIN, SettlementRole.GUNNER,
-                        SettlementRole.QUARTERMASTER, SettlementRole.SAILOR});
+        SettlementRole[] roles = flagship
+                ? new SettlementRole[]{SettlementRole.CAPTAIN, SettlementRole.GUNNER,
+                        SettlementRole.GUNNER, SettlementRole.QUARTERMASTER,
+                        SettlementRole.SAILOR, SettlementRole.SAILOR}
+                : new SettlementRole[]{SettlementRole.CAPTAIN, SettlementRole.GUNNER,
+                        SettlementRole.QUARTERMASTER, SettlementRole.SAILOR};
+        spawnCrew(world, pirate, Archetype.PIRATE, roles);
         return pirate;
     }
 

@@ -12,6 +12,7 @@ public final class ModModelLayers {
     public static final EntityModelLayer AIRSHIP = new EntityModelLayer(RivalRealms.id("airship"), "main");
     public static final EntityModelLayer SAILING_SHIP = new EntityModelLayer(RivalRealms.id("sailing_ship"), "main");
     public static final EntityModelLayer SLOOP = new EntityModelLayer(RivalRealms.id("sloop"), "main");
+    public static final EntityModelLayer GALLEON = new EntityModelLayer(RivalRealms.id("galleon"), "main");
 
     private ModModelLayers() {
     }

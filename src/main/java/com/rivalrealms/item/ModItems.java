@@ -52,6 +52,8 @@ public final class ModItems {
             new ShipSpawnEggItem(new Item.Settings().maxCount(16), ModEntities.MERCHANT_SHIP));
     public static final Item PIRATE_SHIP_SPAWN_EGG = register("pirate_ship_spawn_egg",
             new ShipSpawnEggItem(new Item.Settings().maxCount(16), ModEntities.PIRATE_SHIP, true));
+    public static final Item GALLEON_SHIP_SPAWN_EGG = register("galleon_ship_spawn_egg",
+            new ShipSpawnEggItem(new Item.Settings().maxCount(16), ModEntities.GALLEON, true));
 
     /** Block item handle for airship metal; assigned during {@link #register()}. */
     public static Item AIRSHIP_METAL;

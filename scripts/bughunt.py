@@ -110,6 +110,7 @@ def check_png_assets() -> None:
         "assets/rivalrealms/textures/entity/airship.png": (128, 128),
         "assets/rivalrealms/textures/entity/merchant_ship.png": (256, 128),
         "assets/rivalrealms/textures/entity/pirate_ship.png": (256, 128),
+        "assets/rivalrealms/textures/entity/galleon.png": (256, 256),
         "assets/rivalrealms/textures/entity/sloop.png": (256, 128),
         "assets/rivalrealms/textures/item/survivor_spawn_egg.png": (16, 16),
         "assets/rivalrealms/textures/item/knight_spawn_egg.png": (16, 16),
@@ -118,6 +119,7 @@ def check_png_assets() -> None:
         "assets/rivalrealms/textures/item/sky_captain_spawn_egg.png": (16, 16),
         "assets/rivalrealms/textures/item/merchant_ship_spawn_egg.png": (16, 16),
         "assets/rivalrealms/textures/item/pirate_ship_spawn_egg.png": (16, 16),
+        "assets/rivalrealms/textures/item/galleon_ship_spawn_egg.png": (16, 16),
     }
     for relative_path, expected in expected_dimensions.items():
         path = ROOT / "src/main/resources" / relative_path
@@ -143,7 +145,8 @@ def check_visual_renderers() -> None:
                          (pirate_renderer, "textures/entity/pirate_ship.png")):
         if not path.exists() or marker not in path.read_text(encoding="utf-8"):
             fail(f"ship renderer is missing its dedicated texture: {path.name}")
-    for marker in ("ModEntities.MERCHANT_SHIP", "ModEntities.PIRATE_SHIP", "ModEntities.SLOOP", "ModEntities.CANNONBALL"):
+    for marker in ("ModEntities.MERCHANT_SHIP", "ModEntities.PIRATE_SHIP", "ModEntities.SLOOP",
+                   "ModEntities.GALLEON", "ModEntities.CANNONBALL"):
         if marker not in client_initializer.read_text(encoding="utf-8"):
             fail(f"client renderer registration is missing: {marker}")
     archetypes = (ROOT / "src/main/java/com/rivalrealms/entity/Archetype.java").read_text(encoding="utf-8")

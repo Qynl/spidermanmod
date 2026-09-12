@@ -63,6 +63,17 @@ The **Royal Jewelry Trader** (pale oak, crown-emblazoned sails) and the **Freebo
 - **Board a raider at your peril** — the crew jumps off the ship and attacks you
 - Both spawn fully crewed from their creative-tab kits; `/rivalrealms convoy` stages the whole duel
 
+### The Freebooter fleet
+Raider sloops patrol the seas even when no merchant is around, and they do not
+spare **player crews**: an occupied sloop on the horizon gets hunted and
+bombarded like any prize. Three raids in ten escalate to the **Freebooter
+Flagship** — a true galleon (double masts, crow's nest, bowsprit, two-tier
+stern castle, gold gallery windows and gun ports along the waterline) with a
+140-point hull, slower but tougher, firing **three-ball fanned volleys** with
+a deeper thunderclap. Sink one for coin, jewelry, cannonballs, a flintlock,
+and sometimes a recruitment contract. Also spawnable via the **Flagship Crew
+Kit** egg.
+
 ### Freebooter Sloop
 Your own ship. Craft a **Sloop in a Bottle**, use it on water, right-click to board:
 

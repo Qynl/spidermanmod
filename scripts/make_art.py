@@ -515,91 +515,179 @@ def spawn_egg_texture(path, base, spot):
 # ------------------------------------------------------------------ skins
 
 def skin_texture(name, face, hair, shirt, trim, pants, hat, hat_kind="cap", eye=(24, 24, 28, 255)):
+    """A full 64x64 player-layout skin (base + overlay layer).
+
+    Every face of every box is painted, so nothing renders see-through, with
+    directional shading, per-culture outfits and facial detail.
+    """
     p = canvas(64, 64)
-    face_d = darken(face, 0.82)
-    face_l = brighten(face, 1.12)
-    shirt_d = darken(shirt, 0.8)
-    shirt_l = brighten(shirt, 1.12)
+    skin_d, skin_l = darken(face, 0.80), brighten(face, 1.10)
+    hair_d, hair_l = darken(hair, 0.72), brighten(hair, 1.15)
+    shirt_d, shirt_l = darken(shirt, 0.78), brighten(shirt, 1.12)
+    pants_d = darken(pants, 0.75)
+    trim_d, trim_l = darken(trim, 0.72), brighten(trim, 1.18)
+    BOOT, BOOT_D = (44, 34, 26, 255), (28, 22, 17, 255)
+    BELT, BUCKLE = (46, 34, 24, 255), GOLD
+    WHITE, INK = (238, 238, 238, 255), (22, 20, 18, 255)
 
-    def shade_box(x0, y0, x1, y1):
-        vline(p, 64, x0, y0, y1, None or (0, 0, 0, 0))  # placeholder, replaced below
+    # ---------------- head (base at origin 0,0; hat overlay at 32,0) ------
+    def head(ox, oy, top, side_l, side_r, front, back, bottom):
+        rect(p, 64, ox + 8, oy, ox + 16, oy + 8, top)
+        rect(p, 64, ox + 16, oy, ox + 24, oy + 8, bottom)
+        rect(p, 64, ox, oy + 8, ox + 8, oy + 16, side_r)
+        rect(p, 64, ox + 8, oy + 8, ox + 16, oy + 16, front)
+        rect(p, 64, ox + 16, oy + 8, ox + 24, oy + 16, side_l)
+        rect(p, 64, ox + 24, oy + 8, ox + 32, oy + 16, back)
+        vline(p, 64, ox + 8, oy + 8, oy + 16, darken(front, 0.9))
+        vline(p, 64, ox + 15, oy + 8, oy + 16, brighten(front, 1.08))
 
-    # ---- head
-    rect(p, 64, 8, 8, 16, 16, face)
-    rect(p, 64, 8, 0, 16, 8, hair)
-    rect(p, 64, 0, 8, 8, 16, face_d)
-    rect(p, 64, 16, 8, 24, 16, face_l)
-    # eyes + brows
-    px(p, 64, 10, 11, eye)
-    px(p, 64, 13, 11, eye)
-    px(p, 64, 10, 10, darken(hair, 0.8))
-    px(p, 64, 13, 10, darken(hair, 0.8))
-    # mouth
-    rect(p, 64, 11, 14, 13, 15, darken(face, 0.7))
-    # side shading
-    vline(p, 64, 8, 8, 16, face_d)
-    vline(p, 64, 15, 8, 16, face_l)
+    head(0, 0, hair, skin_l, skin_d, face, hair_d, skin_d)
+    hline(p, 64, 8, 16, 8, hair)                      # fringe
+    px(p, 64, 8, 8, hair_d); px(p, 64, 15, 8, hair_l)
 
-    # ---- hat layer (outer head)
+    # face: brows, eyes with whites + dark iris, nose, mouth
+    px(p, 64, 10, 10, darken(hair, 0.85)); px(p, 64, 13, 10, darken(hair, 0.85))
+    for bx in (10, 13):
+        px(p, 64, bx, 11, WHITE); px(p, 64, bx + 1, 11, WHITE)
+    px(p, 64, 11, 11, eye); px(p, 64, 14, 11, eye)
+    px(p, 64, 12, 12, darken(face, 0.88))             # nose shade
+    hline(p, 64, 11, 13, 14, darken(face, 0.70))      # mouth
+
+    # culture flair on the base face
+    if name == "pirate":
+        rect(p, 64, 10, 15, 14, 17, hair_d)           # beard
+        px(p, 64, 9, 15, hair_d); px(p, 64, 15, 15, hair_d)
+        hline(p, 64, 8, 11, 10, INK)                  # eyepatch + strap
+        px(p, 64, 10, 11, INK); px(p, 64, 11, 11, INK)
+        px(p, 64, 15, 13, GOLD)                       # earring
+    elif name == "outlaw":
+        for dx in (9, 12, 14):                        # stubble
+            px(p, 64, dx, 16 if dx != 12 else 17, darken(face, 0.72))
+        hline(p, 64, 13, 15, 9, (150, 90, 70, 255))   # scar
+    elif name == "sky_captain":
+        px(p, 64, 9, 12, darken(face, 0.82)); px(p, 64, 15, 12, darken(face, 0.82))
+
+    # ---------------- hat overlay head (32,0 region) ----------------------
     hat_d = darken(hat, 0.78)
-    rect(p, 64, 40, 8, 48, 16, hat)
-    rect(p, 64, 48, 8, 56, 16, hat_d)
-    rect(p, 64, 40, 0, 56, 8, hat)
-    if hat_kind == "wide":        # outlaw brim hat
-        rect(p, 64, 32, 8, 40, 12, hat)
-        rect(p, 64, 56, 8, 64, 12, hat)
-        rect(p, 64, 32, 0, 64, 4, hat)
-        hline(p, 64, 40, 56, 0, hat_d)
-    elif hat_kind == "band":      # pirate bandana + skull dot
-        rect(p, 64, 40, 8, 56, 12, hat)
-        hline(p, 64, 40, 56, 8, brighten(hat, 1.3))
-        px(p, 64, 44, 11, (236, 236, 236, 255))
-        px(p, 64, 45, 11, (236, 236, 236, 255))
-    elif hat_kind == "goggles":   # sky captain goggles on hat band
-        hline(p, 64, 40, 56, 8, (160, 168, 178, 255))
-        px(p, 64, 44, 8, (110, 220, 235, 255))
-        px(p, 64, 48, 8, (110, 220, 235, 255))
-    elif hat_kind == "helm":      # knight nasal helm
-        rect(p, 64, 40, 8, 56, 16, hat)
-        rect(p, 64, 40, 0, 56, 8, hat)
-        rect(p, 64, 47, 8, 49, 15, brighten(hat, 1.2))   # nasal bar
-        hline(p, 64, 40, 56, 15, hat_d)
-        px(p, 64, 43, 11, (16, 16, 18, 255))
-        px(p, 64, 52, 11, (16, 16, 18, 255))
+    hat_l = brighten(hat, 1.14)
+    if hat_kind == "helm":
+        head(32, 0, hat_l, hat, hat, hat, hat_d, hat_d)
+        rect(p, 64, 40, 8, 48, 11, hat)               # open the face: keep front upper as visor
+        rect(p, 64, 40, 12, 48, 16, INK)              # face plate
+        rect(p, 64, 43, 11, 45, 13, INK)              # eye slit
+        px(p, 64, 43, 11, (90, 110, 150, 255)); px(p, 64, 44, 11, (120, 150, 190, 255))
+        rect(p, 64, 47, 8, 49, 14, brighten(hat, 1.25))  # nasal bar
+        hline(p, 64, 32, 64, 7, hat_d)
+    elif hat_kind == "band":
+        head(32, 0, hat, hat_l, hat, hat, hat_d, hat_d)
+        hline(p, 64, 40, 48, 8, hat_l)                # band over the forehead
+        hline(p, 64, 32, 64, 11, hat)                 # wrap the sides/back
+        rect(p, 64, 56, 12, 60, 15, hat_d)            # knot tail
+        px(p, 64, 43, 10, WHITE); px(p, 64, 44, 10, WHITE)   # skull dot
+    elif hat_kind == "wide":
+        head(32, 0, hat, hat_l, hat, hat_l, hat_d, hat_d)
+        rect(p, 64, 32, 12, 64, 14, hat)              # brim ring
+        hline(p, 64, 34, 62, 13, hat_d)
+        rect(p, 64, 40, 0, 48, 8, hat)                # crown top
+        hline(p, 64, 40, 48, 7, (120, 88, 52, 255))   # hat band
+    elif hat_kind == "goggles":
+        head(32, 0, hat, hat_l, hat, hat, hat_d, hat_d)
+        hline(p, 64, 40, 48, 9, (150, 158, 168, 255)) # strap
+        for gx in (42, 46):
+            px(p, 64, gx, 9, (36, 40, 48, 255)); px(p, 64, gx + 1, 9, (36, 40, 48, 255))
+            px(p, 64, gx, 10, (110, 220, 235, 255)); px(p, 64, gx + 1, 10, (140, 235, 248, 255))
+    else:  # simple cap
+        head(32, 0, hat, hat, hat, hat, hat_d, hat_d)
 
-    # ---- torso
-    rect(p, 64, 20, 20, 28, 32, shirt)
-    rect(p, 64, 20, 16, 28, 20, trim)
-    rect(p, 64, 16, 20, 20, 32, shirt_d)
-    rect(p, 64, 28, 20, 32, 32, shirt_l)
-    # tabard / chest stripe
-    rect(p, 64, 23, 20, 25, 32, trim)
-    vline(p, 64, 24, 20, 32, brighten(trim, 1.2))
-    # belt
-    rect(p, 64, 20, 30, 28, 32, (52, 38, 28, 255))
-    px(p, 64, 23, 30, GOLD)
-    px(p, 64, 24, 30, GOLD_D)
+    # ---------------- torso ------------------------------------------------
+    rect(p, 64, 20, 16, 28, 20, shirt_d)              # top
+    rect(p, 64, 28, 16, 36, 20, pants)                # bottom
+    rect(p, 64, 16, 20, 20, 32, shirt_d)              # right
+    rect(p, 64, 20, 20, 28, 32, shirt)                # front
+    rect(p, 64, 28, 20, 32, 32, shirt_l)              # left
+    rect(p, 64, 32, 20, 40, 32, shirt_d)              # back
+    vline(p, 64, 20, 20, 32, shirt_d); vline(p, 64, 27, 20, 32, shirt_l)
+    rect(p, 64, 20, 30, 28, 32, BELT)
+    px(p, 64, 23, 30, BUCKLE); px(p, 64, 24, 31, BUCKLE)
 
-    # ---- arms
-    for base_x in (44, 36):
-        rect(p, 64, base_x, 20, base_x + 4, 32, shirt)
-        rect(p, 64, base_x, 16, base_x + 4, 20, trim)
-        rect(p, 64, base_x, 32, base_x + 4, 36, face)
-        vline(p, 64, base_x, 20, 32, shirt_d)
-        vline(p, 64, base_x + 3, 20, 32, shirt_l)
-        vline(p, 64, base_x, 32, 36, face_d)
+    if name == "knight":
+        rect(p, 64, 22, 20, 26, 32, trim)             # tabard
+        px(p, 64, 23, 22, GOLD); px(p, 64, 24, 22, GOLD)
+        px(p, 64, 23, 23, GOLD); px(p, 64, 24, 23, GOLD); px(p, 64, 22, 23, GOLD); px(p, 64, 25, 23, GOLD)
+        rect(p, 64, 16, 20, 20, 32, trim_d)           # pauldron stripe
+        rect(p, 64, 28, 20, 32, 32, trim_l)
+    elif name == "pirate":
+        rect(p, 64, 20, 20, 22, 30, trim)             # open vest edges
+        rect(p, 64, 26, 20, 28, 30, trim_d)
+        rect(p, 64, 20, 26, 28, 28, (150, 44, 44, 255))  # sash
+        px(p, 64, 24, 26, GOLD)
+        rect(p, 64, 32, 20, 40, 32, shirt_d)
+    elif name == "outlaw":
+        rect(p, 64, 20, 20, 28, 22, trim)             # poncho shoulders
+        for yy in range(24, 31):                      # bandolier
+            px(p, 64, 20 + (yy - 24), yy, (58, 44, 30, 255))
+            if (yy - 24) % 2 == 0:
+                px(p, 64, 21 + (yy - 24), yy, (196, 160, 84, 255))
+        rect(p, 64, 32, 20, 40, 32, darken(shirt, 0.9))
+    elif name == "sky_captain":
+        rect(p, 64, 20, 20, 28, 23, trim)             # flight collar
+        for bx in (22, 25):                           # brass buttons
+            px(p, 64, bx, 25, GOLD); px(p, 64, bx, 27, GOLD)
+        rect(p, 64, 32, 20, 40, 32, shirt_d)
 
-    # ---- legs
-    for base_x in (20, 36):
-        rect(p, 64, base_x, 52, base_x + 4, 64, pants)
-        rect(p, 64, base_x, 48, base_x + 4, 52, trim)
-        vline(p, 64, base_x, 52, 64, darken(pants, 0.78))
-        # boot cuff
-        rect(p, 64, base_x, 60, base_x + 4, 64, (36, 30, 26, 255))
+    # ---------------- arms (right base; left mirrored below) ---------------
+    def arm(ox, oy, sleeve, hand, sleeve_d, sleeve_l):
+        rect(p, 64, ox + 4, oy, ox + 8, oy + 4, sleeve)       # top
+        rect(p, 64, ox + 8, oy, ox + 12, oy + 4, hand)        # bottom (hand)
+        rect(p, 64, ox, oy + 4, ox + 4, oy + 16, sleeve_d)    # right
+        rect(p, 64, ox + 4, oy + 4, ox + 8, oy + 16, sleeve)  # front
+        rect(p, 64, ox + 8, oy + 4, ox + 12, oy + 16, sleeve_l)  # left
+        rect(p, 64, ox + 12, oy + 4, ox + 16, oy + 16, sleeve_d)  # back
+        rect(p, 64, ox + 4, oy + 12, ox + 8, oy + 16, hand)   # hand rows
+        vline(p, 64, ox + 4, oy + 4, oy + 12, sleeve_d)
+        vline(p, 64, ox + 7, oy + 4, oy + 12, sleeve_l)
 
-    # boot soles + glove cuffs
-    for base_x in (20, 36):
-        hline(p, 64, base_x, base_x + 4, 63, (22, 20, 18, 255))
+    arm(40, 16, shirt, skin_d, shirt_d, shirt)            # right arm
+    arm(32, 48, shirt_l, skin_l, shirt_d, shirt_l)        # left arm
+    for ox, oy in ((40, 16), (32, 48)):                   # cuffs
+        hline(p, 64, ox + 4, ox + 8, oy + 3, trim if name != "knight" else trim_d)
+    if name == "pirate":                                  # striped sleeves
+        for ox, oy in ((40, 16), (32, 48)):
+            hline(p, 64, ox, ox + 16, oy + 7, trim_d)
+
+    # ---------------- legs --------------------------------------------------
+    def leg(ox, oy):
+        rect(p, 64, ox + 4, oy, ox + 8, oy + 4, pants)        # top
+        rect(p, 64, ox + 8, oy, ox + 12, oy + 4, BOOT_D)      # bottom
+        rect(p, 64, ox, oy + 4, ox + 4, oy + 16, pants_d)
+        rect(p, 64, ox + 4, oy + 4, ox + 8, oy + 16, pants)
+        rect(p, 64, ox + 8, oy + 4, ox + 12, oy + 16, pants)
+        rect(p, 64, ox + 12, oy + 4, ox + 16, oy + 16, pants_d)
+        rect(p, 64, ox, oy + 12, ox + 16, oy + 16, BOOT)      # boots
+        rect(p, 64, ox + 4, oy + 12, ox + 8, oy + 16, BOOT)
+        hline(p, 64, ox, ox + 16, oy + 15, BOOT_D)
+        hline(p, 64, ox + 4, ox + 8, oy + 3, trim_d)          # waistband edge
+
+    leg(0, 16)    # right leg
+    leg(16, 48)   # left leg
+
+    # ---------------- torso overlay (vest / scarf / cloak) ------------------
+    if name == "knight":
+        rect(p, 64, 20, 36, 28, 48, trim_d)
+        rect(p, 64, 32, 36, 40, 48, trim_d)
+        hline(p, 64, 20, 28, 36, trim)
+    elif name == "pirate":
+        rect(p, 64, 16, 36, 20, 48, trim_d)
+        rect(p, 64, 36, 36, 40, 48, trim_d)
+        hline(p, 64, 20, 28, 44, (150, 44, 44, 255))
+    elif name == "outlaw":
+        rect(p, 64, 20, 36, 28, 44, trim)
+        rect(p, 64, 32, 36, 40, 44, trim_d)
+        hline(p, 64, 32, 40, 40, (58, 44, 30, 255))
+    elif name == "sky_captain":
+        rect(p, 64, 20, 36, 28, 40, trim)             # scarf wrap
+        rect(p, 64, 34, 38, 38, 50, trim_d)           # scarf tail
+        hline(p, 64, 20, 28, 36, brighten(trim, 1.2))
 
     png(TEX / "entity/survivor" / f"{name}.png", 64, 64, p)
 
@@ -631,9 +719,13 @@ def paint_airship(path):
     # seam rivets along the equator
     for x in range(4, 112, 16):
         px(p, 128, x, 52, darken(canvas_dark, 0.7))
+    # gilded roundel emblem on the envelope flank
+    disc(p, 128, 56, 50, 5, GOLD)
+    disc(p, 128, 56, 50, 3, stripe)
+    px(p, 128, 55, 49, brighten(GOLD, 1.3)); px(p, 128, 58, 52, darken(GOLD, 0.8))
 
-    # --- nose cap (0,62)-(36,84) & tail cap (38,62)-(74,84)
-    for (x0, x1) in ((0, 36), (38, 74)):
+    # --- nose cap (0,62)-(42,84) & tail cap (38,62)-(80,84)
+    for (x0, x1) in ((0, 42), (38, 80)):
         rect(p, 128, x0, 62, x1, 84, canvas_light)
         for y in range(62, 84, 6):
             hline(p, 128, x0, x1, y, canvas_dark)
@@ -672,86 +764,263 @@ def paint_airship(path):
     png(path, 128, 128, p)
 
 
-def paint_ship(path, hull, hull_dark, sail, sail_dark, trim, flag, emblem="crown"):
-    """256x128 sheet matching SailingShipEntityModel's UV plan.
+def _ship_side_band(p, x0, x1, hull, hull_dark, trim, ports=None, portholes=None):
+    """One long hull face: gunwale, planked topsides with seams and nails,
+    wale stripe, waterline. Optional gun ports or gold portholes."""
+    rect(p, 256, x0, 10, x1, 20, hull)
+    hline(p, 256, x0, x1, 10, brighten(hull, 1.28))       # gunwale cap
+    hline(p, 256, x0, x1, 11, trim)                        # cap trim
+    for y in range(13, 17):
+        hline(p, 256, x0, x1, y, hull if y % 2 == 1 else darken(hull, 0.94))
+    for x in range(x0 + 3, x1 - 2, 7):                     # plank seams + nails
+        vline(p, 256, x, 13, 16, darken(hull, 0.86))
+        px(p, 256, x + 3, 14, darken(hull, 0.72))
+    hline(p, 256, x0, x1, 17, hull_dark)                   # main wale
+    hline(p, 256, x0, x1, 18, darken(hull_dark, 0.80))     # waterline
+    hline(p, 256, x0, x1, 19, darken(hull_dark, 0.62))
+    if ports:
+        for px_ in ports:
+            rect(p, 256, x0 + px_, 13, x0 + px_ + 3, 16, (18, 16, 18, 255))
+            hline(p, 256, x0 + px_, x0 + px_ + 3, 13, (140, 44, 44, 255))
+    if portholes:
+        for px_ in portholes:
+            disc(p, 256, x0 + px_, 15, 1, GOLD)
+            px(p, 256, x0 + px_, 15, (30, 34, 52, 255))
 
-    Regions: hull box (0,0)-(176,70) with deck top face at (60,0)-(88,10),
-    underside (88,0)-(116,10) and the side strip (0,60)-(176,70); fore/aft
-    castles (0,70)-(56,88) and (56,70)-(112,88); mast (176,0)-(188,33);
-    yard (188,0)-(256,4); sail (0,96)-(66,121); pennant (70,96)-(96,104).
+
+def paint_ship(path, hull, hull_dark, sail, sail_dark, trim, flag, emblem="crown"):
+    """256x128 sheet matching SailingShipEntityModel's box UV plan.
+
+    Hull box is 28x10x60, so its faces live at: deck top (60,0)-(88,10),
+    keel (88,0)-(116,10), long sides (0,10)-(60,20) and (88,10)-(148,20),
+    bow (60,10)-(88,20), stern (148,10)-(176,20).
     """
     p = canvas(256, 128, (0, 0, 0, 0))
+    pirate = emblem == "skull"
 
-    # --- hull underside (88,0)-(116,10): tarred shadow planks
+    # --- deck top (60,0)-(88,10): planking with a grating hatch
+    rect(p, 256, 60, 0, 88, 10, brighten(hull, 1.16))
+    for x in range(62, 88, 4):
+        vline(p, 256, x, 0, 10, darken(hull, 0.90))
+    rect(p, 256, 68, 3, 80, 8, darken(hull, 0.78))         # grating
+    for x in range(69, 80, 2):
+        vline(p, 256, x, 4, 7, darken(hull, 0.62))
+    hline(p, 256, 66, 82, 0, brighten(hull, 1.3))
+
+    # --- keel (88,0)-(116,10): tarred underside
     rect(p, 256, 88, 0, 116, 10, hull_dark)
-    for x in range(88, 116, 5):
+    for x in range(90, 116, 5):
         vline(p, 256, x, 0, 10, darken(hull_dark, 0.85))
+    hline(p, 256, 88, 116, 4, darken(hull_dark, 0.7))      # keel stripe
 
-    # --- hull deck top face (60,0)-(88,10): planked deck with caulking
-    rect(p, 256, 60, 0, 88, 10, brighten(hull, 1.12))
-    for x in range(60, 88, 4):
-        vline(p, 256, x, 0, 10, darken(hull, 0.9))
-    hline(p, 256, 60, 88, 4, darken(hull, 0.88))
+    # --- long sides (both), bow, stern
+    _ship_side_band(p, 0, 60, hull, hull_dark, trim,
+                    ports=(14, 40) if pirate else None,
+                    portholes=(16, 42) if not pirate else None)
+    _ship_side_band(p, 88, 148, hull, hull_dark, trim,
+                    ports=(14, 40) if pirate else None,
+                    portholes=(16, 42) if not pirate else None)
+    # bow (60,10)-(88,20): vertical stems + figure marks
+    rect(p, 256, 60, 10, 88, 20, hull)
+    hline(p, 256, 60, 88, 10, brighten(hull, 1.28))
+    for x in range(62, 88, 5):
+        vline(p, 256, x, 11, 18, darken(hull, 0.88))
+    hline(p, 256, 60, 88, 18, darken(hull_dark, 0.80))
+    if pirate:
+        rect(p, 256, 71, 13, 77, 16, (140, 44, 44, 255))   # red maw
+        px(p, 256, 73, 14, (238, 238, 238, 255)); px(p, 256, 75, 14, (238, 238, 238, 255))
+    else:
+        disc(p, 256, 74, 14, 2, GOLD)                      # gilded bow eye
+        px(p, 256, 74, 14, (40, 46, 66, 255))
+    # stern (148,10)-(176,20): gallery windows
+    rect(p, 256, 148, 10, 176, 20, hull)
+    hline(p, 256, 148, 176, 10, brighten(hull, 1.28))
+    for wx in (152, 160, 168):
+        rect(p, 256, wx, 13, wx + 4, 16, GOLD if not pirate else (232, 200, 96, 255))
+        px(p, 256, wx + 1, 14, (44, 38, 30, 255))
+    hline(p, 256, 148, 176, 18, darken(hull_dark, 0.80))
 
-    # --- hull side strip (0,60)-(176,70): gunwale, trim band, waterline
-    rect(p, 256, 0, 60, 176, 70, hull)
-    hline(p, 256, 0, 176, 60, brighten(hull, 1.25))       # gunwale cap
-    hline(p, 256, 0, 176, 61, trim)
-    hline(p, 256, 0, 176, 66, hull_dark)
-    hline(p, 256, 0, 176, 68, darken(hull_dark, 0.72))    # waterline
-    hline(p, 256, 0, 176, 69, darken(hull_dark, 0.6))
-    for x in range(4, 176, 18):
-        px(p, 256, x, 63, darken(hull, 0.78))             # tar seams / rivets
-        px(p, 256, x, 64, darken(hull, 0.78))
-
-    # --- castles (0,70)-(56,88) & (56,70)-(112,88): raised deck wood
+    # --- castles (0,70)-(56,88) & (56,70)-(112,88)
     for (x0, x1) in ((0, 56), (56, 112)):
         rect(p, 256, x0, 70, x1, 88, brighten(hull, 1.08))
-        for y in range(70, 88, 4):
-            hline(p, 256, x0, x1, y + 3, hull_dark)
+        for y in range(74, 88, 4):
+            hline(p, 256, x0, x1, y, darken(hull, 0.90))
         hline(p, 256, x0, x1, 70, trim)
-        for x in range(x0 + 4, x1, 8):
-            vline(p, 256, x, 72, 86, darken(hull, 0.9))
+        hline(p, 256, x0, x1, 80, hull_dark)
+        for wx in range(x0 + 6, x1 - 5, 12):               # cabin windows
+            rect(p, 256, wx, 82, wx + 3, 85, GOLD if not pirate else (226, 196, 96, 255))
+        for x in range(x0 + 4, x1, 9):
+            px(p, 256, x, 74, darken(hull, 0.78))          # rail posts
 
     # --- mast (176,0)-(188,33) & yard (188,0)-(256,4)
-    rect(p, 256, 176, 0, 188, 33, hull)
-    vline(p, 256, 177, 0, 33, brighten(hull, 1.3))
-    vline(p, 256, 185, 0, 33, hull_dark)
-    rect(p, 256, 188, 0, 256, 4, hull)
+    rect(p, 256, 176, 0, 188, 33, darken(hull, 0.9))
+    vline(p, 256, 177, 0, 33, brighten(hull, 1.2))
+    vline(p, 256, 185, 0, 33, darken(hull_dark, 0.8))
+    for y in (6, 20):                                      # rope bands
+        hline(p, 256, 176, 188, y, (86, 66, 44, 255))
+    rect(p, 256, 188, 0, 256, 4, darken(hull, 0.9))
     hline(p, 256, 188, 256, 0, brighten(hull, 1.2))
-    hline(p, 256, 188, 256, 3, hull_dark)
+    for x in range(192, 256, 16):
+        rect(p, 256, x, 1, x + 3, 3, (86, 66, 44, 255))    # rigging lashings
 
-    # --- sail (0,96)-(66,121): canvas with seams, trim band, emblem
+    # --- sail (0,96)-(66,121): canvas, vertical seams, hem, emblem
     rect(p, 256, 0, 96, 66, 121, sail)
-    for y in range(99, 118, 4):
-        hline(p, 256, 0, 66, y, sail_dark)
+    for x in range(6, 66, 10):
+        vline(p, 256, x, 96, 121, sail_dark)
+    for y in (99, 108):
+        hline(p, 256, 0, 66, y, darken(sail, 0.94))
     hline(p, 256, 0, 66, 96, brighten(sail, 1.12))
     rect(p, 256, 0, 115, 66, 119, trim)
+    hline(p, 256, 0, 66, 115, brighten(trim, 1.2))
     cx = 33
     if emblem == "crown":
-        rect(p, 256, cx - 5, 101, cx + 5, 108, GOLD)
-        for x in (cx - 5, cx, cx + 5):
+        rect(p, 256, cx - 5, 101, cx + 5, 107, GOLD)
+        for x in (cx - 5, cx - 1, cx + 3):
             rect(p, 256, x, 99, x + 1, 101, GOLD)
-        rect(p, 256, cx - 1, 103, cx + 2, 106, sail)
+        rect(p, 256, cx - 2, 104, cx + 2, 107, sail)
     elif emblem == "skull":
-        disc(p, 256, cx, 104, 4, (238, 238, 238, 255))
-        rect(p, 256, cx - 4, 107, cx + 4, 110, (238, 238, 238, 255))
-        px(p, 256, cx - 2, 103, (24, 24, 28, 255))
-        px(p, 256, cx + 2, 103, (24, 24, 28, 255))
-        rect(p, 256, cx - 1, 109, cx + 1, 110, (24, 24, 28, 255))
+        disc(p, 256, cx, 103, 4, (238, 238, 238, 255))
+        rect(p, 256, cx - 4, 106, cx + 4, 109, (238, 238, 238, 255))
+        px(p, 256, cx - 2, 102, (24, 24, 28, 255)); px(p, 256, cx + 2, 102, (24, 24, 28, 255))
+        rect(p, 256, cx - 2, 108, cx + 2, 109, (24, 24, 28, 255))
+        hline(p, 256, cx - 5, cx + 5, 111, (216, 60, 52, 255))
     elif emblem == "gull":
-        hline(p, 256, cx - 6, cx - 1, 104, (24, 40, 44, 255))
-        hline(p, 256, cx + 1, cx + 6, 104, (24, 40, 44, 255))
-        px(p, 256, cx - 1, 103, (24, 40, 44, 255))
-        px(p, 256, cx + 1, 103, (24, 40, 44, 255))
+        hline(p, 256, cx - 6, cx - 1, 104, (26, 46, 48, 255))
+        hline(p, 256, cx + 1, cx + 6, 104, (26, 46, 48, 255))
+        px(p, 256, cx - 1, 103, (26, 46, 48, 255)); px(p, 256, cx + 1, 103, (26, 46, 48, 255))
+        hline(p, 256, cx - 3, cx + 3, 109, trim)
 
-    # --- pennant (70,96)-(96,104)
+    # --- pennant (70,96)-(96,104): swallow-tail streamer
     rect(p, 256, 70, 96, 96, 104, flag)
-    rect(p, 256, 92, 96, 96, 104, (0, 0, 0, 0))           # swallow-tail notch
-    hline(p, 256, 70, 92, 96, brighten(flag, 1.3))
+    rect(p, 256, 91, 96, 96, 104, (0, 0, 0, 0))            # tail notch
+    px(p, 256, 92, 99, (0, 0, 0, 0)); px(p, 256, 93, 100, (0, 0, 0, 0))
+    hline(p, 256, 70, 91, 96, brighten(flag, 1.3))
+    vline(p, 256, 70, 96, 104, GOLD)
 
     jitter(p, 256, 9, 3)
     png(path, 256, 128, p)
+
+
+def paint_galleon(path):
+    """256x256 sheet matching GalleonEntityModel's box UV plan.
+
+    Hull 24x14x96: deck (96,0)-(120,24), keel (120,0)-(144,24), gun-deck
+    sides (0,24)-(96,38) and (120,24)-(216,38), bow (96,24)-(120,38),
+    stern (216,24)-(240,38). Castles, masts, yards, bowsprit, nest, canvas,
+    flag and pennant fill the rest.
+    """
+    p = canvas(256, 256, (0, 0, 0, 0))
+    hull = (52, 40, 34, 255)
+    hull_l = (74, 58, 46, 255)
+    hull_dark = (34, 26, 24, 255)
+    trim = (140, 44, 44, 255)
+    gold = (226, 192, 92, 255)
+    rope = (96, 74, 48, 255)
+    sail_c = (52, 50, 56, 255)
+    sail_d = (38, 37, 42, 255)
+
+    def band(x0, x1, y0, y1, ports):
+        rect(p, 256, x0, y0, x1, y1, hull)
+        hline(p, 256, x0, x1, y0, hull_l)                  # gunwale
+        hline(p, 256, x0, x1, y0 + 1, trim)
+        for y in range(y0 + 3, y1 - 3):
+            hline(p, 256, x0, x1, y, hull if y % 2 == 1 else darken(hull, 0.92))
+        for x in range(x0 + 4, x1 - 3, 9):
+            vline(p, 256, x, y0 + 3, y1 - 3, darken(hull, 0.85))
+        hline(p, 256, x0, x1, y1 - 3, hull_dark)           # wale
+        hline(p, 256, x0, x1, y1 - 2, darken(hull_dark, 0.85))
+        hline(p, 256, x0, x1, y1 - 1, (20, 18, 20, 255))   # waterline
+        for gx in ports:                                   # gun ports with red lids
+            rect(p, 256, x0 + gx, y0 + 4, x0 + gx + 4, y0 + 9, (16, 14, 16, 255))
+            hline(p, 256, x0 + gx, x0 + gx + 4, y0 + 4, trim)
+            px(p, 256, x0 + gx + 1, y0 + 5, (60, 52, 44, 255))
+
+    # --- hull faces
+    band(0, 96, 24, 38, (8, 30, 52, 74))
+    band(120, 216, 24, 38, (8, 30, 52, 74, 96))
+    rect(p, 256, 96, 24, 120, 38, hull)                    # bow
+    hline(p, 256, 96, 120, 24, hull_l)
+    for x in range(99, 120, 6):
+        vline(p, 256, x, 25, 34, darken(hull, 0.88))
+    rect(p, 256, 104, 27, 112, 31, trim)                   # red maw
+    px(p, 256, 106, 28, (238, 238, 238, 255)); px(p, 256, 109, 28, (238, 238, 238, 255))
+    hline(p, 256, 96, 120, 35, darken(hull_dark, 0.85))
+    rect(p, 256, 216, 24, 240, 38, hull)                   # stern gallery
+    hline(p, 256, 216, 240, 24, hull_l)
+    for wx in (220, 227, 234):
+        rect(p, 256, wx, 27, wx + 5, 32, gold)
+        px(p, 256, wx + 2, 29, (44, 38, 30, 255))
+    hline(p, 256, 216, 240, 35, darken(hull_dark, 0.85))
+    rect(p, 256, 96, 0, 120, 24, brighten(hull, 1.14))     # deck
+    for x in range(98, 120, 4):
+        vline(p, 256, x, 0, 24, darken(hull, 0.90))
+    rect(p, 256, 102, 8, 114, 16, darken(hull, 0.76))      # main hatch
+    for x in range(104, 114, 2):
+        vline(p, 256, x, 9, 15, darken(hull, 0.6))
+    rect(p, 256, 120, 0, 144, 24, hull_dark)               # keel
+    hline(p, 256, 120, 144, 12, darken(hull_dark, 0.7))
+
+    # --- castles
+    for (x0, x1, y0, y1) in ((0, 58, 110, 133), (60, 132, 110, 140), (140, 184, 110, 128)):
+        rect(p, 256, x0, y0, x1, y1, brighten(hull, 1.06))
+        for y in range(y0 + 4, y1, 4):
+            hline(p, 256, x0, x1, y, darken(hull, 0.90))
+        hline(p, 256, x0, x1, y0, trim)
+        mid_y = (y0 + y1) // 2
+        hline(p, 256, x0, x1, mid_y, hull_dark)
+        for wx in range(x0 + 5, x1 - 6, 11):
+            rect(p, 256, wx, mid_y + 2, wx + 3, mid_y + 5, gold)
+    # aft-topsail driver: gold scrollwork on the stern castle top
+    hline(p, 256, 62, 130, 111, gold)
+
+    # --- masts, yards, bowsprit, nest
+    for (x0, x1, y0, y1) in ((0, 16, 140, 190), (20, 32, 140, 179)):
+        rect(p, 256, x0, y0, x1, y1, darken(hull, 0.9))
+        vline(p, 256, x0 + 1, y0, y1, brighten(hull, 1.2))
+        for y in range(y0 + 6, y1, 12):
+            hline(p, 256, x0, x1, y, rope)
+    for (x0, x1, y0, y1) in ((40, 132, 140, 144), (140, 204, 140, 144), (192, 256, 146, 148)):
+        rect(p, 256, x0, y0, x1, y1, darken(hull, 0.9))
+        hline(p, 256, x0, x1, y0, brighten(hull, 1.15))
+        for x in range(x0 + 4, x1 - 3, 14):
+            rect(p, 256, x, y0 + 1, x + 3, y0 + 2, rope)
+    rect(p, 256, 200, 150, 224, 160, darken(hull, 0.8))    # crow's nest
+    hline(p, 256, 200, 224, 150, trim)
+
+    # --- canvas: main (0,196)-(82,227), fore (90,196)-(148,219)
+    for (x0, x1, y0, y1) in ((0, 82, 196, 227), (90, 148, 196, 219)):
+        rect(p, 256, x0, y0, x1, y1, sail_c)
+        for x in range(x0 + 6, x1, 12):
+            vline(p, 256, x, y0, y1, sail_d)
+        hline(p, 256, x0, x1, y0 + 3, darken(sail_c, 0.9))
+        rect(p, 256, x0, y1 - 5, x1, y1 - 1, trim)
+    # skull & cross-bones on the main course
+    cx = 41
+    disc(p, 256, cx, 206, 5, (238, 238, 238, 255))
+    rect(p, 256, cx - 5, 210, cx + 5, 214, (238, 238, 238, 255))
+    px(p, 256, cx - 3, 205, (24, 24, 28, 255)); px(p, 256, cx + 3, 205, (24, 24, 28, 255))
+    rect(p, 256, cx - 2, 211, cx + 2, 213, (24, 24, 28, 255))
+    hline(p, 256, cx - 8, cx - 3, 216, (238, 238, 238, 255))
+    hline(p, 256, cx + 3, cx + 8, 216, (238, 238, 238, 255))
+    hline(p, 256, cx - 6, cx + 6, 217, (238, 238, 238, 255))
+    # gull sigil on the fore course
+    hline(p, 256, 111, 118, 205, (200, 205, 210, 255))
+    px(p, 256, 118, 204, (200, 205, 210, 255)); px(p, 256, 119, 203, (200, 205, 210, 255))
+
+    # --- flag (0,232)-(30,243) & pennant (40,232)-(86,240)
+    rect(p, 256, 0, 232, 30, 243, (24, 22, 26, 255))
+    disc(p, 256, 15, 237, 3, (238, 238, 238, 255))
+    px(p, 256, 13, 236, (24, 24, 28, 255)); px(p, 256, 17, 236, (24, 24, 28, 255))
+    hline(p, 256, 12, 18, 241, (216, 60, 52, 255))
+    vline(p, 256, 0, 232, 243, GOLD)
+    rect(p, 256, 40, 232, 86, 240, trim)
+    rect(p, 256, 82, 232, 86, 240, (0, 0, 0, 0))
+    hline(p, 256, 40, 82, 232, brighten(trim, 1.3))
+    for x in range(46, 80, 8):
+        vline(p, 256, x, 232, 240, (24, 22, 26, 255))
+
+    jitter(p, 256, 11, 3)
+    png(path, 256, 256, p)
 
 
 def icon_texture(path):
@@ -824,6 +1093,7 @@ def main():
     spawn_egg_texture(TEX / "item/sky_captain_spawn_egg.png", (127, 77, 168, 255), (120, 220, 235, 255))
     spawn_egg_texture(TEX / "item/merchant_ship_spawn_egg.png", (222, 214, 190, 255), (66, 92, 168, 255))
     spawn_egg_texture(TEX / "item/pirate_ship_spawn_egg.png", (36, 32, 38, 255), (178, 52, 52, 255))
+    spawn_egg_texture(TEX / "item/galleon_ship_spawn_egg.png", (52, 40, 34, 255), (140, 44, 44, 255))
 
     # survivor cultures
     skin_texture("knight", face=(226, 186, 152, 255), hair=(96, 70, 44, 255),
@@ -853,6 +1123,7 @@ def main():
                hull=(122, 92, 57, 255), hull_dark=(94, 70, 44, 255),
                sail=(226, 234, 232, 255), sail_dark=(198, 210, 208, 255),
                trim=(64, 142, 134, 255), flag=(64, 142, 134, 255), emblem="gull")
+    paint_galleon(TEX / "entity/galleon.png")
 
     # mod icon (both the fabric.mod.json icon and the legacy item icon slot)
     icon_texture(ROOT / "icon.png")

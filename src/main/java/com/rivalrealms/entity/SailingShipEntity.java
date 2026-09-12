@@ -48,6 +48,11 @@ public abstract class SailingShipEntity extends Entity {
 
     private float hull = MAX_HULL;
 
+    /** Subclasses with heavier timbers override this (the galleon runs 140). */
+    protected float maxHull() {
+        return MAX_HULL;
+    }
+
     protected SailingShipEntity(EntityType<? extends SailingShipEntity> type, World world) {
         super(type, world);
         this.setNoGravity(true);
@@ -111,7 +116,7 @@ public abstract class SailingShipEntity extends Entity {
                         this.getX() - this.getVelocity().x * 6.0, this.getY() + 0.15, this.getZ() - this.getVelocity().z * 6.0,
                         3, 0.7, 0.05, 0.7, 0.01);
             }
-            if (this.hull <= MAX_HULL * 0.34f && world.getTime() % 14L == 0) {
+            if (this.hull <= maxHull() * 0.34f && world.getTime() % 14L == 0) {
                 serverWorld.spawnParticles(ParticleTypes.SMOKE,
                         this.getX(), this.getY() + 1.6, this.getZ(), 3, 0.8, 0.3, 1.6, 0.012);
             }
@@ -151,7 +156,7 @@ public abstract class SailingShipEntity extends Entity {
     }
 
     public float hullFraction() {
-        return this.hull / MAX_HULL;
+        return this.hull / maxHull();
     }
 
     // ---------------------------------------------------------------- boarding
@@ -292,7 +297,7 @@ public abstract class SailingShipEntity extends Entity {
 
     @Override
     protected void readCustomDataFromNbt(NbtCompound nbt) {
-        this.hull = MathHelper.clamp(nbt.getFloat("Hull"), 1.0f, MAX_HULL);
+        this.hull = MathHelper.clamp(nbt.getFloat("Hull"), 1.0f, maxHull());
         this.dataTracker.set(HULL_FRACTION, this.hullFraction());
     }
 

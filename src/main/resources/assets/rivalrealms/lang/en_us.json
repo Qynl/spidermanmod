@@ -30,5 +30,7 @@
   "entity.rivalrealms.merchant_ship": "Royal Jewelry Trader",
   "entity.rivalrealms.pirate_ship": "Freebooter Raider",
   "entity.rivalrealms.sloop": "Freebooter Sloop",
-  "entity.rivalrealms.cannonball": "Cannonball"
+  "entity.rivalrealms.cannonball": "Cannonball",
+  "item.rivalrealms.galleon_ship_spawn_egg": "Freebooter Flagship Crew Kit",
+  "entity.rivalrealms.galleon": "Freebooter Flagship"
 }
