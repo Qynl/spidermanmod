@@ -1,5 +1,6 @@
 package com.rivalrealms.block;
 
+import com.mojang.serialization.MapCodec;
 import com.rivalrealms.item.ModItems;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
@@ -32,11 +33,17 @@ import net.minecraft.world.World;
  * the answer to raider sails on the horizon.
  */
 public class CannonBlock extends HorizontalFacingBlock {
+    public static final MapCodec<CannonBlock> CODEC = createCodec(CannonBlock::new);
     public static final BooleanProperty LOADED = BooleanProperty.of("loaded");
 
     private static final VoxelShape CARRIAGE = Block.createCuboidShape(3.0, 0.0, 5.0, 13.0, 5.0, 12.0);
     private static final VoxelShape BARREL = Block.createCuboidShape(4.5, 4.0, 1.0, 11.5, 11.0, 14.0);
     private static final VoxelShape SHAPE = VoxelShapes.union(CARRIAGE, BARREL);
+
+    @Override
+    public MapCodec<? extends HorizontalFacingBlock> getCodec() {
+        return CODEC;
+    }
 
     public CannonBlock(Settings settings) {
         super(settings);

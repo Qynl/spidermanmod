@@ -185,7 +185,7 @@ public final class RealmEvents {
         BlockPos spawn = surfacePosition(world,
                 center.add(world.random.nextInt(15) - 7, 0, world.random.nextInt(15) - 7));
         if (spawn == null) {
-            return;
+            return null;
         }
         settler.refreshPositionAndAngles(spawn.getX() + 0.5, spawn.getY(), spawn.getZ() + 0.5,
                 world.random.nextFloat() * 360.0f, 0.0f);

@@ -27,6 +27,11 @@ add('net.minecraft.registry.entry.RegistryEntry.Reference', ['net.minecraft.regi
 ])
 add('net.minecraft.entity.EntityPose', [], [])
 
+add('com.mojang.serialization.MapCodec', [], [])
+add('com.mojang.serialization.Codec', [], [])
+add('net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents', [], [
+    'public static final net.fabricmc.fabric.api.event.Event AFTER;',
+])
 add('net.minecraft.enchantment.Enchantment', [], [])
 add('net.minecraft.item.CrossbowItem', ['net.minecraft.item.RangedWeaponItem'], [
     'public static boolean isCharged(net.minecraft.item.ItemStack stack);',

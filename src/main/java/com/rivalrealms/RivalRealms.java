@@ -32,8 +32,8 @@ public final class RivalRealms implements ModInitializer {
         ServerChunkEvents.CHUNK_LOAD.register(WorldSettlementGenerator::onChunkLoad);
         ServerTickEvents.END_SERVER_TICK.register(RealmEvents::onServerTick);
         // Stealing from a settlement's fields is noticed, remembered and paid for.
-        net.fabricmc.fabric.api.event.player.ServerBlockBreakEvents.AFTER.register(
-                (world, pos, state, blockEntity, breaker) -> RealmEvents.onBlockBroken(world, pos, state, breaker));
+        net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents.AFTER.register(
+                (world, player, pos, state, blockEntity) -> RealmEvents.onBlockBroken(world, pos, state, player));
         LOGGER.info("Rival Realms is ready: survivors, settlements, betrayals and frontiers await.");
     }
 

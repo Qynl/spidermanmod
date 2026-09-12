@@ -1,5 +1,6 @@
 package com.rivalrealms.item;
 
+import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.projectile.ArrowEntity;
 import net.minecraft.item.Item;
@@ -57,7 +58,8 @@ public class BlunderbussItem extends Item {
                     user.getX() + barrelX, user.getEyeY() - 0.1, user.getZ() + barrelZ, 5, 0.2, 0.1, 0.2, 0.05);
             user.takeKnockback(0.9, -barrelX, -barrelZ);
             user.getItemCooldownManager().set(this, 50);
-            stack.damage(1, user, p -> p.sendToolBreakStatus(hand));
+            stack.damage(1, user, hand == Hand.OFF_HAND
+                    ? EquipmentSlot.OFFHAND : EquipmentSlot.MAINHAND);
         }
         return TypedActionResult.success(stack, world.isClient());
     }
