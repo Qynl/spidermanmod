@@ -19,6 +19,10 @@ This repository intentionally starts a new project; the old Spider-Man concept i
 - **Living-world encounters:** small survivor parties appear at a low rate rather than flooding the world.
 - **Scattered world landmarks:** explored overworld regions can reveal persistent knight fortresses, citadels, royal cities, frontier towns, pirate harbors, shipyards, skyports, and defended outposts. Their style follows the surrounding biome and each includes streets, entrances, windows, markets, themed loot, work areas, banners, and NPC residents.
 
+## Creative tab
+
+All Rival Realms content is collected in the **Rival Realms** creative tab: settlement blocks, the Realm Banner, Recruitment Contract, revolver, flintlock, pirate boat, survivor spawn egg, and the deployable airship spawn item. You do not need to search through unrelated vanilla tabs.
+
 ## Commands
 
 Commands require permission level 2:
@@ -30,6 +34,7 @@ Commands require permission level 2:
 /rivalrealms landmark <fortress|citadel|town|royal_city|harbor|shipyard|skyport|airship_yard|outpost>
 /rivalrealms claim
 /rivalrealms bases
+/rivalrealms locate
 /rivalrealms jobs
 /rivalrealms assign <role> <survivor>
 /rivalrealms diplomacy <faction_a> <faction_b> <-100..100>

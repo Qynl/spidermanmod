@@ -22,6 +22,8 @@ public final class ModItems {
             new BoatItem(false, BoatEntity.Type.SPRUCE, new Item.Settings().maxCount(1)));
     public static final Item SURVIVOR_SPAWN_EGG = register("survivor_spawn_egg",
             new SpawnEggItem(ModEntities.SURVIVOR, 0x6f4b3e, 0xd0a75b, new Item.Settings()));
+    public static final Item AIRSHIP_SPAWN_EGG = register("airship_spawn_egg",
+            new AirshipSpawnEggItem(new Item.Settings().maxCount(16)));
 
     private ModItems() {
     }
@@ -40,6 +42,7 @@ public final class ModItems {
         registerBlockItem("frontier_planks", ModBlocks.FRONTIER_PLANKS);
         registerBlockItem("airship_metal", ModBlocks.AIRSHIP_METAL);
         registerBlockItem("realm_banner", ModBlocks.REALM_BANNER);
+        ModItemGroups.register();
         RivalRealms.LOGGER.info("Registered contracts, guns, boats, spawn eggs and settlement blocks.");
     }
 }

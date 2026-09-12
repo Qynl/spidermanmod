@@ -82,6 +82,7 @@ def check_png_assets() -> None:
         "assets/rivalrealms/textures/entity/survivor/outlaw.png": (64, 64),
         "assets/rivalrealms/textures/entity/survivor/sky_captain.png": (64, 64),
         "assets/rivalrealms/textures/entity/airship.png": (64, 32),
+        "assets/rivalrealms/textures/item/airship_spawn_egg.png": (16, 16),
     }
     for relative_path, expected in expected_dimensions.items():
         path = ROOT / "src/main/resources" / relative_path
@@ -105,6 +106,23 @@ def check_visual_renderers() -> None:
     for culture in re.findall(r'"([a-z][a-z0-9_]*)",\s*"[A-Z][A-Za-z]+",\s*"[A-Z]', archetypes):
         if not (RESOURCES / "assets/rivalrealms/textures/entity/survivor" / f"{culture}.png").exists():
             fail(f"missing survivor texture for culture: {culture}")
+
+
+def check_content_catalog() -> None:
+    group = ROOT / "src/main/java/com/rivalrealms/item/ModItemGroups.java"
+    items = ROOT / "src/main/java/com/rivalrealms/item/ModItems.java"
+    if not group.exists() or "FabricItemGroup.builder" not in group.read_text(encoding="utf-8"):
+        fail("Rival Realms creative tab is missing")
+    group_text = group.read_text(encoding="utf-8")
+    for entry in ("CROWN_BRICK", "SHIP_PLANKS", "FRONTIER_PLANKS", "AIRSHIP_METAL",
+                  "REALM_BANNER", "RECRUITMENT_CONTRACT", "REVOLVER", "FLINTLOCK",
+                  "PIRATE_BOAT", "SURVIVOR_SPAWN_EGG", "AIRSHIP_SPAWN_EGG"):
+        if entry not in group_text:
+            fail(f"creative tab is missing catalog entry: {entry}")
+    if "AIRSHIP_SPAWN_EGG" not in items.read_text(encoding="utf-8"):
+        fail("airship spawn item is not registered")
+    if not (RESOURCES / "assets/rivalrealms/models/item/airship_spawn_egg.json").exists():
+        fail("airship spawn item model is missing")
 
 
 def check_mod_json() -> None:
@@ -206,6 +224,8 @@ def check_jar(jar_path: Path) -> None:
             "assets/rivalrealms/textures/entity/airship.png",
             "com/rivalrealms/RivalRealms.class",
             "com/rivalrealms/client/AirshipRenderer.class",
+            "com/rivalrealms/item/ModItemGroups.class",
+            "com/rivalrealms/item/AirshipSpawnEggItem.class",
         }
         missing = sorted(required - names)
         if missing:
@@ -223,6 +243,7 @@ def main() -> None:
     check_asset_references()
     check_png_assets()
     check_mod_json()
+    check_content_catalog()
     check_visual_renderers()
     check_runtime_safety()
     if args.jar:

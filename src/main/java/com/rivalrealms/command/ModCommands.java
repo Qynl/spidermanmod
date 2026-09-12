@@ -76,6 +76,8 @@ public final class ModCommands {
                         .executes(context -> claim(context.getSource())))
                 .then(CommandManager.literal("bases")
                         .executes(context -> listBases(context.getSource())))
+                .then(CommandManager.literal("locate")
+                        .executes(context -> locate(context.getSource())))
                 .then(CommandManager.literal("jobs")
                         .executes(context -> jobs(context.getSource())))
                 .then(CommandManager.literal("assign")
@@ -217,6 +219,28 @@ public final class ModCommands {
         return bases.size();
     }
 
+    private static int locate(ServerCommandSource source) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
+        ServerPlayerEntity player = source.getPlayer();
+        RealmState.BaseRecord nearest = null;
+        double nearestDistance = Double.MAX_VALUE;
+        for (RealmState.BaseRecord base : RealmState.get(player.getServerWorld()).bases()) {
+            double distance = base.center().getSquaredDistance(player.getBlockPos());
+            if (distance < nearestDistance) {
+                nearest = base;
+                nearestDistance = distance;
+            }
+        }
+        if (nearest == null) {
+            source.sendError(Text.literal("No persistent landmarks have been discovered yet. Explore new overworld chunks or use /rivalrealms landmark town."));
+            return 0;
+        }
+        RealmState.BaseRecord located = nearest;
+        int blocks = (int) Math.sqrt(nearestDistance);
+        source.sendFeedback(() -> Text.literal("Nearest settlement: " + located.name() + " · "
+                + located.center().toShortString() + " · " + blocks + " blocks away"), false);
+        return 1;
+    }
+
     private static int jobs(ServerCommandSource source) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
         ServerPlayerEntity player = source.getPlayer();
         ServerWorld world = player.getServerWorld();
@@ -298,7 +322,7 @@ public final class ModCommands {
     private static int info(ServerCommandSource source) {
         source.sendFeedback(() -> Text.literal("Rival Realms: /rivalrealms spawn <culture> [count], /rivalrealms build <style>, "
                 + "/rivalrealms landmark <fortress|citadel|town|royal_city|harbor|shipyard|skyport|airship_yard|outpost>, /rivalrealms claim, "
-                + "/rivalrealms bases, /rivalrealms jobs, /rivalrealms assign <role> <survivor>, "
+                + "/rivalrealms bases, /rivalrealms locate, /rivalrealms jobs, /rivalrealms assign <role> <survivor>, "
                 + "/rivalrealms diplomacy <a> <b> <value>, /rivalrealms airship"), false);
         return 1;
     }
