@@ -58,6 +58,7 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
     public SurvivorEntity(EntityType<? extends SurvivorEntity> entityType, World world) {
         super(entityType, world);
         setPersistent();
+        setCanPickUpLoot(true);
         this.experiencePoints = 10;
     }
 

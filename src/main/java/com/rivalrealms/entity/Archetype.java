@@ -113,6 +113,12 @@ public enum Archetype {
         survivor.equipStack(EquipmentSlot.CHEST, new ItemStack(chestplate));
         survivor.equipStack(EquipmentSlot.LEGS, new ItemStack(leggings));
         survivor.equipStack(EquipmentSlot.FEET, new ItemStack(boots));
+        survivor.setEquipmentDropChance(EquipmentSlot.MAINHAND, 1.0f);
+        survivor.setEquipmentDropChance(EquipmentSlot.OFFHAND, 1.0f);
+        survivor.setEquipmentDropChance(EquipmentSlot.HEAD, 1.0f);
+        survivor.setEquipmentDropChance(EquipmentSlot.CHEST, 1.0f);
+        survivor.setEquipmentDropChance(EquipmentSlot.LEGS, 1.0f);
+        survivor.setEquipmentDropChance(EquipmentSlot.FEET, 1.0f);
     }
 
     public static Archetype byId(String value) {
