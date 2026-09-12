@@ -31,7 +31,9 @@ add('net.minecraft.enchantment.Enchantment', [], [])
 add('net.minecraft.registry.RegistryEntryLookup', [], [
     'public net.minecraft.registry.entry.RegistryEntry.Reference getOrThrow(net.minecraft.registry.RegistryKey key);',
 ], iface=True)
-add('net.minecraft.registry.Registry', ['net.minecraft.registry.RegistryEntryLookup'], [])
+add('net.minecraft.registry.Registry', [], [
+    'public net.minecraft.registry.entry.RegistryEntry.Reference entryOf(net.minecraft.registry.RegistryKey key);',
+])
 add('net.minecraft.registry.RegistryWrapper.Impl', ['net.minecraft.registry.Registry'], [
     'public net.minecraft.registry.Registry get(net.minecraft.registry.RegistryKey key);',
 ])
