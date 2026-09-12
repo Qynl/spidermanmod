@@ -2,12 +2,14 @@ package com.rivalrealms.command;
 
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
+import com.rivalrealms.RivalRealms;
 import com.rivalrealms.entity.Archetype;
 import com.rivalrealms.entity.ModEntities;
 import com.rivalrealms.entity.SurvivorEntity;
 import com.rivalrealms.world.BuildStyle;
 import com.rivalrealms.world.RealmState;
 import com.rivalrealms.world.SettlementRole;
+import com.rivalrealms.world.SettlementVariant;
 import com.rivalrealms.world.StructureBuilder;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.minecraft.command.CommandRegistryAccess;
@@ -60,6 +62,16 @@ public final class ModCommands {
                                 })
                                 .executes(context -> build(context.getSource(),
                                         StringArgumentType.getString(context, "style")))))
+                .then(CommandManager.literal("landmark")
+                        .then(CommandManager.argument("variant", StringArgumentType.word())
+                                .suggests((context, builder) -> {
+                                    for (SettlementVariant variant : SettlementVariant.values()) {
+                                        builder.suggest(variant.name().toLowerCase());
+                                    }
+                                    return builder.buildFuture();
+                                })
+                                .executes(context -> landmark(context.getSource(),
+                                        StringArgumentType.getString(context, "variant")))))
                 .then(CommandManager.literal("claim")
                         .executes(context -> claim(context.getSource())))
                 .then(CommandManager.literal("bases")
@@ -137,6 +149,46 @@ public final class ModCommands {
                     + ". Hostile factions can now organize raids against it."), true);
         }
         return 1;
+    }
+
+    private static int landmark(ServerCommandSource source, String variantId)
+            throws com.mojang.brigadier.exceptions.CommandSyntaxException {
+        ServerPlayerEntity player = source.getPlayer();
+        SettlementVariant variant;
+        try {
+            variant = SettlementVariant.valueOf(variantId.toUpperCase(java.util.Locale.ROOT));
+        } catch (IllegalArgumentException exception) {
+            source.sendError(Text.literal("Unknown landmark. Use fortress, town, harbor, skyport, or outpost."));
+            return 0;
+        }
+        BuildStyle style = switch (variant) {
+            case FORTRESS -> BuildStyle.KNIGHT;
+            case TOWN, OUTPOST -> BuildStyle.WESTERN;
+            case HARBOR -> BuildStyle.PIRATE;
+            case SKYPORT -> BuildStyle.SKY;
+        };
+        ServerWorld world = player.getServerWorld();
+        BlockPos center = player.getBlockPos();
+        RealmState realms = RealmState.get(world);
+        if (!realms.canClaimBase(center)) {
+            source.sendError(Text.literal("This landmark would overlap an existing settlement."));
+            return 0;
+        }
+        try {
+            StructureBuilder.buildScattered(world, center, style, variant);
+            RealmState.BaseRecord base = realms.claimBase(center, player.getUuid(), style);
+            if (base == null) {
+                source.sendError(Text.literal("The landmark was built, but its claim could not be saved."));
+                return 0;
+            }
+            source.sendFeedback(() -> Text.literal("Built and claimed a " + variant.name().toLowerCase()
+                    + " settlement. Use /rivalrealms jobs to inspect its workforce."), true);
+            return 1;
+        } catch (RuntimeException exception) {
+            RivalRealms.LOGGER.error("Landmark command failed at {}", center, exception);
+            source.sendError(Text.literal("The landmark could not be built safely; check the server log."));
+            return 0;
+        }
     }
 
     private static int claim(ServerCommandSource source) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
@@ -245,7 +297,8 @@ public final class ModCommands {
 
     private static int info(ServerCommandSource source) {
         source.sendFeedback(() -> Text.literal("Rival Realms: /rivalrealms spawn <culture> [count], /rivalrealms build <style>, "
-                + "/rivalrealms claim, /rivalrealms bases, /rivalrealms jobs, /rivalrealms assign <role> <survivor>, "
+                + "/rivalrealms landmark <fortress|town|harbor|skyport|outpost>, /rivalrealms claim, "
+                + "/rivalrealms bases, /rivalrealms jobs, /rivalrealms assign <role> <survivor>, "
                 + "/rivalrealms diplomacy <a> <b> <value>, /rivalrealms airship"), false);
         return 1;
     }

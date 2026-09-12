@@ -17,6 +17,7 @@ This repository intentionally starts a new project; the old Spider-Man concept i
 - **Vehicles:** `/rivalrealms airship` launches a rideable flying boat; the pirate boat item is also craftable.
 - **Frontier weapons:** revolver hitscan and pirate flintlock, both server-authoritative and repairable.
 - **Living-world encounters:** small survivor parties appear at a low rate rather than flooding the world.
+- **Scattered world landmarks:** explored overworld regions can reveal persistent knight fortresses, frontier towns, pirate harbors, skyports, and defended outposts. Their style follows the surrounding biome and each includes themed loot, work areas, banners, and NPC residents.
 
 ## Commands
 
@@ -26,6 +27,7 @@ Commands require permission level 2:
 /rivalrealms info
 /rivalrealms spawn <knight|pirate|outlaw|sky_captain> [count]
 /rivalrealms build <knight|pirate|western|sky>
+/rivalrealms landmark <fortress|town|harbor|skyport|outpost>
 /rivalrealms claim
 /rivalrealms bases
 /rivalrealms jobs
