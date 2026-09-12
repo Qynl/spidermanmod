@@ -11,6 +11,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up JDK 21
         uses: actions/setup-java@v4
@@ -35,8 +37,10 @@ jobs:
       - name: Commit jar to branch (for arena)
         if: github.ref == 'refs/heads/arena/01a09235-spidermanmod'
         run: |
+          set -x
           git config user.name "arena-agent"
           git config user.email "arena-agent@users.noreply.github.com"
+          git remote -v
           ls -lh build/libs/
           JAR=$(ls build/libs/*.jar | head -n 1)
           echo "Using jar $JAR"
@@ -52,10 +56,17 @@ jobs:
           git diff --cached --stat
           if ! git diff --cached --quiet; then
             git commit -m "Build jar from CI for arena/01a09235-spidermanmod [skip ci]"
-            git push origin HEAD:arena/01a09235-spidermanmod
+            echo "Pushing..."
+            git push origin HEAD:arena/01a09235-spidermanmod --verbose || {
+              echo "Push failed, trying with token remote"
+              git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git
+              git push origin HEAD:arena/01a09235-spidermanmod --verbose
+            }
           else
             echo "No changes to jar"
           fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   # Validates the offline toolchain (build-local/): stub generation, named
   # compile, Yarn -> Intermediary remap, refmap, jar checks, unit tests.
@@ -63,6 +74,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up JDK 21
         uses: actions/setup-java@v4
