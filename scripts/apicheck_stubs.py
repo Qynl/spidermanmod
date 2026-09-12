@@ -628,7 +628,7 @@ add('net.minecraft.particle.ParticleTypes', [], [
     'public static final net.minecraft.particle.ParticleType SMOKE;',
     'public static final net.minecraft.particle.ParticleType POOF;',
     'public static final net.minecraft.particle.ParticleType FLAME;',
-    'public static final net.minecraft.particle.ParticleType CRIT;', 'public static final net.minecraft.particle.ParticleType EAT;', 'public static final net.minecraft.particle.ParticleType HEART;', 'public static final net.minecraft.particle.ParticleType SMOKE;',
+    'public static final net.minecraft.particle.ParticleType CRIT;', 'public static final net.minecraft.particle.ParticleType HEART;', 'public static final net.minecraft.particle.ParticleType SMOKE;',
     'public static final net.minecraft.particle.ParticleType SPLASH;',
     'public static final net.minecraft.particle.ParticleType SWEEP_ATTACK;',
 ])

@@ -207,7 +207,7 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
             if (eatTimer % 14 == 0 && eatTimer > 0) {
                 serverWorld.playSound(null, getX(), getY(), getZ(), SoundEvents.ENTITY_GENERIC_EAT,
                         SoundCategory.NEUTRAL, 0.7f, 0.9f + random.nextFloat() * 0.3f);
-                serverWorld.spawnParticles(ParticleTypes.EAT,
+                serverWorld.spawnParticles(ParticleTypes.POOF,
                         getX(), getY() + getStandingEyeHeight() * 0.8, getZ(), 4, 0.2, 0.1, 0.2, 0.02);
             }
             if (eatTimer == 0) {

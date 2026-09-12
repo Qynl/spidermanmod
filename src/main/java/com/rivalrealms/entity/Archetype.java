@@ -2,6 +2,7 @@ package com.rivalrealms.entity;
 
 import com.rivalrealms.RivalRealms;
 import com.rivalrealms.item.ModItems;
+import net.minecraft.enchantment.Enchantments;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
