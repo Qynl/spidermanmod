@@ -40,31 +40,34 @@ jobs:
       - name: Commit jar to branch (for arena)
         if: github.ref == 'refs/heads/arena/01a09235-spidermanmod'
         run: |
-          set -x
+          set +e
           git config user.name "arena-agent"
           git config user.email "arena-agent@users.noreply.github.com"
-          ls -lh build/libs/
-          echo "--- all jars ---"
+          ls -lh build/libs/ > /tmp/list.txt 2>&1
+          echo "--- all jars ---" >> /tmp/list.txt
           for f in build/libs/*.jar; do
-            echo "== $f =="
-            ls -lh "$f"
-            python3 - << PY
-          import zipfile, sys
-          jar=sys.argv[1]
-          try:
-            with zipfile.ZipFile(jar) as z:
-              names=z.namelist()
-              has_class=any(n.endswith(".class") for n in names)
-              has_java=any(n.endswith(".java") for n in names)
-              print(f"  entries={len(names)} has_class={has_class} has_java={has_java}")
-              if has_class:
-                print("  sample classes:", [n for n in names if n.endswith(".class")][:5])
-              else:
-                print("  sample:", names[:10])
-          except Exception as e:
-            print(f"  error reading jar: {e}")
-          PY "$f"
+            echo "== $f ==" >> /tmp/list.txt
+            ls -lh "$f" >> /tmp/list.txt 2>&1
+            python3 - << PY >> /tmp/list.txt 2>&1
+          import zipfile, sys, glob
+          for jar_path in glob.glob("build/libs/*.jar"):
+              print(f"\n== {jar_path} ==")
+              try:
+                with zipfile.ZipFile(jar_path) as z:
+                  names=z.namelist()
+                  has_class=any(n.endswith(".class") for n in names)
+                  has_java=any(n.endswith(".java") for n in names)
+                  print(f"  entries={len(names)} has_class={has_class} has_java={has_java}")
+                  if has_class:
+                    print("  sample classes:", [n for n in names if n.endswith(".class")][:10])
+                  else:
+                    print("  sample:", names[:20])
+              except Exception as e:
+                print(f"  error reading jar: {e}")
+          PY
+            break
           done
+          cat /tmp/list.txt
           # Find jar with classes, not sources
           MAIN_JAR=""
           for f in build/libs/*.jar; do
@@ -75,30 +78,52 @@ jobs:
             fi
           done
           if [ -z "$MAIN_JAR" ]; then
-            echo "No jar with classes found, trying any non-sources"
+            echo "No jar with classes found!" | tee -a /tmp/list.txt
             MAIN_JAR=$(ls build/libs/*.jar | grep -v sources | head -n 1)
           fi
-          echo "Selected MAIN_JAR=$MAIN_JAR"
+          echo "Selected MAIN_JAR=$MAIN_JAR" | tee -a /tmp/list.txt
           if [ -z "$MAIN_JAR" ] || [ ! -f "$MAIN_JAR" ]; then
-            echo "Main jar not found!"
+            echo "Main jar not found!" | tee -a /tmp/list.txt
+            gh issue create --title "jar debug $GITHUB_RUN_ID no class jar" --body-file /tmp/list.txt || true
             exit 1
           fi
           DEST="build/libs/spiderman-1.0.0.jar"
           if [ "$MAIN_JAR" != "$DEST" ]; then
             cp "$MAIN_JAR" "$DEST"
           fi
-          ls -lh "$DEST"
+          ls -lh "$DEST" | tee -a /tmp/list.txt
+          # Verify DEST has classes
+          python3 - << PY
+          import zipfile, sys
+          jar="build/libs/spiderman-1.0.0.jar"
+          with zipfile.ZipFile(jar) as z:
+              has_class=any(n.endswith(".class") for n in z.namelist())
+              print(f"DEST has_class={has_class}")
+              if not has_class:
+                  print("DEST missing classes!")
+                  sys.exit(1)
+          PY
+          if [ $? -ne 0 ]; then
+            echo "DEST jar missing classes, failing" | tee -a /tmp/list.txt
+            gh issue create --title "jar debug $GITHUB_RUN_ID DEST no class" --body-file /tmp/list.txt || true
+            exit 1
+          fi
           git add -f "$DEST"
           git status
           git diff --cached --stat
           if ! git diff --cached --quiet; then
             git commit -m "Build jar from CI for arena/01a09235-spidermanmod [skip ci]"
-            git push origin HEAD:arena/01a09235-spidermanmod
+            git push origin HEAD:arena/01a09235-spidermanmod || {
+              echo "push failed" | tee -a /tmp/list.txt
+              gh issue create --title "jar push failed $GITHUB_RUN_ID" --body-file /tmp/list.txt || true
+              exit 1
+            }
           else
             echo "No changes to jar"
           fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   # Validates the offline toolchain (build-local/): stub generation, named
   # compile, Yarn -> Intermediary remap, refmap, jar checks, unit tests.
