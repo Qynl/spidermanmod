@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import struct
 import sys
 import zipfile
 from pathlib import Path
@@ -37,25 +38,73 @@ def check_json_files() -> None:
 
 def check_asset_references() -> None:
     missing = []
-    for path in json_files(RESOURCES / "assets"):
-        data = path.read_text(encoding="utf-8")
-        for namespace, asset in re.findall(r"(?:\"(?:parent|model|texture|layer0|layer1)\"\s*:\s*\"(?:([a-z0-9_.-]+):)?([a-z0-9_./-]+))", data):
-            namespace = namespace or MOD_ID
-            if namespace != MOD_ID:
-                continue
-            asset_path = RESOURCES / "assets" / namespace / (asset + (".json" if path.parts[-2] == "blockstates" and asset.startswith("rivalrealms:") else ""))
-            # Most references are texture paths and may be explicitly prefixed.
-            if asset.startswith("textures/"):
-                candidate = RESOURCES / "assets" / namespace / f"{asset}.png"
-            elif asset.startswith("rivalrealms:"):
-                candidate = RESOURCES / "assets" / namespace / f"{asset.split(':', 1)[1]}.json"
+
+    def inspect(value, key):
+        if isinstance(value, dict):
+            for child_key, child_value in value.items():
+                inspect(child_value, child_key)
+        elif isinstance(value, list):
+            for child_value in value:
+                inspect(child_value, key)
+        elif isinstance(value, str) and value.startswith(f"{MOD_ID}:"):
+            asset = value.split(":", 1)[1]
+            if key in {"parent", "model"}:
+                candidate = RESOURCES / "assets" / MOD_ID / "models" / f"{asset}.json"
             else:
-                candidate = None
-            if candidate is not None and not candidate.exists():
-                # Vanilla parents are intentionally ignored; only check local assets.
+                candidate = RESOURCES / "assets" / MOD_ID / "textures" / f"{asset}.png"
+            if not candidate.exists():
                 missing.append(str(candidate.relative_to(ROOT)))
+
+    for path in json_files(RESOURCES / "assets"):
+        try:
+            inspect(json.loads(path.read_text(encoding="utf-8")), None)
+        except Exception as exc:
+            fail(f"could not inspect asset references in {path.relative_to(ROOT)}: {exc}")
     if missing:
         fail("missing referenced assets: " + ", ".join(sorted(set(missing))))
+
+
+def check_png_assets() -> None:
+    """Validate PNG signatures and dimensions without external image tools."""
+    for path in RESOURCES.rglob("*.png"):
+        data = path.read_bytes()
+        if data[:8] != b"\x89PNG\r\n\x1a\n":
+            fail(f"invalid PNG signature: {path.relative_to(ROOT)}")
+        if len(data) < 24 or data[12:16] != b"IHDR":
+            fail(f"PNG has no IHDR: {path.relative_to(ROOT)}")
+        width, height = struct.unpack(">II", data[16:24])
+        if not (0 < width <= 2048 and 0 < height <= 2048):
+            fail(f"unsafe PNG dimensions in {path.relative_to(ROOT)}: {width}x{height}")
+
+    expected_dimensions = {
+        "assets/rivalrealms/textures/entity/survivor/knight.png": (64, 64),
+        "assets/rivalrealms/textures/entity/survivor/pirate.png": (64, 64),
+        "assets/rivalrealms/textures/entity/survivor/outlaw.png": (64, 64),
+        "assets/rivalrealms/textures/entity/survivor/sky_captain.png": (64, 64),
+        "assets/rivalrealms/textures/entity/airship.png": (64, 32),
+    }
+    for relative_path, expected in expected_dimensions.items():
+        path = ROOT / "src/main/resources" / relative_path
+        data = path.read_bytes() if path.exists() else b""
+        actual = struct.unpack(">II", data[16:24]) if len(data) >= 24 else None
+        if actual != expected:
+            fail(f"unexpected texture dimensions for {relative_path}: {actual}, expected {expected}")
+
+
+def check_visual_renderers() -> None:
+    survivor_renderer = ROOT / "src/client/java/com/rivalrealms/client/SurvivorRenderer.java"
+    client_initializer = ROOT / "src/client/java/com/rivalrealms/client/RivalRealmsClient.java"
+    airship_renderer = ROOT / "src/client/java/com/rivalrealms/client/AirshipRenderer.java"
+    if "ArmorFeatureRenderer" not in survivor_renderer.read_text(encoding="utf-8"):
+        fail("survivor renderer does not render equipped armor")
+    if "AirshipRenderer::new" not in client_initializer.read_text(encoding="utf-8"):
+        fail("airship is still using the generic renderer")
+    if "textures/entity/airship.png" not in airship_renderer.read_text(encoding="utf-8"):
+        fail("airship renderer has no dedicated texture")
+    archetypes = (ROOT / "src/main/java/com/rivalrealms/entity/Archetype.java").read_text(encoding="utf-8")
+    for culture in re.findall(r'"([a-z][a-z0-9_]*)",\s*"[A-Z][A-Za-z]+",\s*"[A-Z]', archetypes):
+        if not (RESOURCES / "assets/rivalrealms/textures/entity/survivor" / f"{culture}.png").exists():
+            fail(f"missing survivor texture for culture: {culture}")
 
 
 def check_mod_json() -> None:
@@ -129,7 +178,9 @@ def check_jar(jar_path: Path) -> None:
             "fabric.mod.json",
             "assets/rivalrealms/lang/en_us.json",
             "assets/rivalrealms/textures/entity/survivor/knight.png",
+            "assets/rivalrealms/textures/entity/airship.png",
             "com/rivalrealms/RivalRealms.class",
+            "com/rivalrealms/client/AirshipRenderer.class",
         }
         missing = sorted(required - names)
         if missing:
@@ -144,7 +195,9 @@ def main() -> None:
     parser.add_argument("--jar", type=Path)
     args = parser.parse_args()
     check_json_files()
+    check_png_assets()
     check_mod_json()
+    check_visual_renderers()
     check_runtime_safety()
     if args.jar:
         check_jar(args.jar)

@@ -2,14 +2,19 @@ package com.rivalrealms.world;
 
 import com.rivalrealms.block.ModBlocks;
 import com.rivalrealms.entity.ModEntities;
+import com.rivalrealms.item.ModItems;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
+import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.vehicle.BoatEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.inventory.Inventory;
 
 /**
  * Small hand-authored set pieces. They are intentionally made from normal
@@ -147,6 +152,10 @@ public final class StructureBuilder {
         tower(world, base.add(-10, 1, 7), stone, brick);
         tower(world, base.add(10, 1, 7), stone, brick);
         keep(world, base.add(-4, 1, -2), brick, stone);
+        set(world, base.add(0, 2, 2), Blocks.CHEST);
+        stockChest(world, base.add(0, 2, 2), new ItemStack(Items.IRON_SWORD),
+                new ItemStack(Items.SHIELD), new ItemStack(Items.IRON_INGOT, 8),
+                new ItemStack(ModItems.RECRUITMENT_CONTRACT));
         roof(world, base.add(-4, 8, -2), 9, 7, brick);
         flag(world, base.add(0, 9, 0), Blocks.BLUE_WOOL, brick);
 
@@ -159,6 +168,9 @@ public final class StructureBuilder {
 
     private static void buildPirateHarbor(ServerWorld world, BlockPos base) {
         Block plank = ModBlocks.SHIP_PLANKS;
+        // A real water basin makes the harbor boat rideable instead of leaving
+        // a decorative boat stranded on terrain.
+        fill(world, base.add(-9, 0, -8), 19, 1, 6, Blocks.WATER);
         fill(world, base.add(-12, 0, -2), 25, 1, 6, Blocks.SPRUCE_PLANKS);
         fill(world, base.add(-12, -1, 0), 25, 1, 2, Blocks.SPRUCE_LOG);
         for (int x = -10; x <= 10; x += 4) {
@@ -172,6 +184,10 @@ public final class StructureBuilder {
         fill(world, base.add(-3, 5, 0), 7, 5, 1, Blocks.RED_WOOL);
         warehouse(world, base.add(-11, 1, 5), plank, Blocks.DARK_OAK_LOG);
         warehouse(world, base.add(7, 1, 5), plank, Blocks.SPRUCE_LOG);
+        set(world, base.add(-8, 2, 7), Blocks.CHEST);
+        stockChest(world, base.add(-8, 2, 7), new ItemStack(ModItems.FLINTLOCK),
+                new ItemStack(Items.IRON_NUGGET, 12), new ItemStack(Items.COOKED_COD, 4),
+                new ItemStack(ModItems.RECRUITMENT_CONTRACT));
         set(world, base.add(0, 1, -2), ModBlocks.REALM_BANNER);
         spawnWorkingBoat(world, base.add(0, 0, -5));
     }
@@ -183,6 +199,9 @@ public final class StructureBuilder {
         saloon(world, base.add(-12, 0, -7), wood);
         saloon(world, base.add(7, 0, -7), Blocks.OAK_PLANKS);
         sheriffOffice(world, base.add(-12, 0, 6), wood);
+        stockChest(world, base.add(-11, 1, 10), new ItemStack(ModItems.REVOLVER),
+                new ItemStack(Items.GOLD_NUGGET, 12), new ItemStack(Items.BREAD, 4),
+                new ItemStack(ModItems.RECRUITMENT_CONTRACT));
         mine(world, base.add(7, 0, 6));
         for (int x = -14; x <= 14; x += 4) {
             set(world, base.add(x, 1, 3), Blocks.OAK_FENCE);
@@ -208,6 +227,10 @@ public final class StructureBuilder {
         fill(world, base.add(0, 10, 0), 1, 8, 1, Blocks.DARK_OAK_LOG);
         fill(world, base.add(-5, 15, 0), 11, 1, 1, Blocks.WHITE_WOOL);
         set(world, base.add(0, 10, 1), ModBlocks.REALM_BANNER);
+        set(world, base.add(-5, 10, -5), Blocks.CHEST);
+        stockChest(world, base.add(-5, 10, -5), new ItemStack(Items.CROSSBOW),
+                new ItemStack(Items.FIREWORK_ROCKET, 8), new ItemStack(Items.GOLD_INGOT, 4),
+                new ItemStack(ModItems.RECRUITMENT_CONTRACT));
         for (int x = -6; x <= 6; x += 3) {
             set(world, base.add(x, 10, -7), Blocks.LANTERN);
         }
@@ -331,6 +354,17 @@ public final class StructureBuilder {
                 }
             }
         }
+    }
+
+    private static void stockChest(ServerWorld world, BlockPos pos, ItemStack... stacks) {
+        BlockEntity blockEntity = world.getBlockEntity(pos);
+        if (!(blockEntity instanceof Inventory inventory)) {
+            return;
+        }
+        for (int slot = 0; slot < stacks.length && slot < inventory.size(); slot++) {
+            inventory.setStack(slot, stacks[slot].copy());
+        }
+        inventory.markDirty();
     }
 
     private static void set(ServerWorld world, BlockPos pos, Block block) {

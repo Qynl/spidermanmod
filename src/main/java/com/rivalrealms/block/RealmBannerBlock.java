@@ -10,12 +10,25 @@ import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.shape.VoxelShape;
+import net.minecraft.util.shape.VoxelShapes;
+import net.minecraft.world.BlockView;
 import net.minecraft.world.World;
+import net.minecraft.entity.ShapeContext;
 
 /** A visible, interactable claim marker for a player settlement. */
 public final class RealmBannerBlock extends Block {
+    private static final VoxelShape POLE = Block.createCuboidShape(7, 0, 7, 9, 16, 9);
+    private static final VoxelShape FLAG = Block.createCuboidShape(8, 8, 8, 16, 15, 9);
+    private static final VoxelShape OUTLINE = VoxelShapes.union(POLE, FLAG);
+
     public RealmBannerBlock(AbstractBlock.Settings settings) {
         super(settings);
+    }
+
+    @Override
+    public VoxelShape getOutlineShape(net.minecraft.block.BlockState state, BlockView world, BlockPos pos, ShapeContext context) {
+        return OUTLINE;
     }
 
     @Override
