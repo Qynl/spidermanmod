@@ -37,11 +37,20 @@ jobs:
         run: |
           git config user.name "arena-agent"
           git config user.email "arena-agent@users.noreply.github.com"
-          mkdir -p build/libs
-          cp build/libs/*.jar build/libs/spiderman-1.0.0.jar || true
+          ls -lh build/libs/
+          JAR=$(ls build/libs/*.jar | head -n 1)
+          echo "Using jar $JAR"
+          cp "$JAR" build/libs/spiderman-1.0.0.jar
+          ls -lh build/libs/spiderman-1.0.0.jar
           git add -f build/libs/spiderman-1.0.0.jar
-          git diff --cached --quiet || git commit -m "Build jar from CI for arena/01a09235-spidermanmod [skip ci]"
-          git push origin HEAD:arena/01a09235-spidermanmod || true
+          git status
+          git diff --cached --stat
+          if ! git diff --cached --quiet; then
+            git commit -m "Build jar from CI for arena/01a09235-spidermanmod [skip ci]"
+            git push origin HEAD:arena/01a09235-spidermanmod
+          else
+            echo "No changes to jar"
+          fi
 
   # Validates the offline toolchain (build-local/): stub generation, named
   # compile, Yarn -> Intermediary remap, refmap, jar checks, unit tests.
