@@ -158,14 +158,14 @@ public final class ModCommands {
         try {
             variant = SettlementVariant.valueOf(variantId.toUpperCase(java.util.Locale.ROOT));
         } catch (IllegalArgumentException exception) {
-            source.sendError(Text.literal("Unknown landmark. Use fortress, town, harbor, skyport, or outpost."));
+            source.sendError(Text.literal("Unknown landmark. Use fortress, citadel, town, royal_city, harbor, shipyard, skyport, airship_yard, or outpost."));
             return 0;
         }
         BuildStyle style = switch (variant) {
-            case FORTRESS -> BuildStyle.KNIGHT;
+            case FORTRESS, CITADEL, ROYAL_CITY -> BuildStyle.KNIGHT;
             case TOWN, OUTPOST -> BuildStyle.WESTERN;
-            case HARBOR -> BuildStyle.PIRATE;
-            case SKYPORT -> BuildStyle.SKY;
+            case HARBOR, SHIPYARD -> BuildStyle.PIRATE;
+            case SKYPORT, AIRSHIP_YARD -> BuildStyle.SKY;
         };
         ServerWorld world = player.getServerWorld();
         BlockPos center = player.getBlockPos();
@@ -297,7 +297,7 @@ public final class ModCommands {
 
     private static int info(ServerCommandSource source) {
         source.sendFeedback(() -> Text.literal("Rival Realms: /rivalrealms spawn <culture> [count], /rivalrealms build <style>, "
-                + "/rivalrealms landmark <fortress|town|harbor|skyport|outpost>, /rivalrealms claim, "
+                + "/rivalrealms landmark <fortress|citadel|town|royal_city|harbor|shipyard|skyport|airship_yard|outpost>, /rivalrealms claim, "
                 + "/rivalrealms bases, /rivalrealms jobs, /rivalrealms assign <role> <survivor>, "
                 + "/rivalrealms diplomacy <a> <b> <value>, /rivalrealms airship"), false);
         return 1;

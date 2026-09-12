@@ -77,20 +77,28 @@ public final class WorldSettlementGenerator {
     private static SettlementPlan planFor(String biome, long hash) {
         String name = biome == null ? "" : biome.toLowerCase(Locale.ROOT);
         if (name.contains("ocean") || name.contains("river") || name.contains("beach")) {
-            return new SettlementPlan(BuildStyle.PIRATE, SettlementVariant.HARBOR);
+            return new SettlementPlan(BuildStyle.PIRATE,
+                    (hash & 8L) == 0L ? SettlementVariant.HARBOR : SettlementVariant.SHIPYARD);
         }
         if (name.contains("desert") || name.contains("badlands") || name.contains("savanna")) {
             return new SettlementPlan(BuildStyle.WESTERN,
                     (hash & 2L) == 0L ? SettlementVariant.TOWN : SettlementVariant.OUTPOST);
         }
         if (name.contains("peak") || name.contains("mountain") || name.contains("windswept")) {
-            return new SettlementPlan(BuildStyle.SKY, SettlementVariant.SKYPORT);
+            return new SettlementPlan(BuildStyle.SKY,
+                    (hash & 16L) == 0L ? SettlementVariant.SKYPORT : SettlementVariant.AIRSHIP_YARD);
         }
         if (name.contains("taiga") || name.contains("snow") || name.contains("ice")) {
-            return new SettlementPlan(BuildStyle.KNIGHT, SettlementVariant.FORTRESS);
+            return new SettlementPlan(BuildStyle.KNIGHT,
+                    (hash & 8L) == 0L ? SettlementVariant.FORTRESS : SettlementVariant.CITADEL);
         }
         return new SettlementPlan(BuildStyle.KNIGHT,
-                (hash & 4L) == 0L ? SettlementVariant.TOWN : SettlementVariant.FORTRESS);
+                switch ((int) (hash & 3L)) {
+                    case 0 -> SettlementVariant.TOWN;
+                    case 1 -> SettlementVariant.ROYAL_CITY;
+                    case 2 -> SettlementVariant.FORTRESS;
+                    default -> SettlementVariant.CITADEL;
+                });
     }
 
     private static boolean terrainAllows(ServerWorld world, BlockPos center, BuildStyle style) {

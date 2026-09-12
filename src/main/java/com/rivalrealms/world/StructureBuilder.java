@@ -59,9 +59,13 @@ public final class StructureBuilder {
     public static void buildScattered(ServerWorld world, BlockPos center, BuildStyle style, SettlementVariant variant) {
         switch (variant) {
             case FORTRESS -> buildScatteredFortress(world, center);
+            case CITADEL -> buildCitadel(world, center);
             case TOWN -> buildScatteredTown(world, center, style);
+            case ROYAL_CITY -> buildRoyalCity(world, center);
             case HARBOR -> buildScatteredHarbor(world, center);
+            case SHIPYARD -> buildShipyard(world, center);
             case SKYPORT -> buildScatteredSkyport(world, center);
+            case AIRSHIP_YARD -> buildAirshipYard(world, center);
             case OUTPOST -> buildScatteredOutpost(world, center, style);
         }
         world.playSound(null, center, SoundEvents.BLOCK_ANVIL_LAND, SoundCategory.BLOCKS, 0.55f, 0.9f);
@@ -145,6 +149,53 @@ public final class StructureBuilder {
         set(world, base.add(4, 1, -5), Blocks.CHEST);
         stockChest(world, base.add(4, 1, -5), new ItemStack(Items.IRON_AXE), new ItemStack(Items.BREAD, 4),
                 new ItemStack(ModItems.RECRUITMENT_CONTRACT));
+    }
+
+    private static void buildCitadel(ServerWorld world, BlockPos base) {
+        buildScatteredFortress(world, base);
+        Block stone = Blocks.STONE_BRICKS;
+        Block trim = ModBlocks.CROWN_BRICK;
+        wall(world, base.add(-22, 0, -18), 45, 5, 37, trim);
+        opening(world, base.add(-2, 1, -18), 5, 4);
+        tower(world, base.add(-22, 0, -18), stone, trim);
+        tower(world, base.add(20, 0, -18), stone, trim);
+        tower(world, base.add(-22, 0, 16), stone, trim);
+        tower(world, base.add(20, 0, 16), stone, trim);
+        gatehouse(world, base.add(-5, 1, -18), trim, stone);
+        stable(world, base.add(15, 0, 2), Blocks.SPRUCE_PLANKS, Blocks.SPRUCE_LOG);
+        bridge(world, base.add(-7, 0, -22), 15, Blocks.POLISHED_ANDESITE);
+        set(world, base.add(0, 1, -18), ModBlocks.REALM_BANNER);
+    }
+
+    private static void buildRoyalCity(ServerWorld world, BlockPos base) {
+        buildScatteredTown(world, base, BuildStyle.KNIGHT);
+        palace(world, base.add(-6, 0, 9), ModBlocks.CROWN_BRICK, Blocks.STONE_BRICKS);
+        marketStall(world, base.add(-14, 0, 1), Blocks.RED_WOOL, Blocks.OAK_LOG);
+        marketStall(world, base.add(8, 0, 1), Blocks.BLUE_WOOL, Blocks.OAK_LOG);
+        marketStall(world, base.add(-14, 0, 5), Blocks.YELLOW_WOOL, Blocks.OAK_LOG);
+        marketStall(world, base.add(8, 0, 5), Blocks.WHITE_WOOL, Blocks.OAK_LOG);
+        stable(world, base.add(14, 0, -14), Blocks.OAK_PLANKS, Blocks.OAK_LOG);
+        lampPost(world, base.add(-14, 1, -4));
+        lampPost(world, base.add(14, 1, -4));
+        set(world, base.add(0, 1, 12), ModBlocks.REALM_BANNER);
+    }
+
+    private static void buildShipyard(ServerWorld world, BlockPos base) {
+        buildScatteredHarbor(world, base);
+        pierCrane(world, base.add(-14, 0, -5));
+        pierCrane(world, base.add(14, 0, -5));
+        warehouse(world, base.add(-22, 1, 10), ModBlocks.SHIP_PLANKS, Blocks.DARK_OAK_LOG);
+        warehouse(world, base.add(16, 1, 10), ModBlocks.SHIP_PLANKS, Blocks.SPRUCE_LOG);
+        fill(world, base.add(-22, 0, -12), 45, 1, 3, ModBlocks.SHIP_PLANKS);
+        set(world, base.add(0, 1, -12), ModBlocks.REALM_BANNER);
+    }
+
+    private static void buildAirshipYard(ServerWorld world, BlockPos base) {
+        buildScatteredSkyport(world, base);
+        hangar(world, base.add(-13, 8, -12), ModBlocks.AIRSHIP_METAL, Blocks.SPRUCE_LOG);
+        hangar(world, base.add(9, 8, -12), ModBlocks.AIRSHIP_METAL, Blocks.SPRUCE_LOG);
+        fill(world, base.add(-22, 8, 9), 45, 1, 3, ModBlocks.AIRSHIP_METAL);
+        set(world, base.add(0, 10, 9), ModBlocks.REALM_BANNER);
     }
 
     private static void expandKnight(ServerWorld world, BlockPos base, int level) {
@@ -328,6 +379,71 @@ public final class StructureBuilder {
         spawnAirship(world, base.add(0, 17, 0));
     }
 
+    private static void gatehouse(ServerWorld world, BlockPos base, Block wall, Block trim) {
+        fill(world, base, 11, 1, 5, wall);
+        wall(world, base, 11, 5, 5, wall);
+        opening(world, base.add(4, 1, 0), 3, 4);
+        fill(world, base.add(0, 5, 0), 11, 1, 5, trim);
+        set(world, base.add(2, 2, 0), Blocks.LANTERN);
+        set(world, base.add(8, 2, 0), Blocks.LANTERN);
+    }
+
+    private static void stable(ServerWorld world, BlockPos base, Block wall, Block log) {
+        fill(world, base, 9, 1, 7, wall);
+        wall(world, base, 9, 4, 7, log);
+        opening(world, base.add(4, 1, 0), 2, 3);
+        fill(world, base.add(1, 1, 1), 7, 2, 5, Blocks.AIR);
+        set(world, base.add(2, 1, 2), Blocks.HAY_BLOCK);
+        set(world, base.add(6, 1, 2), Blocks.HAY_BLOCK);
+        set(world, base.add(4, 3, 0), Blocks.LANTERN);
+        roof(world, base.add(0, 5, 0), 9, 7, Blocks.SPRUCE_STAIRS);
+    }
+
+    private static void bridge(ServerWorld world, BlockPos base, int width, Block block) {
+        fill(world, base, width, 1, 5, block);
+        for (int x = 0; x < width; x++) {
+            set(world, base.add(x, 1, 0), Blocks.STONE_BRICK_WALL);
+            set(world, base.add(x, 1, 4), Blocks.STONE_BRICK_WALL);
+        }
+        set(world, base.add(width / 2, 1, 2), ModBlocks.REALM_BANNER);
+    }
+
+    private static void palace(ServerWorld world, BlockPos base, Block wall, Block trim) {
+        fill(world, base, 13, 1, 9, wall);
+        wall(world, base, 13, 6, 9, trim);
+        opening(world, base.add(6, 1, 0), 2, 4);
+        fill(world, base.add(2, 1, 1), 9, 4, 7, Blocks.AIR);
+        roof(world, base.add(0, 7, 0), 13, 9, Blocks.STONE_BRICK_STAIRS);
+        tower(world, base.add(-2, 1, -2), trim, wall);
+        tower(world, base.add(10, 1, -2), trim, wall);
+        set(world, base.add(3, 2, 0), Blocks.LANTERN);
+        set(world, base.add(8, 2, 0), Blocks.LANTERN);
+        set(world, base.add(6, 1, 4), Blocks.CHEST);
+        stockChest(world, base.add(6, 1, 4), new ItemStack(Items.GOLD_INGOT, 6),
+                new ItemStack(Items.IRON_SWORD), new ItemStack(ModItems.RECRUITMENT_CONTRACT));
+    }
+
+    private static void marketStall(ServerWorld world, BlockPos base, Block canopy, Block post) {
+        for (int x : new int[]{0, 4}) {
+            for (int z : new int[]{0, 3}) {
+                fill(world, base.add(x, 0, z), 1, 3, 1, post);
+            }
+        }
+        fill(world, base.add(0, 3, 0), 5, 1, 4, canopy);
+        fill(world, base.add(1, 1, 1), 3, 1, 2, Blocks.SPRUCE_PLANKS);
+        set(world, base.add(2, 1, 2), Blocks.BARREL);
+    }
+
+    private static void hangar(ServerWorld world, BlockPos base, Block wall, Block log) {
+        fill(world, base, 11, 1, 9, wall);
+        wall(world, base, 11, 6, 9, log);
+        opening(world, base.add(3, 1, 0), 5, 5);
+        fill(world, base.add(1, 1, 1), 9, 4, 7, Blocks.AIR);
+        roof(world, base.add(0, 6, 0), 11, 9, wall);
+        set(world, base.add(1, 2, 0), Blocks.LANTERN);
+        set(world, base.add(9, 2, 0), Blocks.LANTERN);
+    }
+
     private static void well(ServerWorld world, BlockPos base) {
         fill(world, base, 5, 1, 5, Blocks.STONE_BRICKS);
         fill(world, base.add(1, 1, 1), 3, 1, 3, Blocks.WATER);
@@ -400,6 +516,10 @@ public final class StructureBuilder {
     private static void tower(ServerWorld world, BlockPos base, Block wall, Block trim) {
         fill(world, base, 3, 9, 3, wall);
         fill(world, base.add(1, 1, 1), 1, 7, 1, Blocks.AIR);
+        opening(world, base.add(1, 1, 0), 1, 3);
+        set(world, base.add(0, 4, 1), Blocks.GLASS_PANE);
+        set(world, base.add(2, 4, 1), Blocks.GLASS_PANE);
+        set(world, base.add(1, 6, 0), Blocks.LANTERN);
         for (int y = 9; y <= 10; y++) {
             fill(world, base.add(-1, y, -1), 5, 1, 5, trim);
         }
@@ -408,6 +528,9 @@ public final class StructureBuilder {
     private static void keep(ServerWorld world, BlockPos base, Block wall, Block trim) {
         fill(world, base, 9, 7, 7, wall);
         fill(world, base.add(1, 1, 1), 7, 5, 5, Blocks.AIR);
+        opening(world, base.add(4, 1, 0), 1, 4);
+        set(world, base.add(1, 3, 0), Blocks.GLASS_PANE);
+        set(world, base.add(7, 3, 0), Blocks.GLASS_PANE);
         fill(world, base.add(2, 1, 1), 5, 1, 5, trim);
         set(world, base.add(4, 1, 0), Blocks.LANTERN);
         set(world, base.add(4, 1, 6), Blocks.LANTERN);
@@ -417,14 +540,21 @@ public final class StructureBuilder {
         fill(world, base, 7, 1, 6, wall);
         wall(world, base, 7, 4, 6, log);
         fill(world, base.add(1, 1, 1), 5, 3, 4, Blocks.AIR);
+        opening(world, base.add(3, 1, 0), 1, 2);
+        set(world, base.add(1, 2, 0), Blocks.GLASS_PANE);
+        set(world, base.add(5, 2, 0), Blocks.GLASS_PANE);
+        set(world, base.add(3, 2, 5), Blocks.GLASS_PANE);
         roof(world, base.add(0, 5, 0), 7, 6, roof);
-        set(world, base.add(3, 2, 0), Blocks.LANTERN);
+        set(world, base.add(3, 4, 0), Blocks.LANTERN);
     }
 
     private static void warehouse(ServerWorld world, BlockPos base, Block wall, Block log) {
         fill(world, base, 7, 1, 5, wall);
         wall(world, base, 7, 4, 5, log);
         fill(world, base.add(1, 1, 1), 5, 3, 3, Blocks.AIR);
+        opening(world, base.add(2, 1, 0), 3, 3);
+        set(world, base.add(1, 2, 0), Blocks.GLASS_PANE);
+        set(world, base.add(5, 2, 0), Blocks.GLASS_PANE);
         roof(world, base.add(0, 5, 0), 7, 5, Blocks.DARK_OAK_PLANKS);
         set(world, base.add(3, 1, 0), Blocks.BARREL);
         set(world, base.add(4, 1, 0), Blocks.BARREL);
@@ -434,6 +564,9 @@ public final class StructureBuilder {
         fill(world, base, 7, 1, 6, wall);
         wall(world, base, 7, 4, 6, Blocks.OAK_LOG);
         fill(world, base.add(1, 1, 1), 5, 3, 4, Blocks.AIR);
+        opening(world, base.add(3, 1, 0), 1, 3);
+        set(world, base.add(1, 2, 0), Blocks.GLASS_PANE);
+        set(world, base.add(5, 2, 0), Blocks.GLASS_PANE);
         roof(world, base.add(0, 5, 0), 7, 6, Blocks.RED_SANDSTONE);
         fill(world, base.add(2, 1, 2), 3, 1, 1, Blocks.SPRUCE_PLANKS);
         set(world, base.add(3, 4, 0), Blocks.LANTERN);
@@ -449,6 +582,9 @@ public final class StructureBuilder {
         fill(world, base, 7, 1, 6, Blocks.RED_SANDSTONE);
         wall(world, base, 7, 4, 6, Blocks.STRIPPED_OAK_LOG);
         fill(world, base.add(1, 1, 1), 5, 3, 4, Blocks.AIR);
+        opening(world, base.add(3, 1, 0), 1, 3);
+        set(world, base.add(1, 2, 0), Blocks.IRON_BARS);
+        set(world, base.add(5, 2, 0), Blocks.IRON_BARS);
         roof(world, base.add(0, 5, 0), 7, 6, Blocks.DARK_OAK_PLANKS);
         fill(world, base.add(2, 1, 0), 3, 3, 1, Blocks.BLACKSTONE);
         set(world, base.add(3, 1, 1), Blocks.RAIL);
