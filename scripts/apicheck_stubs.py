@@ -25,6 +25,31 @@ add('net.minecraft.registry.entry.RegistryEntry.Reference', ['net.minecraft.regi
 ])
 add('net.minecraft.entity.EntityPose', [], [])
 
+add('net.minecraft.enchantment.Enchantment', [], [])
+add('net.minecraft.enchantment.Enchantments', [], [
+    'public static final net.minecraft.registry.entry.RegistryEntry<net.minecraft.enchantment.Enchantment> PROTECTION;',
+    'public static final net.minecraft.registry.entry.RegistryEntry<net.minecraft.enchantment.Enchantment> SHARPNESS;',
+    'public static final net.minecraft.registry.entry.RegistryEntry<net.minecraft.enchantment.Enchantment> POWER;',
+    'public static final net.minecraft.registry.entry.RegistryEntry<net.minecraft.enchantment.Enchantment> PIERCING;',
+    'public static final net.minecraft.registry.entry.RegistryEntry<net.minecraft.enchantment.Enchantment> UNBREAKING;',
+])
+
+add('net.minecraft.village.TradedItem', [], [
+    'public TradedItem(net.minecraft.item.ItemLike item);',
+    'public TradedItem(net.minecraft.item.ItemLike item, int count);',
+])
+add('net.minecraft.village.TradeOffer', [], [
+    'public TradeOffer(net.minecraft.village.TradedItem firstBuyItem, java.util.Optional<net.minecraft.village.TradedItem> secondBuyItem, net.minecraft.item.ItemStack sellItem, int maxUses, int merchantExperience, float priceMultiplier);',
+])
+add('net.minecraft.village.TradeOfferList', ['java.util.ArrayList'], [])
+add('net.minecraft.village.Merchant', [], [], iface=True)
+add('net.minecraft.village.SimpleMerchant', ['net.minecraft.village.Merchant'], [
+    'public SimpleMerchant(net.minecraft.entity.player.PlayerEntity customer);',
+    'public net.minecraft.village.TradeOfferList getOffers();',
+    'public void setCustomer(net.minecraft.entity.player.PlayerEntity customer);',
+    'public void sendOffers(net.minecraft.entity.player.PlayerEntity customer, net.minecraft.text.Text title, int levelProgress);',
+])
+
 # ---- net.minecraft.util
 add('net.minecraft.util.Identifier', [], [
     'public static net.minecraft.util.Identifier of(String namespace, String path);',
@@ -94,7 +119,7 @@ add('net.minecraft.util.math.random.Random', [], [
     'public int nextInt(int bound);', 'public float nextFloat();', 'public double nextDouble();',
 ])
 add('net.minecraft.util.Formatting', [], [
-    'public static final net.minecraft.util.Formatting RED;',
+    'public static final net.minecraft.util.Formatting RED;', 'public static final net.minecraft.util.Formatting GOLD;', 'public static final net.minecraft.util.Formatting GREEN;', 'public static final net.minecraft.util.Formatting GRAY;',
 ])
 add('net.minecraft.util.Hand', [], [
     'public static final net.minecraft.util.Hand MAIN_HAND;',
@@ -215,7 +240,7 @@ add('net.minecraft.block.Blocks', [], [
     'public static final net.minecraft.block.Block CHEST;', 'public static final net.minecraft.block.Block BARREL;',
     'public static final net.minecraft.block.Block LANTERN;', 'public static final net.minecraft.block.Block CHAIN;',
     'public static final net.minecraft.block.Block CAMPFIRE;', 'public static final net.minecraft.block.Block FARMLAND;',
-    'public static final net.minecraft.block.Block WHEAT;', 'public static final net.minecraft.block.Block COARSE_DIRT;',
+    'public static final net.minecraft.block.Block WHEAT;', 'public static final net.minecraft.block.Block COARSE_DIRT;', 'public static final net.minecraft.block.Block SOUL_LANTERN;', 'public static final net.minecraft.block.Block COBBLESTONE_SLAB;', 'public static final net.minecraft.block.Block STONE_BRICK_SLAB;', 'public static final net.minecraft.block.Block DEAD_BUSH;', 'public static final net.minecraft.block.Block MOSSY_COBBLESTONE;', 'public static final net.minecraft.block.Block PODZOL;', 'public static final net.minecraft.block.Block COBWEB;', 'public static final net.minecraft.block.Block GRASS_BLOCK;',
     'public static final net.minecraft.block.Block GRAVEL;', 'public static final net.minecraft.block.Block RED_SANDSTONE;',
     'public static final net.minecraft.block.Block WHITE_CARPET;', 'public static final net.minecraft.block.Block CRAFTING_TABLE;',
     'public static final net.minecraft.block.Block FURNACE;', 'public static final net.minecraft.block.Block ANVIL;',
@@ -309,7 +334,7 @@ add('net.minecraft.item.ItemStack', [], [
 ])
 add('net.minecraft.item.Items', [], [
     'public static final net.minecraft.item.Item AIR;',
-    'public static final net.minecraft.item.Item IRON_SWORD;', 'public static final net.minecraft.item.Item SHIELD;',
+    'public static final net.minecraft.item.Item IRON_SWORD;', 'public static final net.minecraft.item.Item WOODEN_SWORD;', 'public static final net.minecraft.item.Item STONE_SWORD;', 'public static final net.minecraft.item.Item GOLDEN_SWORD;', 'public static final net.minecraft.item.Item DIAMOND_SWORD;', 'public static final net.minecraft.item.Item SHIELD;', 'public static final net.minecraft.item.Item LEATHER_HELMET;', 'public static final net.minecraft.item.Item LEATHER_CHESTPLATE;', 'public static final net.minecraft.item.Item LEATHER_LEGGINGS;', 'public static final net.minecraft.item.Item LEATHER_BOOTS;', 'public static final net.minecraft.item.Item CHAINMAIL_HELMET;', 'public static final net.minecraft.item.Item CHAINMAIL_CHESTPLATE;', 'public static final net.minecraft.item.Item CHAINMAIL_LEGGINGS;', 'public static final net.minecraft.item.Item CHAINMAIL_BOOTS;', 'public static final net.minecraft.item.Item IRON_HELMET;', 'public static final net.minecraft.item.Item IRON_CHESTPLATE;', 'public static final net.minecraft.item.Item IRON_LEGGINGS;', 'public static final net.minecraft.item.Item IRON_BOOTS;', 'public static final net.minecraft.item.Item DIAMOND_HELMET;', 'public static final net.minecraft.item.Item DIAMOND_CHESTPLATE;', 'public static final net.minecraft.item.Item DIAMOND_LEGGINGS;', 'public static final net.minecraft.item.Item DIAMOND_BOOTS;', 'public static final net.minecraft.item.Item GOLDEN_HELMET;', 'public static final net.minecraft.item.Item GOLDEN_BOOTS;', 'public static final net.minecraft.item.Item TORCH;', 'public static final net.minecraft.item.Item COMPASS;', 'public static final net.minecraft.item.Item EXPERIENCE_BOTTLE;', 'public static final net.minecraft.item.Item APPLE;',
     'public static final net.minecraft.item.Item IRON_HELMET;', 'public static final net.minecraft.item.Item IRON_CHESTPLATE;',
     'public static final net.minecraft.item.Item IRON_LEGGINGS;', 'public static final net.minecraft.item.Item IRON_BOOTS;',
     'public static final net.minecraft.item.Item LEATHER_HELMET;', 'public static final net.minecraft.item.Item LEATHER_CHESTPLATE;',
@@ -323,7 +348,7 @@ add('net.minecraft.item.Items', [], [
     'public static final net.minecraft.item.Item IRON_INGOT;', 'public static final net.minecraft.item.Item COPPER_INGOT;',
     'public static final net.minecraft.item.Item GOLD_INGOT;', 'public static final net.minecraft.item.Item GOLD_NUGGET;',
     'public static final net.minecraft.item.Item IRON_NUGGET;', 'public static final net.minecraft.item.Item EMERALD;',
-    'public static final net.minecraft.item.Item DIAMOND;', 'public static final net.minecraft.item.Item COAL;',
+    'public static final net.minecraft.item.Item DIAMOND;', 'public static final net.minecraft.item.Item COAL;', 'public static final net.minecraft.item.Item WHEAT;', 
     'public static final net.minecraft.item.Item COAL_BLOCK;', 'public static final net.minecraft.item.Item STICK;',
     'public static final net.minecraft.item.Item PAPER;', 'public static final net.minecraft.item.Item LEATHER;',
     'public static final net.minecraft.item.Item GLASS;', 'public static final net.minecraft.item.Item FLINT;',
@@ -402,6 +427,8 @@ add('net.minecraft.entity.Entity', [], [
     'public net.minecraft.entity.damage.DamageSources getDamageSources();',
     'public net.minecraft.item.ItemStack getPickBlockStack();',
     'public double getEyeY();',
+    'public boolean isOnGround();',
+    'public net.minecraft.util.math.Vec3d getPos();',
     'public float getEyeHeight(net.minecraft.entity.EntityPose pose);',
     'protected void updatePassengerPosition(net.minecraft.entity.Entity passenger, net.minecraft.entity.Entity.PositionUpdater positionUpdater);',
     'protected boolean canAddPassenger(net.minecraft.entity.Entity passenger);',
@@ -434,6 +461,8 @@ add('net.minecraft.entity.LivingEntity', ['net.minecraft.entity.Entity'], [
     'public net.minecraft.entity.LivingEntity getTarget();',
     'public void setTarget(net.minecraft.entity.LivingEntity target);',
     'public float getHealth();', 'public void setHealth(float health);',
+    'public float getMaxHealth();', 'public void heal(float amount);', 'public boolean canSee(net.minecraft.entity.Entity entity);',
+    'protected void dropEquipment(net.minecraft.server.world.ServerWorld world, net.minecraft.entity.damage.DamageSource source, boolean equipped);',
     'public void swingHand(net.minecraft.util.Hand hand, boolean fromServerPlayer);',
     'public net.minecraft.item.ItemStack getEquippedStack(net.minecraft.entity.EquipmentSlot slot);',
     'public void equipStack(net.minecraft.entity.EquipmentSlot slot, net.minecraft.item.ItemStack stack);',
@@ -599,7 +628,7 @@ add('net.minecraft.particle.ParticleTypes', [], [
     'public static final net.minecraft.particle.ParticleType SMOKE;',
     'public static final net.minecraft.particle.ParticleType POOF;',
     'public static final net.minecraft.particle.ParticleType FLAME;',
-    'public static final net.minecraft.particle.ParticleType CRIT;',
+    'public static final net.minecraft.particle.ParticleType CRIT;', 'public static final net.minecraft.particle.ParticleType EAT;', 'public static final net.minecraft.particle.ParticleType HEART;', 'public static final net.minecraft.particle.ParticleType SMOKE;',
     'public static final net.minecraft.particle.ParticleType SPLASH;',
     'public static final net.minecraft.particle.ParticleType SWEEP_ATTACK;',
 ])

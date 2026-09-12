@@ -95,11 +95,15 @@ public final class WorldSettlementGenerator {
                     (hash & 8L) == 0L ? SettlementVariant.FORTRESS : SettlementVariant.CITADEL);
         }
         return new SettlementPlan(BuildStyle.KNIGHT,
-                switch ((int) (hash & 3L)) {
+                switch ((int) (hash & 7L)) {
                     case 0 -> SettlementVariant.TOWN;
                     case 1 -> SettlementVariant.ROYAL_CITY;
                     case 2 -> SettlementVariant.FORTRESS;
-                    default -> SettlementVariant.CITADEL;
+                    case 3 -> SettlementVariant.CITADEL;
+                    case 4 -> SettlementVariant.MILL;
+                    case 5 -> SettlementVariant.RUIN;
+                    case 6 -> SettlementVariant.GRAVEYARD;
+                    default -> SettlementVariant.TOWN;
                 });
     }
 

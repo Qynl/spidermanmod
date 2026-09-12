@@ -99,6 +99,27 @@ Culture NPCs use their own gear *with matching feedback*: outlaws and pirates fi
 
 Survivors are one server-authoritative entity with data-driven cultures: real equipment, stats, targeting, persistent NBT, culture-specific names with epithets, and job titles.
 
+### Temperaments — some attack you, some are chill until you attack
+Every free survivor rolls a **temperament** once, colour-codes its name tag, and keeps it for life:
+
+| Temperament | Name tag | Behaviour |
+|---|---|---|
+| **Bloodthirsty** | Red | Attacks on sight (raiders are most often bloodthirsty) |
+| **Wary** | Gold | **Chill until you attack** — then repays every hit, and remembers |
+| **Good-natured** | Green | Never starts fights, flees when struck, and **opens a trade screen** |
+
+Culture-weighted: pirates/outlaws skew hostile, knights/sky captains skew wary, everyone has a chance at any roll. Roll too slow? They won't — gunfire cadence, sprint speeds and ranged damage were all retuned in 2.1.
+
+### Random loadouts — some even wear diamond
+Gear is luck of the draw on first spawn: leather is common, chain and iron less so, and **a rare survivor struts the frontier in full diamond** (up to ~8% per slot for elite cultures). Better pieces can already carry Protection or Sharpness, pirates roll real blade tiers (wooden → diamond cutlass), and everything drops on death — kill a diamond knight, take the plate. Assigned ship crew and settlement staff always stay combat-ready regardless of roll.
+
+### Player-like behaviours
+- Wounded survivors **pull out bread and eat to heal** — nibble sounds, crumbs, hearts
+- They **mutter one-liners** in your action bar when you walk past (pools per temperament)
+- Good-natured folk **accept food from anyone** and puff hearts
+- Trusted companions (95+ trust) **press small gifts into your hand** — emeralds, arrows, snacks
+- Good-natured survivors **trade like villagers**: staples for emeralds, culture goods (knights sell golden carrots, sky captains sell XP bottles), they buy coal and leather, and one rare **7-emerald + 2-iron → diamond** deal
+
 ### Recruitment & trust
 - Right-click an unclaimed survivor with a **Recruitment Contract** to recruit (start trust 80/100)
 - Feed companions bread, cooked salmon, apples, cooked beef or golden carrots to raise trust
@@ -120,8 +141,11 @@ Every build is terrain-adaptive: it samples the surface, packs a foundation unde
 - **Harbor / Shipyard** — plank terraces, tavern, piers with pilings and lanterns, cranes with cargo, moored boats, storage yards
 - **Skyport / Airship Yard** — elevated metal platforms on scaffolding legs, hangars, a dock tower, moored zeppelini* — mooring masts with chains
 - **Outpost** — palisades with fence gates, watch tower, campfire, farm
+- **Mill** — stone windmill tower with a fence-and-canvas sail pinwheel, miller's cottage, wheat terraces
+- **Ruin** — a shattered watchtower breached like it lost an old siege, rubble drifts, cobwebs, a squatter camp under a wool lean-to
+- **Graveyard** — podzol memorial ground behind a weathered ring wall: rows of headstones, dead bushes, a soul lantern, and one keeper; loot chest for the brave
 
-New chunks can receive a deterministic, biome-aware site: oceans get harbors, deserts get frontier towns, mountains get skyports, snow gets fortresses, plains get towns and royal cities. Sites persist in world data with duplicate prevention, and generation never force-loads distant chunks.
+New chunks can receive a deterministic, biome-aware site: oceans get harbors, deserts get frontier towns, mountains get skyports, snow gets fortresses, and the temperate roll now spans **eight** silhouettes — towns, royal cities, fortresses, citadels, mills, ruins and graveyards. Sites persist in world data with duplicate prevention, and generation never force-loads distant chunks.
 
 ---
 

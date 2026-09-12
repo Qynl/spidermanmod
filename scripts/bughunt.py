@@ -252,6 +252,9 @@ def check_runtime_safety() -> None:
             "buildAirshipYard",
             "buildScatteredSkyport",
             "buildScatteredOutpost",
+            "buildScatteredMill",
+            "buildScatteredRuin",
+            "buildScatteredGraveyard",
         ),
         "src/main/java/com/rivalrealms/world/RealmState.java": (
             "MAX_BASES",
@@ -260,6 +263,10 @@ def check_runtime_safety() -> None:
         "src/main/java/com/rivalrealms/entity/SurvivorEntity.java": (
             "nextTargetScan",
             "owner == null",
+            "Temperament",
+            "openTrades",
+            "eatTick",
+            "quipTick",
         ),
         "src/main/java/com/rivalrealms/world/WorldSettlementGenerator.java": (
             "SITE_SPACING",

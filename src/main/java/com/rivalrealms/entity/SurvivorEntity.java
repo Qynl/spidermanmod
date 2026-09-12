@@ -37,9 +37,15 @@ import net.minecraft.util.ActionResult;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3d;
+import net.minecraft.village.SimpleMerchant;
+import net.minecraft.village.TradeOffer;
+import net.minecraft.village.TradeOfferList;
+import net.minecraft.village.TradedItem;
 import net.minecraft.world.World;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -72,6 +78,8 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
     private boolean guarding;
     private boolean loadoutApplied;
     private boolean archetypeLocked;
+    private Temperament temperament = Temperament.GUARDED;
+    private boolean temperamentChosen;
     private UUID guardOwnerUuid;
     private BlockPos guardCenter;
     private String guardFaction;
@@ -79,6 +87,13 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
     private long nextTargetScan;
     private long nextWorkMove;
     private long nextOwnerDefenseScan;
+    private long nextQuip;
+    private long nextEat;
+    private long nextGift;
+    private long fleeUntil;
+    private Vec3d fleeFrom;
+    private int eatTimer;
+    private ItemStack savedHand = ItemStack.EMPTY;
 
     public SurvivorEntity(EntityType<? extends SurvivorEntity> entityType, World world) {
         super(entityType, world);
@@ -99,12 +114,12 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
     @Override
     protected void initGoals() {
         goalSelector.add(0, new SwimGoal(this));
-        goalSelector.add(1, new ConditionalProjectileGoal(this, 1.0, 20, 18.0f));
+        goalSelector.add(1, new ConditionalProjectileGoal(this, 1.0, 38, 20.0f));
         goalSelector.add(2, new MeleeAttackGoal(this, 1.15, true));
         goalSelector.add(3, new WanderAroundFarGoal(this, 0.8));
         goalSelector.add(4, new LookAtEntityGoal(this, PlayerEntity.class, 12.0f));
         goalSelector.add(5, new LookAroundGoal(this));
-        targetSelector.add(1, new RevengeGoal(this));
+        targetSelector.add(1, new PersonalityRevengeGoal(this));
     }
 
     @Override
@@ -128,6 +143,15 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
 
         ensureLoadout();
         PlayerEntity owner = ownerUuid == null ? null : getWorld().getPlayerByUuid(ownerUuid);
+
+        // A survivor that was just hit by a chill stranger plays it safe and
+        // puts distance between them instead of trading blows.
+        if (fleeing()) {
+            fleeTick();
+            return;
+        }
+
+        eatTick();
 
         if (recruited) {
             if (owner == null) {
@@ -161,10 +185,154 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
             acquireRivalTarget();
         }
 
+        // Trusting companions share their wealth; survivors people-watch and
+        // mutter one-liners at passers-by.
+        giftTick(owner);
+        quipTick();
+
         // Ranged cultures keep their offhand weapon stocked so their pose reads
         // correctly at a glance.
         if (getWorld().getTime() % 80L == 0 && isRanged() && getOffHandStack().isEmpty()) {
             setStackInHand(Hand.OFF_HAND, getArchetype().rangedStack());
+        }
+    }
+
+    /** Wounded survivors eat like players do: bread in hand, nibble sounds, a chunk of health back. */
+    private void eatTick() {
+        long time = getWorld().getTime();
+        if (eatTimer > 0) {
+            getNavigation().stop();
+            eatTimer--;
+            ServerWorld serverWorld = (ServerWorld) getWorld();
+            if (eatTimer % 14 == 0 && eatTimer > 0) {
+                serverWorld.playSound(null, getX(), getY(), getZ(), SoundEvents.ENTITY_GENERIC_EAT,
+                        SoundCategory.NEUTRAL, 0.7f, 0.9f + random.nextFloat() * 0.3f);
+                serverWorld.spawnParticles(ParticleTypes.EAT,
+                        getX(), getY() + getStandingEyeHeight() * 0.8, getZ(), 4, 0.2, 0.1, 0.2, 0.02);
+            }
+            if (eatTimer == 0) {
+                this.heal(8.0f);
+                serverWorld.spawnParticles(ParticleTypes.HEART,
+                        getX(), getY() + getStandingEyeHeight() + 0.4, getZ(), 3, 0.3, 0.3, 0.3, 0.0);
+                setStackInHand(Hand.MAIN_HAND, savedHand);
+                savedHand = ItemStack.EMPTY;
+                nextEat = time + 1800L + random.nextInt(1200);
+            }
+            return;
+        }
+        boolean hungryAndSafe = getHealth() < getMaxHealth() * 0.55f && time > nextEat
+                && getTarget() == null && isOnGround() && !hasVehicle();
+        boolean canFreeHands = getMainHandStack().isEmpty() || !isRanged();
+        if (hungryAndSafe && canFreeHands) {
+            savedHand = getMainHandStack().copy();
+            setStackInHand(Hand.MAIN_HAND, new ItemStack(Items.BREAD));
+            eatTimer = 50;
+            ((ServerWorld) getWorld()).playSound(null, getX(), getY(), getZ(), SoundEvents.ENTITY_GENERIC_EAT,
+                    SoundCategory.NEUTRAL, 0.7f, 1.0f);
+        }
+    }
+
+    /** Chatter lines keep crowds feeling like people instead of mobs. */
+    private void quipTick() {
+        long time = getWorld().getTime();
+        if (time < nextQuip) {
+            return;
+        }
+        nextQuip = time + 300L + random.nextInt(600);
+        if (random.nextInt(20) != 0 || eatTimer > 0) {
+            return;
+        }
+        PlayerEntity listener = getWorld().getClosestPlayer(this, 7.0);
+        if (listener == null) {
+            return;
+        }
+        listener.sendMessage(Text.literal("<" + getName().getString() + "> " + quip())
+                .formatted(Formatting.GRAY), true);
+        nextQuip = time + 3600L + random.nextInt(5400);
+    }
+
+    private String quip() {
+        return switch (temperament) {
+            case HOSTILE -> switch (random.nextInt(6)) {
+                case 0 -> "Draw, stranger.";
+                case 1 -> "Yer purse or yer teeth.";
+                case 2 -> "Wrong frontier, friend.";
+                case 3 -> "Keep walkin'.";
+                case 4 -> "You lost? Dead men don't ask directions.";
+                default -> "One more step. I dare ye.";
+            };
+            case GUARDED -> switch (random.nextInt(6)) {
+                case 0 -> "Keep yer steel where I can see it.";
+                case 1 -> "Trouble finds folk fast out here.";
+                case 2 -> "Start something and we finish it.";
+                case 3 -> "We're square. Stay that way.";
+                case 4 -> "I watch everyone. No offence.";
+                default -> "Roads get rowdy after dark.";
+            };
+            case CHILL -> switch (random.nextInt(7)) {
+                case 0 -> "Fine weather for a walk.";
+                case 1 -> "Got any bread to spare?";
+                case 2 -> "The road's been quiet lately.";
+                case 3 -> "Careful past the ridge, friend.";
+                case 4 -> "Need supplies? I trade fair.";
+                case 5 -> "Seen any good sunrises lately?";
+                default -> "May the road stay soft for ye.";
+            };
+        };
+    }
+
+    /** Trusted companions press small gifts on their owner now and then. */
+    private void giftTick(PlayerEntity owner) {
+        long time = getWorld().getTime();
+        if (!recruited || trust < 95 || owner == null || time < nextGift) {
+            return;
+        }
+        nextGift = time + 4800L;
+        if (random.nextInt(5) != 0) {
+            return;
+        }
+        ItemStack gift = switch (random.nextInt(5)) {
+            case 0 -> new ItemStack(Items.EMERALD, 1 + random.nextInt(2));
+            case 1 -> new ItemStack(Items.GOLDEN_CARROT, 2);
+            case 2 -> new ItemStack(Items.ARROW, 6 + random.nextInt(6));
+            case 3 -> new ItemStack(Items.IRON_INGOT, 1 + random.nextInt(2));
+            default -> new ItemStack(Items.BREAD, 3);
+        };
+        this.dropStack(gift);
+        owner.sendMessage(Text.literal(getName().getString()
+                + " presses a small gift into your hand."), true);
+        getWorld().playSound(null, getX(), getY(), getZ(), SoundEvents.ENTITY_VILLAGER_YES,
+                SoundCategory.NEUTRAL, 0.8f, 1.2f);
+    }
+
+    private boolean fleeing() {
+        return getWorld().getTime() < fleeUntil;
+    }
+
+    /** Chill folk break off fights and sprint for the horizon. */
+    private void startFleeing(LivingEntity threat) {
+        fleeUntil = getWorld().getTime() + 260L;
+        fleeFrom = threat.getPos();
+        setTarget(null);
+        getNavigation().stop();
+        if (threat instanceof ServerPlayerEntity serverPlayer) {
+            serverPlayer.sendMessage(Text.literal(getName().getString()
+                    + " flees from you! (" + temperament.title() + ")"), true);
+        }
+    }
+
+    private void fleeTick() {
+        if (fleeFrom == null) {
+            fleeUntil = 0L;
+            return;
+        }
+        if (getWorld().getTime() % 20L == 0) {
+            Vec3d away = getPos().subtract(fleeFrom).normalize().multiply(14.0);
+            BlockPos fleeTarget = BlockPos.ofFloored(getX() + away.x, getY(), getZ() + away.z);
+            getNavigation().startMovingTo(fleeTarget.getX(), getY(), fleeTarget.getZ(), 1.25);
+        }
+        if (!fleeing()) {
+            fleeFrom = null;
         }
     }
 
@@ -194,9 +362,20 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
         } else {
             setArchetype(getArchetype());
         }
-        if (!hasCustomName()) {
-            setCustomName(Text.literal(getArchetype().randomName(random)));
+        if (!temperamentChosen) {
+            // Some raid on sight, some are chill until you attack, and a rare
+            // few are good-natured traders. Rolled once, remembered forever.
+            temperament = Temperament.roll(getArchetype(), random);
+            temperamentChosen = true;
         }
+        if (!hasCustomName()) {
+            // The name plate colour tells sharp-eyed players who is trouble.
+            setCustomName(Text.literal(getArchetype().randomName(random)).formatted(temperament.color()));
+        }
+    }
+
+    public Temperament getTemperament() {
+        return temperament;
     }
 
     private void acquireRivalTarget() {
@@ -210,16 +389,22 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
         }
         nextTargetScan = now + 20L;
 
-        // Free survivors are dangerous to players; settlement guards are not.
-        // Guards only select rival NPCs when diplomacy says the factions are at war.
-        if (guardCenter == null) {
-            PlayerEntity player = getWorld().getClosestPlayer(this, 18.0);
+        // Free survivors behave per temperament: Bloodthirsty raid on sight,
+        // Wary folk only fight back, and Good-natured wanderers never draw on
+        // a stranger. Settlement guards are not hostile to players. Guards
+        // and wary survivors only select rival NPCs when diplomacy says the
+        // factions are at war; chill souls sit the wars out.
+        if (guardCenter == null && temperament == Temperament.HOSTILE) {
+            PlayerEntity player = getWorld().getClosestPlayer(this, 16.0);
             if (player != null && !player.isCreative() && !player.isSpectator()) {
                 setTarget(player);
                 return;
             }
         }
 
+        if (temperament == Temperament.CHILL) {
+            return;
+        }
         List<net.minecraft.entity.Entity> nearby = getWorld().getOtherEntities(
                 this, getBoundingBox().expand(20.0), entity -> entity instanceof SurvivorEntity survivor
                         && survivor.isAlive()
@@ -294,7 +479,7 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
                 getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE).setBaseValue(archetype == Archetype.KNIGHT ? 5.0 : 3.5);
             }
             setHealth((float) archetype.health());
-            archetype.equip(this);
+            archetype.equip(this, random);
         }
     }
 
@@ -342,6 +527,12 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
         ownerUuid = null;
         guarding = false;
         setTarget(null);
+        // Assigned crew and guards serve a banner: the easy-going trader roll
+        // is reserved for free wanderers, so ships and settlements stay sharp.
+        if (temperament == Temperament.CHILL) {
+            temperament = Temperament.GUARDED;
+            temperamentChosen = true;
+        }
         String nameBase = guardFaction != null && guardFaction.equals("Freebooters")
                 ? Archetype.pirateShipTitle(random)
                 : role.displayName();
@@ -383,6 +574,35 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
     @Override
     public ActionResult interactMob(PlayerEntity player, Hand hand) {
         ItemStack held = player.getStackInHand(hand);
+
+        // Good-natured survivors open their trade satchel for a friendly face.
+        if (temperament == Temperament.CHILL && !isRecruited() && held.isEmpty()
+                && !player.shouldCancelInteraction()) {
+            if (!getWorld().isClient) {
+                openTrades(player);
+            }
+            return ActionResult.SUCCESS;
+        }
+
+        // Anyone can share food with a non-hostile stranger; it builds rapport
+        // and stops them from feeling like vending-machine mobs.
+        if (!isRecruited() && temperament != Temperament.HOSTILE && isPreferredFood(held)) {
+            if (!getWorld().isClient) {
+                String foodName = held.getName().getString();
+                if (!player.isCreative()) {
+                    held.decrement(1);
+                }
+                getWorld().playSound(null, getX(), getY(), getZ(), SoundEvents.ENTITY_GENERIC_EAT,
+                        SoundCategory.NEUTRAL, 0.8f, 1.0f);
+                if (temperament == Temperament.CHILL) {
+                    ((ServerWorld) getWorld()).spawnParticles(ParticleTypes.HEART,
+                            getX(), getY() + getStandingEyeHeight() + 0.4, getZ(), 3, 0.3, 0.3, 0.3, 0.0);
+                }
+                player.sendMessage(Text.literal(getName().getString() + " accepts your "
+                        + foodName + "."), true);
+            }
+            return ActionResult.SUCCESS;
+        }
 
         if (held.isOf(ModItems.RECRUITMENT_CONTRACT)) {
             if (!isRecruited() || isOwner(player)) {
@@ -441,6 +661,51 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
                 || stack.isOf(Items.APPLE);
     }
 
+    /**
+     * Opens a villager-style trade screen with offers rolled from this
+     * survivor's culture. Uses the vanilla merchant protocol, so it works on
+     * dedicated servers exactly like trading with a wanderer.
+     */
+    private void openTrades(PlayerEntity player) {
+        SimpleMerchant merchant = new SimpleMerchant(player);
+        merchant.setCustomer(player);
+        rollTrades(merchant.getOffers());
+        merchant.sendOffers(player, getDisplayName(), 0);
+        getWorld().playSound(null, getX(), getY(), getZ(), SoundEvents.ENTITY_VILLAGER_YES,
+                SoundCategory.NEUTRAL, 0.9f, 1.0f);
+    }
+
+    /** Staples for everyone, culture goods on top, one rare diamond deal. */
+    private void rollTrades(TradeOfferList offers) {
+        int emeralds = 1 + random.nextInt(2);
+        offers.add(new TradeOffer(new TradedItem(Items.EMERALD, emeralds), Optional.empty(),
+                new ItemStack(Items.BREAD, 3 + random.nextInt(4)), 8, 2, 0.05f));
+        offers.add(new TradeOffer(new TradedItem(Items.EMERALD, 1), Optional.empty(),
+                new ItemStack(Items.ARROW, 8 + random.nextInt(9)), 8, 2, 0.05f));
+        offers.add(new TradeOffer(new TradedItem(Items.EMERALD, 2), Optional.empty(),
+                new ItemStack(Items.TORCH, 10 + random.nextInt(7)), 8, 2, 0.05f));
+        offers.add(new TradeOffer(new TradedItem(Items.EMERALD, 3), Optional.empty(),
+                new ItemStack(Items.COOKED_SALMON, 3 + random.nextInt(3)), 6, 3, 0.05f));
+        offers.add(new TradeOffer(new TradedItem(Items.EMERALD, 4 + random.nextInt(3)), Optional.empty(),
+                new ItemStack(Items.IRON_INGOT, 2 + random.nextInt(2)), 6, 3, 0.05f));
+        offers.add(new TradeOffer(new TradedItem(Items.EMERALD, 7), Optional.of(new TradedItem(Items.IRON_INGOT, 2)),
+                new ItemStack(Items.DIAMOND, 1), 3, 6, 0.05f));
+        offers.add(new TradeOffer(new TradedItem(Items.COAL, 12), Optional.empty(),
+                new ItemStack(Items.EMERALD, 1), 8, 2, 0.05f));
+        offers.add(new TradeOffer(new TradedItem(Items.LEATHER, 5), Optional.empty(),
+                new ItemStack(Items.EMERALD, 1), 8, 2, 0.05f));
+        switch (getArchetype()) {
+            case KNIGHT -> offers.add(new TradeOffer(new TradedItem(Items.EMERALD, 5), Optional.empty(),
+                    new ItemStack(Items.GOLDEN_CARROT, 3), 6, 3, 0.05f));
+            case PIRATE -> offers.add(new TradeOffer(new TradedItem(Items.EMERALD, 3), Optional.empty(),
+                    new ItemStack(Items.COMPASS, 1), 6, 3, 0.05f));
+            case OUTLAW -> offers.add(new TradeOffer(new TradedItem(Items.EMERALD, 2), Optional.empty(),
+                    new ItemStack(Items.LEATHER, 4), 8, 2, 0.05f));
+            case SKY_CAPTAIN -> offers.add(new TradeOffer(new TradedItem(Items.EMERALD, 4), Optional.empty(),
+                    new ItemStack(Items.EXPERIENCE_BOTTLE, 3), 6, 4, 0.05f));
+        }
+    }
+
     private void released(PlayerEntity player) {
         recruited = false;
         guarding = false;
@@ -456,17 +721,32 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
 
     @Override
     public boolean damage(DamageSource source, float amount) {
-        if (!getWorld().isClient && source.getAttacker() instanceof PlayerEntity player) {
-            if (guardCenter != null && guardOwnerUuid != null && guardOwnerUuid.equals(player.getUuid())) {
-                // Settlement staff are protected from accidental friendly fire;
-                // RevengeGoal must never turn an owner's mistake into a revolt.
-                setTarget(null);
-                return false;
+        if (!getWorld().isClient) {
+            // Getting hit ruins an appetite mid-bite.
+            if (eatTimer > 0) {
+                eatTimer = 0;
+                setStackInHand(Hand.MAIN_HAND, savedHand);
+                savedHand = ItemStack.EMPTY;
             }
-            if (isOwner(player)) {
-                trust = Math.max(0, trust - 35);
-                if (trust < 25 && random.nextInt(4) == 0) {
-                    betray(player);
+            if (source.getAttacker() instanceof LivingEntity attacker && attacker != this) {
+                if (temperament == Temperament.CHILL && !isRecruited() && !isSettlementWorker()) {
+                    // Good-natured folk never fight back: they run.
+                    startFleeing(attacker);
+                    return super.damage(source, amount);
+                }
+            }
+            if (source.getAttacker() instanceof PlayerEntity player) {
+                if (guardCenter != null && guardOwnerUuid != null && guardOwnerUuid.equals(player.getUuid())) {
+                    // Settlement staff are protected from accidental friendly fire;
+                    // RevengeGoal must never turn an owner's mistake into a revolt.
+                    setTarget(null);
+                    return false;
+                }
+                if (isOwner(player)) {
+                    trust = Math.max(0, trust - 35);
+                    if (trust < 25 && random.nextInt(4) == 0) {
+                        betray(player);
+                    }
                 }
             }
         }
@@ -528,6 +808,9 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
         super.writeCustomDataToNbt(nbt);
         nbt.putString("Archetype", getArchetype().id());
         nbt.putBoolean("ArchetypeLocked", archetypeLocked);
+        nbt.putString("Temperament", temperament.id());
+        nbt.putBoolean("TemperamentChosen", temperamentChosen);
+        nbt.putBoolean("LoadoutApplied", loadoutApplied);
         nbt.putBoolean("Recruited", recruited);
         nbt.putBoolean("Guarding", guarding);
         nbt.putInt("Trust", trust);
@@ -553,6 +836,8 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
         dataTracker.set(ARCHETYPE, nbt.getString("Archetype"));
         // A persisted archetype always wins; only brand-new survivors may roll one.
         archetypeLocked = nbt.contains("Archetype", NbtElement.STRING_TYPE);
+        temperament = Temperament.byId(nbt.getString("Temperament"));
+        temperamentChosen = nbt.getBoolean("TemperamentChosen");
         recruited = nbt.getBoolean("Recruited");
         guarding = nbt.getBoolean("Guarding");
         trust = Math.max(0, Math.min(100, nbt.getInt("Trust")));
@@ -564,7 +849,24 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
         if (nbt.getBoolean("BaseGuard") && settlementRole == SettlementRole.NONE) {
             settlementRole = SettlementRole.GUARD;
         }
-        loadoutApplied = false;
+        // Equipment itself is saved by the vanilla Mob NBT (HandItems/ArmorItems);
+        // only re-roll the loadout for survivors that never had one.
+        loadoutApplied = nbt.getBoolean("LoadoutApplied");
+    }
+
+    /** Wary and hostile survivors repay attacks; good-natured ones run instead. */
+    private static final class PersonalityRevengeGoal extends RevengeGoal {
+        private final SurvivorEntity survivor;
+
+        private PersonalityRevengeGoal(SurvivorEntity survivor) {
+            super(survivor);
+            this.survivor = survivor;
+        }
+
+        @Override
+        public boolean canStart() {
+            return survivor.temperament != Temperament.CHILL && super.canStart();
+        }
     }
 
     private static final class ConditionalProjectileGoal extends ProjectileAttackGoal {

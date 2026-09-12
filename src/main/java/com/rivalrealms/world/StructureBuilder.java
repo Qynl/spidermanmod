@@ -78,6 +78,9 @@ public final class StructureBuilder {
             case SKYPORT -> buildScatteredSkyport(world, center);
             case AIRSHIP_YARD -> buildAirshipYard(world, center);
             case OUTPOST -> buildScatteredOutpost(world, center, style);
+            case MILL -> buildScatteredMill(world, center);
+            case RUIN -> buildScatteredRuin(world, center);
+            case GRAVEYARD -> buildScatteredGraveyard(world, center);
         }
         world.playSound(null, center.getX() + 0.5, center.getY(), center.getZ() + 0.5, SoundEvents.BLOCK_ANVIL_LAND, SoundCategory.BLOCKS, 0.55f, 0.9f);
     }
@@ -186,6 +189,97 @@ public final class StructureBuilder {
                 new ItemStack(Items.BREAD, 4), new ItemStack(ModItems.RECRUITMENT_CONTRACT),
                 new ItemStack(ModItems.CANNONBALL, 1));
         spawnGuard(world, base, y, style);
+    }
+
+    /** A stone windmill with canvas sails over a wheat terrace. */
+    private static void buildScatteredMill(ServerWorld world, BlockPos base) {
+        int y = plateau(world, base, 25, 25, Blocks.GRASS_BLOCK);
+
+        roundTower(world, base.add(-3, 0, -3), 3, 11, Blocks.COBBLESTONE, Blocks.SPRUCE_PLANKS, true);
+        // Pinwheel of fence arms and canvas panels on the tower's south face.
+        BlockPos hub = base.add(0, y + 10, 4);
+        set(world, hub, Blocks.OAK_FENCE);
+        for (int i = 1; i <= 4; i++) {
+            set(world, hub.add(i, 0, 0), Blocks.OAK_FENCE);
+            set(world, hub.add(-i, 0, 0), Blocks.OAK_FENCE);
+            set(world, hub.add(0, i, 0), Blocks.OAK_FENCE);
+            set(world, hub.add(0, -i, 0), Blocks.OAK_FENCE);
+            if (i <= 3) {
+                set(world, hub.add(i, 1, 0), Blocks.WHITE_WOOL);
+                set(world, hub.add(-i, -1, 0), Blocks.WHITE_WOOL);
+            }
+        }
+
+        house(world, base.add(7, 0, -4), 6, 7, Blocks.SPRUCE_PLANKS, Blocks.SPRUCE_LOG,
+                Blocks.SPRUCE_STAIRS, Blocks.SPRUCE_PLANKS);
+        farmPlot(world, base.add(-11, 0, 4), 9, 8);
+        farmPlot(world, base.add(4, 0, 8), 8, 6);
+        campfire(world, base.add(3, 0, 2));
+        stockChest(world, base.add(8, y + 2, -2), new ItemStack(Items.WHEAT, 12),
+                new ItemStack(Items.BREAD, 6), new ItemStack(ModItems.ROYAL_COIN, 1));
+        spawnGuard(world, base, y, BuildStyle.KNIGHT);
+    }
+
+    /** A shattered watchtower camp claimed by squatters — rubble, cobwebs, firelight. */
+    private static void buildScatteredRuin(ServerWorld world, BlockPos base) {
+        int y = plateau(world, base, 21, 21, Blocks.COARSE_DIRT);
+
+        roundTower(world, base.add(-4, 0, -4), 3, 6, Blocks.COBBLESTONE, Blocks.MOSSY_COBBLESTONE, false);
+        // Shell the ring: breach the walls like the tower lost an old siege.
+        for (int i = 0; i < 30; i++) {
+            double angle = world.random.nextDouble() * Math.PI * 2.0;
+            int x = base.getX() - 4 + (int) Math.round(Math.cos(angle) * 3.0);
+            int z = base.getZ() - 4 + (int) Math.round(Math.sin(angle) * 3.0);
+            clearColumn(world, x, z, y + 1 + world.random.nextInt(3), y + 6);
+        }
+        // Rubble drifts and a squatter camp under a wool lean-to.
+        for (int i = 0; i < 14; i++) {
+            int x = base.getX() + world.random.nextInt(19) - 9;
+            int z = base.getZ() + world.random.nextInt(19) - 9;
+            set(world, base.add(x - base.getX(), y + 1, z - base.getZ()),
+                    world.random.nextBoolean() ? Blocks.MOSSY_COBBLESTONE : Blocks.COBBLESTONE);
+        }
+        fill(world, base.add(4, y + 1, 5), 4, 2, 1, Blocks.WHITE_WOOL);
+        set(world, base.add(4, y + 1, 4), Blocks.OAK_FENCE);
+        set(world, base.add(7, y + 1, 4), Blocks.OAK_FENCE);
+        campfire(world, base.add(2, 0, 2));
+        set(world, base.add(-8, y + 2, 8), Blocks.COBWEB);
+        set(world, base.add(8, y + 1, -8), Blocks.COBWEB);
+        stockChest(world, base.add(5, y + 2, 6), new ItemStack(Items.IRON_NUGGET, 5),
+                new ItemStack(Items.BREAD, 2), new ItemStack(ModItems.RECRUITMENT_CONTRACT));
+        spawnGuard(world, base, y, BuildStyle.CUSTOM);
+    }
+
+    /** A quiet memorial ground: broken ring wall, headstones, and one keeper. */
+    private static void buildScatteredGraveyard(ServerWorld world, BlockPos base) {
+        int y = plateau(world, base, 19, 19, Blocks.PODZOL);
+
+        // Low ring wall, weathered open at the corners.
+        wall(world, base.add(-8, y, -8), 17, 2, 1, Blocks.COBBLESTONE);
+        wall(world, base.add(-8, y, 8), 17, 2, 1, Blocks.COBBLESTONE);
+        wall(world, base.add(-8, y, -8), 1, 2, 17, Blocks.COBBLESTONE);
+        wall(world, base.add(8, y, -8), 1, 2, 17, Blocks.COBBLESTONE);
+        clearColumn(world, base.getX() - 8, base.getZ() - 8, y + 1, y + 2);
+        clearColumn(world, base.getX() + 8, base.getZ() + 8, y + 1, y + 2);
+
+        // Two rows of graves with varied markers.
+        for (int gx = -5; gx <= 4; gx += 3) {
+            for (int gz = -4; gz <= 2; gz += 6) {
+                BlockPos grave = base.add(gx, y + 1, gz);
+                set(world, grave, Blocks.COBBLESTONE);
+                set(world, grave.up(), world.random.nextInt(3) == 0 ? Blocks.OAK_FENCE
+                        : world.random.nextBoolean() ? Blocks.COBBLESTONE_SLAB : Blocks.STONE_BRICK_SLAB);
+            }
+        }
+        for (int i = 0; i < 5; i++) {
+            set(world, base.add(world.random.nextInt(15) - 7, y + 1, world.random.nextInt(15) - 7),
+                    Blocks.DEAD_BUSH);
+        }
+        set(world, base.add(0, y + 1, -6), Blocks.OAK_FENCE);
+        set(world, base.add(0, y + 2, -6), Blocks.SOUL_LANTERN);
+        stockChest(world, base.add(6, y + 1, 6), new ItemStack(Items.IRON_NUGGET, 8),
+                new ItemStack(ModItems.ROYAL_COIN, 2), new ItemStack(Items.GOLD_NUGGET, 6));
+        spawnGuard(world, base, y, BuildStyle.CUSTOM);
     }
 
     private static void buildCitadel(ServerWorld world, BlockPos base) {

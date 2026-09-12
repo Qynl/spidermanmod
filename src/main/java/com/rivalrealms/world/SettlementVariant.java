@@ -10,5 +10,8 @@ public enum SettlementVariant {
     SHIPYARD,
     SKYPORT,
     AIRSHIP_YARD,
-    OUTPOST
+    OUTPOST,
+    MILL,
+    RUIN,
+    GRAVEYARD
 }
