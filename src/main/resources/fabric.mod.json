@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "id": "rivalrealms",
+  "version": "${version}",
+  "name": "Rival Realms",
+  "description": "Player-like survivor cultures, living settlements, betrayal, custom fortresses, pirate harbors, frontier towns and airships.",
+  "authors": ["Qynl", "Rival Realms contributors"],
+  "contact": {
+    "sources": "https://github.com/Qynl/spidermanmod"
+  },
+  "license": "MIT",
+  "icon": "assets/rivalrealms/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": ["com.rivalrealms.RivalRealms"],
+    "client": ["com.rivalrealms.client.RivalRealmsClient"]
+  },
+  "depends": {
+    "fabricloader": ">=0.16.5",
+    "minecraft": "~1.21.1",
+    "java": ">=21",
+    "fabric-api": "*"
+  }
+}
