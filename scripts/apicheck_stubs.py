@@ -19,7 +19,9 @@ def add(fqcn, supers=(), members=(), iface=False):
 
 
 # ---- registry entries & pose (1.21.1 sound constants are split across these types)
-add('net.minecraft.registry.entry.RegistryEntry', [], [], iface=True)
+add('net.minecraft.registry.entry.RegistryEntry', [], [
+    'public static <T> net.minecraft.registry.entry.RegistryEntry<T> of(T value);',
+], iface=True)
 add('net.minecraft.registry.entry.RegistryEntry.Reference', ['net.minecraft.registry.entry.RegistryEntry'], [
     'public T value();',
 ])
@@ -27,11 +29,11 @@ add('net.minecraft.entity.EntityPose', [], [])
 
 add('net.minecraft.enchantment.Enchantment', [], [])
 add('net.minecraft.enchantment.Enchantments', [], [
-    'public static final net.minecraft.registry.entry.RegistryEntry<net.minecraft.enchantment.Enchantment> PROTECTION;',
-    'public static final net.minecraft.registry.entry.RegistryEntry<net.minecraft.enchantment.Enchantment> SHARPNESS;',
-    'public static final net.minecraft.registry.entry.RegistryEntry<net.minecraft.enchantment.Enchantment> POWER;',
-    'public static final net.minecraft.registry.entry.RegistryEntry<net.minecraft.enchantment.Enchantment> PIERCING;',
-    'public static final net.minecraft.registry.entry.RegistryEntry<net.minecraft.enchantment.Enchantment> UNBREAKING;',
+    'public static final net.minecraft.registry.RegistryKey<net.minecraft.enchantment.Enchantment> PROTECTION;',
+    'public static final net.minecraft.registry.RegistryKey<net.minecraft.enchantment.Enchantment> SHARPNESS;',
+    'public static final net.minecraft.registry.RegistryKey<net.minecraft.enchantment.Enchantment> POWER;',
+    'public static final net.minecraft.registry.RegistryKey<net.minecraft.enchantment.Enchantment> PIERCING;',
+    'public static final net.minecraft.registry.RegistryKey<net.minecraft.enchantment.Enchantment> UNBREAKING;',
 ])
 
 add('net.minecraft.village.TradedItem', [], [
