@@ -43,15 +43,37 @@ jobs:
           set -x
           git config user.name "arena-agent"
           git config user.email "arena-agent@users.noreply.github.com"
-          git remote -v
           ls -lh build/libs/
-          JAR=$(ls build/libs/*.jar | head -n 1)
-          echo "Using jar $JAR"
+          # Loom produces main jar + sources jar; we want main jar (not sources, not dev)
+          # Prefer the non-sources jar that contains classes
+          MAIN_JAR="build/libs/spiderman-1.0.0.jar"
+          if [ ! -f "$MAIN_JAR" ]; then
+            # fallback: find first jar that is not sources and not dev
+            MAIN_JAR=$(ls build/libs/*.jar | grep -v sources | grep -v dev | head -n 1)
+          fi
+          echo "MAIN_JAR=$MAIN_JAR"
+          if [ ! -f "$MAIN_JAR" ]; then
+            echo "Main jar not found!"
+            ls -R build/libs
+            exit 1
+          fi
+          # Verify it contains classes, not just java sources
+          if command -v python3 >/dev/null; then
+            python3 - << PY
+          import zipfile, sys
+          jar=sys.argv[1]
+          with zipfile.ZipFile(jar) as z:
+              has_class=any(n.endswith(".class") for n in z.namelist())
+              print(f"has_class={has_class}")
+              if not has_class:
+                  print("ERROR: jar has no .class files, listing:")
+                  print(z.namelist()[:30])
+                  sys.exit(1)
+          PY "$MAIN_JAR"
+          fi
           DEST="build/libs/spiderman-1.0.0.jar"
-          if [ "$JAR" != "$DEST" ]; then
-            cp "$JAR" "$DEST"
-          else
-            echo "Jar already at destination, skipping cp"
+          if [ "$MAIN_JAR" != "$DEST" ]; then
+            cp "$MAIN_JAR" "$DEST"
           fi
           ls -lh "$DEST"
           git add -f "$DEST"
@@ -59,29 +81,12 @@ jobs:
           git diff --cached --stat
           if ! git diff --cached --quiet; then
             git commit -m "Build jar from CI for arena/01a09235-spidermanmod [skip ci]"
-            echo "Pushing..."
-            git push origin HEAD:arena/01a09235-spidermanmod --verbose 2>&1 | tee /tmp/push.log || {
-              echo "First push failed, log:"
-              cat /tmp/push.log
-              echo "Trying with token remote..."
-              git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git
-              git push origin HEAD:arena/01a09235-spidermanmod --verbose 2>&1 | tee /tmp/push2.log || {
-                echo "Second push failed, log:"
-                cat /tmp/push2.log
-                # Save logs to file and try to create an issue with error (to bypass blob storage block)
-                echo "Push failed - see logs" > /tmp/error.txt
-                cat /tmp/push.log /tmp/push2.log >> /tmp/error.txt || true
-                # Try to post comment via API (will be visible via gh issue list)
-                gh issue create --title "jar push failed $GITHUB_RUN_ID" --body-file /tmp/error.txt || true
-                exit 1
-              }
-            }
+            git push origin HEAD:arena/01a09235-spidermanmod
           else
             echo "No changes to jar"
           fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   # Validates the offline toolchain (build-local/): stub generation, named
   # compile, Yarn -> Intermediary remap, refmap, jar checks, unit tests.
