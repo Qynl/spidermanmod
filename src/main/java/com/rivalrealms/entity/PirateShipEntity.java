@@ -37,7 +37,8 @@ public final class PirateShipEntity extends BoatEntity {
         if (getWorld().isClient || targetUuid == null || plundered) {
             return;
         }
-        Entity entity = getWorld().getEntity(targetUuid);
+        Entity entity = getWorld() instanceof ServerWorld serverWorld
+                ? serverWorld.getEntity(targetUuid) : null;
         if (!(entity instanceof MerchantShipEntity merchant) || !merchant.isAlive()) {
             targetUuid = null;
             return;
