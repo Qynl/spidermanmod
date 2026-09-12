@@ -18,7 +18,9 @@ import java.util.UUID;
  * force-load a distant area from a tick loop.
  */
 public final class WorldSettlementGenerator {
-    private static final long SITE_SPACING = 512L;
+    // Roughly one candidate per 256 explored chunks: visible enough to make
+    // travel feel inhabited without turning every horizon into a city wall.
+    private static final long SITE_SPACING = 256L;
     private static final int SITE_RADIUS = 36;
 
     private WorldSettlementGenerator() {
