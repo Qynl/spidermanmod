@@ -40,9 +40,14 @@ jobs:
           ls -lh build/libs/
           JAR=$(ls build/libs/*.jar | head -n 1)
           echo "Using jar $JAR"
-          cp "$JAR" build/libs/spiderman-1.0.0.jar
-          ls -lh build/libs/spiderman-1.0.0.jar
-          git add -f build/libs/spiderman-1.0.0.jar
+          DEST="build/libs/spiderman-1.0.0.jar"
+          if [ "$JAR" != "$DEST" ]; then
+            cp "$JAR" "$DEST"
+          else
+            echo "Jar already at destination, skipping cp"
+          fi
+          ls -lh "$DEST"
+          git add -f "$DEST"
           git status
           git diff --cached --stat
           if ! git diff --cached --quiet; then
