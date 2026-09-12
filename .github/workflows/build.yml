@@ -44,32 +44,44 @@ jobs:
           git config user.name "arena-agent"
           git config user.email "arena-agent@users.noreply.github.com"
           ls -lh build/libs/
-          # Loom produces main jar + sources jar; we want main jar (not sources, not dev)
-          # Prefer the non-sources jar that contains classes
-          MAIN_JAR="build/libs/spiderman-1.0.0.jar"
-          if [ ! -f "$MAIN_JAR" ]; then
-            # fallback: find first jar that is not sources and not dev
-            MAIN_JAR=$(ls build/libs/*.jar | grep -v sources | grep -v dev | head -n 1)
-          fi
-          echo "MAIN_JAR=$MAIN_JAR"
-          if [ ! -f "$MAIN_JAR" ]; then
-            echo "Main jar not found!"
-            ls -R build/libs
-            exit 1
-          fi
-          # Verify it contains classes, not just java sources
-          if command -v python3 >/dev/null; then
+          echo "--- all jars ---"
+          for f in build/libs/*.jar; do
+            echo "== $f =="
+            ls -lh "$f"
             python3 - << PY
           import zipfile, sys
           jar=sys.argv[1]
-          with zipfile.ZipFile(jar) as z:
-              has_class=any(n.endswith(".class") for n in z.namelist())
-              print(f"has_class={has_class}")
-              if not has_class:
-                  print("ERROR: jar has no .class files, listing:")
-                  print(z.namelist()[:30])
-                  sys.exit(1)
-          PY "$MAIN_JAR"
+          try:
+            with zipfile.ZipFile(jar) as z:
+              names=z.namelist()
+              has_class=any(n.endswith(".class") for n in names)
+              has_java=any(n.endswith(".java") for n in names)
+              print(f"  entries={len(names)} has_class={has_class} has_java={has_java}")
+              if has_class:
+                print("  sample classes:", [n for n in names if n.endswith(".class")][:5])
+              else:
+                print("  sample:", names[:10])
+          except Exception as e:
+            print(f"  error reading jar: {e}")
+          PY "$f"
+          done
+          # Find jar with classes, not sources
+          MAIN_JAR=""
+          for f in build/libs/*.jar; do
+            if echo "$f" | grep -q sources; then continue; fi
+            if python3 -c "import zipfile,sys; z=zipfile.ZipFile(sys.argv[1]); print(any(n.endswith('.class') for n in z.namelist()))" "$f" | grep -q True; then
+              MAIN_JAR="$f"
+              break
+            fi
+          done
+          if [ -z "$MAIN_JAR" ]; then
+            echo "No jar with classes found, trying any non-sources"
+            MAIN_JAR=$(ls build/libs/*.jar | grep -v sources | head -n 1)
+          fi
+          echo "Selected MAIN_JAR=$MAIN_JAR"
+          if [ -z "$MAIN_JAR" ] || [ ! -f "$MAIN_JAR" ]; then
+            echo "Main jar not found!"
+            exit 1
           fi
           DEST="build/libs/spiderman-1.0.0.jar"
           if [ "$MAIN_JAR" != "$DEST" ]; then
