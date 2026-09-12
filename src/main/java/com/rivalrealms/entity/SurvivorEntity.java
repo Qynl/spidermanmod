@@ -283,7 +283,7 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
     }
 
     @Override
-    protected void writeCustomDataToNbt(NbtCompound nbt) {
+    public void writeCustomDataToNbt(NbtCompound nbt) {
         super.writeCustomDataToNbt(nbt);
         nbt.putString("Archetype", getArchetype().id());
         nbt.putBoolean("Recruited", recruited);
@@ -295,7 +295,7 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
     }
 
     @Override
-    protected void readCustomDataFromNbt(NbtCompound nbt) {
+    public void readCustomDataFromNbt(NbtCompound nbt) {
         super.readCustomDataFromNbt(nbt);
         dataTracker.set(ARCHETYPE, nbt.getString("Archetype"));
         recruited = nbt.getBoolean("Recruited");
