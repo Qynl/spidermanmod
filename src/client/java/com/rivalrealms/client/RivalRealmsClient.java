@@ -9,5 +9,7 @@ public final class RivalRealmsClient implements ClientModInitializer {
     public void onInitializeClient() {
         EntityRendererRegistry.register(ModEntities.SURVIVOR, SurvivorRenderer::new);
         EntityRendererRegistry.register(ModEntities.AIRSHIP, AirshipRenderer::new);
+        EntityRendererRegistry.register(ModEntities.MERCHANT_SHIP, MerchantShipRenderer::new);
+        EntityRendererRegistry.register(ModEntities.PIRATE_SHIP, PirateShipRenderer::new);
     }
 }

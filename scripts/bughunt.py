@@ -108,12 +108,16 @@ def check_png_assets() -> None:
         "assets/rivalrealms/textures/entity/survivor/outlaw.png": (64, 64),
         "assets/rivalrealms/textures/entity/survivor/sky_captain.png": (64, 64),
         "assets/rivalrealms/textures/entity/airship.png": (64, 32),
+        "assets/rivalrealms/textures/entity/merchant_ship.png": (64, 32),
+        "assets/rivalrealms/textures/entity/pirate_ship.png": (64, 32),
         "assets/rivalrealms/textures/item/survivor_spawn_egg.png": (16, 16),
         "assets/rivalrealms/textures/item/knight_spawn_egg.png": (16, 16),
         "assets/rivalrealms/textures/item/pirate_spawn_egg.png": (16, 16),
         "assets/rivalrealms/textures/item/outlaw_spawn_egg.png": (16, 16),
         "assets/rivalrealms/textures/item/sky_captain_spawn_egg.png": (16, 16),
         "assets/rivalrealms/textures/item/airship_spawn_egg.png": (16, 16),
+        "assets/rivalrealms/textures/item/merchant_ship_spawn_egg.png": (16, 16),
+        "assets/rivalrealms/textures/item/pirate_ship_spawn_egg.png": (16, 16),
     }
     for relative_path, expected in expected_dimensions.items():
         path = ROOT / "src/main/resources" / relative_path
@@ -133,6 +137,15 @@ def check_visual_renderers() -> None:
         fail("airship is still using the generic renderer")
     if "textures/entity/airship.png" not in airship_renderer.read_text(encoding="utf-8"):
         fail("airship renderer has no dedicated texture")
+    merchant_renderer = ROOT / "src/client/java/com/rivalrealms/client/MerchantShipRenderer.java"
+    pirate_renderer = ROOT / "src/client/java/com/rivalrealms/client/PirateShipRenderer.java"
+    for path, marker in ((merchant_renderer, "textures/entity/merchant_ship.png"),
+                         (pirate_renderer, "textures/entity/pirate_ship.png")):
+        if not path.exists() or marker not in path.read_text(encoding="utf-8"):
+            fail(f"ship renderer is missing its dedicated texture: {path.name}")
+    for marker in ("ModEntities.MERCHANT_SHIP", "ModEntities.PIRATE_SHIP"):
+        if marker not in client_initializer.read_text(encoding="utf-8"):
+            fail(f"client renderer registration is missing: {marker}")
     archetypes = (ROOT / "src/main/java/com/rivalrealms/entity/Archetype.java").read_text(encoding="utf-8")
     for culture in re.findall(r'"([a-z][a-z0-9_]*)",\s*"[A-Z][A-Za-z]+",\s*"[A-Z]', archetypes):
         if not (RESOURCES / "assets/rivalrealms/textures/entity/survivor" / f"{culture}.png").exists():
@@ -148,23 +161,29 @@ def check_content_catalog() -> None:
     for entry in ("CROWN_BRICK", "CASTLE_STONE", "CASTLE_TILES", "ROYAL_WOOD",
                   "SHIP_PLANKS", "FRONTIER_PLANKS", "AIRSHIP_METAL", "REALM_BANNER",
                   "RECRUITMENT_CONTRACT", "REVOLVER", "FLINTLOCK", "PIRATE_BOAT",
-                  "ROYAL_LONGSWORD", "ROYAL_COIN", "MEDIEVAL_MAP", "SURVIVOR_SPAWN_EGG",
+                  "ROYAL_LONGSWORD", "ROYAL_COIN", "ROYAL_JEWELRY", "MEDIEVAL_MAP", "SURVIVOR_SPAWN_EGG",
                   "KNIGHT_SPAWN_EGG", "PIRATE_SPAWN_EGG", "OUTLAW_SPAWN_EGG",
-                  "SKY_CAPTAIN_SPAWN_EGG", "AIRSHIP_SPAWN_EGG"):
+                  "SKY_CAPTAIN_SPAWN_EGG", "AIRSHIP_SPAWN_EGG", "MERCHANT_SHIP_SPAWN_EGG",
+                  "PIRATE_SHIP_SPAWN_EGG"):
         if entry not in group_text:
             fail(f"creative tab is missing catalog entry: {entry}")
     item_text = items.read_text(encoding="utf-8")
     for entry in ("SURVIVOR_SPAWN_EGG", "KNIGHT_SPAWN_EGG", "PIRATE_SPAWN_EGG",
-                  "OUTLAW_SPAWN_EGG", "SKY_CAPTAIN_SPAWN_EGG", "AIRSHIP_SPAWN_EGG"):
+                  "OUTLAW_SPAWN_EGG", "SKY_CAPTAIN_SPAWN_EGG", "AIRSHIP_SPAWN_EGG",
+                  "MERCHANT_SHIP_SPAWN_EGG", "PIRATE_SHIP_SPAWN_EGG", "ROYAL_JEWELRY"):
         if entry not in item_text:
             fail(f"spawn item is not registered: {entry}")
     for model in ("survivor_spawn_egg", "knight_spawn_egg", "pirate_spawn_egg",
-                  "outlaw_spawn_egg", "sky_captain_spawn_egg", "airship_spawn_egg"):
+                  "outlaw_spawn_egg", "sky_captain_spawn_egg", "airship_spawn_egg",
+                  "merchant_ship_spawn_egg", "pirate_ship_spawn_egg", "royal_jewelry"):
         if not (RESOURCES / f"assets/rivalrealms/models/item/{model}.json").exists():
             fail(f"spawn item model is missing: {model}")
     airship_item = (ROOT / "src/main/java/com/rivalrealms/item/AirshipSpawnEggItem.java").read_text(encoding="utf-8")
     if "world.isClient" not in airship_item or "spawnEntity" not in airship_item:
         fail("airship spawn item lacks a guarded server-side spawn path")
+    ship_item = (ROOT / "src/main/java/com/rivalrealms/item/ShipSpawnEggItem.java").read_text(encoding="utf-8")
+    if "world.isClient" not in ship_item or "spawnEntity" not in ship_item:
+        fail("ship spawn item lacks a guarded server-side spawn path")
     if "ModItemGroups.register()" not in items.read_text(encoding="utf-8"):
         fail("creative tab is not initialized after item registration")
     map_item = (ROOT / "src/main/java/com/rivalrealms/item/MedievalMapItem.java").read_text(encoding="utf-8")
@@ -213,6 +232,10 @@ def check_runtime_safety() -> None:
             "isChunkLoaded",
             "surfacePosition",
             "RivalRealms.LOGGER.error",
+            "tickMaritimeEncounters",
+            "spawnShowcaseConvoy",
+            "findWater",
+            "spawnCrew",
         ),
         "src/main/java/com/rivalrealms/world/StructureBuilder.java": (
             "getBottomY()",
@@ -241,6 +264,15 @@ def check_runtime_safety() -> None:
             "areaLoaded",
             "markGeneratedSite",
             "planFor",
+        ),
+        "src/main/java/com/rivalrealms/entity/MerchantShipEntity.java": (
+            "ROYAL_JEWELRY",
+            "raidCargo",
+            "cargoCrates",
+        ),
+        "src/main/java/com/rivalrealms/entity/PirateShipEntity.java": (
+            "setTargetShip",
+            "plundered",
         ),
     }
     for relative_path, markers in required_guards.items():
@@ -272,14 +304,23 @@ def check_jar(jar_path: Path) -> None:
             "assets/rivalrealms/lang/en_us.json",
             "assets/rivalrealms/textures/entity/survivor/knight.png",
             "assets/rivalrealms/textures/entity/airship.png",
+            "assets/rivalrealms/textures/entity/merchant_ship.png",
+            "assets/rivalrealms/textures/entity/pirate_ship.png",
             "assets/rivalrealms/models/item/airship_spawn_egg.json",
+            "assets/rivalrealms/models/item/merchant_ship_spawn_egg.json",
+            "assets/rivalrealms/models/item/pirate_ship_spawn_egg.json",
             "assets/rivalrealms/models/item/knight_spawn_egg.json",
             "assets/rivalrealms/blockstates/castle_stone.json",
             "com/rivalrealms/RivalRealms.class",
             "com/rivalrealms/client/AirshipRenderer.class",
+            "com/rivalrealms/client/MerchantShipRenderer.class",
+            "com/rivalrealms/client/PirateShipRenderer.class",
             "com/rivalrealms/item/ModItemGroups.class",
             "com/rivalrealms/item/SurvivorSpawnEggItem.class",
+            "com/rivalrealms/item/ShipSpawnEggItem.class",
             "com/rivalrealms/item/AirshipSpawnEggItem.class",
+            "com/rivalrealms/entity/MerchantShipEntity.class",
+            "com/rivalrealms/entity/PirateShipEntity.class",
         }
         missing = sorted(required - names)
         if missing:

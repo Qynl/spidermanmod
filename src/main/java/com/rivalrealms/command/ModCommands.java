@@ -7,6 +7,7 @@ import com.rivalrealms.entity.Archetype;
 import com.rivalrealms.entity.ModEntities;
 import com.rivalrealms.entity.SurvivorEntity;
 import com.rivalrealms.world.BuildStyle;
+import com.rivalrealms.world.RealmEvents;
 import com.rivalrealms.world.RealmState;
 import com.rivalrealms.world.SettlementRole;
 import com.rivalrealms.world.SettlementVariant;
@@ -104,6 +105,8 @@ public final class ModCommands {
                                                         IntegerArgumentType.getInteger(context, "value")))))))
                 .then(CommandManager.literal("airship")
                         .executes(context -> spawnAirship(context.getSource())))
+                .then(CommandManager.literal("convoy")
+                        .executes(context -> spawnConvoy(context.getSource())))
                 .then(CommandManager.literal("info")
                         .executes(context -> info(context.getSource()))));
     }
@@ -319,11 +322,24 @@ public final class ModCommands {
         return 1;
     }
 
+    private static int spawnConvoy(ServerCommandSource source)
+            throws com.mojang.brigadier.exceptions.CommandSyntaxException {
+        ServerPlayerEntity player = source.getPlayer();
+        int ships = RealmEvents.spawnShowcaseConvoy(player.getServerWorld(), player.getBlockPos());
+        if (ships == 0) {
+            source.sendError(Text.literal("No loaded water was found nearby. Stand near an ocean, river, or harbour and try again."));
+            return 0;
+        }
+        source.sendFeedback(() -> Text.literal("Spawned a jewelry merchant convoy with "
+                + (ships > 1 ? "a pirate attack force." : "its merchant crew.")), true);
+        return ships;
+    }
+
     private static int info(ServerCommandSource source) {
         source.sendFeedback(() -> Text.literal("Rival Realms: /rivalrealms spawn <culture> [count], /rivalrealms build <style>, "
                 + "/rivalrealms landmark <fortress|citadel|town|royal_city|harbor|shipyard|skyport|airship_yard|outpost>, /rivalrealms claim, "
                 + "/rivalrealms bases, /rivalrealms locate, /rivalrealms jobs, /rivalrealms assign <role> <survivor>, "
-                + "/rivalrealms diplomacy <a> <b> <value>, /rivalrealms airship"), false);
+                + "/rivalrealms diplomacy <a> <b> <value>, /rivalrealms airship, /rivalrealms convoy"), false);
         return 1;
     }
 }

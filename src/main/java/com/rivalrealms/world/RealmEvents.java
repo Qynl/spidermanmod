@@ -2,7 +2,9 @@ package com.rivalrealms.world;
 
 import com.rivalrealms.RivalRealms;
 import com.rivalrealms.entity.Archetype;
+import com.rivalrealms.entity.MerchantShipEntity;
 import com.rivalrealms.entity.ModEntities;
+import com.rivalrealms.entity.PirateShipEntity;
 import com.rivalrealms.entity.SurvivorEntity;
 import net.minecraft.entity.Entity;
 import net.minecraft.server.MinecraftServer;
@@ -10,6 +12,7 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.registry.tag.FluidTags;
 import net.minecraft.util.math.Box;
 import net.minecraft.world.Heightmap;
 
@@ -35,6 +38,14 @@ public final class RealmEvents {
                     // One malformed/old settlement must not take down the
                     // entire server. The base is skipped until the next tick.
                     RivalRealms.LOGGER.error("Rival Realms settlement tick failed in {}", world.getRegistryKey().getValue(), exception);
+                }
+            }
+            if (world.getTime() % 100L == 0) {
+                try {
+                    tickMaritimeEncounters(world);
+                } catch (RuntimeException exception) {
+                    RivalRealms.LOGGER.error("Rival Realms maritime encounter tick failed in {}",
+                            world.getRegistryKey().getValue(), exception);
                 }
             }
         }
@@ -127,7 +138,7 @@ public final class RealmEvents {
                 entity -> entity instanceof SurvivorEntity worker
                         && worker.isSettlementWorker()
                         && base.faction().equalsIgnoreCase(worker.effectiveFaction()));
-        int desired = Math.min(6, base.level() + 1);
+        int desired = Math.min(10, base.level() + 2);
         if (workers.size() >= desired || world.random.nextFloat() > 0.55f) {
             return;
         }
@@ -155,20 +166,38 @@ public final class RealmEvents {
     }
 
     private static SettlementRole nextRole(BuildStyle style, List<Entity> workers) {
-        if (!hasRole(workers, SettlementRole.BUILDER)) {
-            return SettlementRole.BUILDER;
-        }
-        if (!hasRole(workers, SettlementRole.FARMER)) {
-            return SettlementRole.FARMER;
-        }
-        SettlementRole cultureRole = switch (style) {
-            case PIRATE -> SettlementRole.TRADER;
-            case WESTERN -> SettlementRole.BLACKSMITH;
-            case SKY -> SettlementRole.SCOUT;
-            case KNIGHT, CUSTOM -> SettlementRole.BLACKSMITH;
+        SettlementRole[] common = {
+                SettlementRole.BUILDER, SettlementRole.FARMER,
+                SettlementRole.BAKER, SettlementRole.HERBALIST
         };
-        if (!hasRole(workers, cultureRole)) {
-            return cultureRole;
+        for (SettlementRole role : common) {
+            if (!hasRole(workers, role)) {
+                return role;
+            }
+        }
+
+        SettlementRole[] specialists = switch (style) {
+            case PIRATE -> new SettlementRole[]{
+                    SettlementRole.SAILOR, SettlementRole.QUARTERMASTER,
+                    SettlementRole.GUNNER, SettlementRole.NAVIGATOR
+            };
+            case SKY -> new SettlementRole[]{
+                    SettlementRole.NAVIGATOR, SettlementRole.SCOUT,
+                    SettlementRole.BLACKSMITH, SettlementRole.GUNNER
+            };
+            case WESTERN -> new SettlementRole[]{
+                    SettlementRole.BLACKSMITH, SettlementRole.MINER,
+                    SettlementRole.TRADER, SettlementRole.SCOUT
+            };
+            case KNIGHT, CUSTOM -> new SettlementRole[]{
+                    SettlementRole.MASON, SettlementRole.BLACKSMITH,
+                    SettlementRole.JEWELER, SettlementRole.MINER
+            };
+        };
+        for (SettlementRole role : specialists) {
+            if (!hasRole(workers, role)) {
+                return role;
+            }
         }
         return SettlementRole.TRADER;
     }
@@ -186,8 +215,16 @@ public final class RealmEvents {
         Box search = new Box(base.center()).expand(base.radius());
         int farmers = 0;
         int builders = 0;
+        int bakers = 0;
+        int herbalists = 0;
         int traders = 0;
+        int merchants = 0;
+        int jewelers = 0;
         int blacksmiths = 0;
+        int masons = 0;
+        int miners = 0;
+        int sailors = 0;
+        int quartermasters = 0;
         for (Entity entity : world.getOtherEntities(null, search,
                 candidate -> candidate instanceof SurvivorEntity worker
                         && worker.isSettlementWorker()
@@ -196,16 +233,24 @@ public final class RealmEvents {
             switch (worker.settlementRole()) {
                 case FARMER -> farmers++;
                 case BUILDER -> builders++;
+                case BAKER -> bakers++;
+                case HERBALIST -> herbalists++;
                 case TRADER -> traders++;
+                case MERCHANT -> merchants++;
+                case JEWELER -> jewelers++;
                 case BLACKSMITH -> blacksmiths++;
+                case MASON -> masons++;
+                case MINER -> miners++;
+                case SAILOR -> sailors++;
+                case QUARTERMASTER -> quartermasters++;
                 default -> {
                 }
             }
         }
 
-        int food = farmers * 2 + traders;
-        int materials = blacksmiths * 2 + traders;
-        int work = builders * 2;
+        int food = farmers * 2 + bakers * 3 + herbalists + traders + merchants + quartermasters;
+        int materials = blacksmiths * 2 + masons * 2 + miners * 3 + jewelers * 2 + traders + merchants + sailors;
+        int work = builders * 2 + masons + jewelers + miners + sailors;
         if (food > 0 || materials > 0 || work > 0) {
             state.recordSettlementWork(base, food, materials, work);
         }
@@ -278,6 +323,126 @@ public final class RealmEvents {
         if (owner != null) {
             owner.sendMessage(Text.literal("Raid incoming at " + base.name() + ": " + attacker.title() + " forces are approaching."), false);
         }
+    }
+
+    private static void tickMaritimeEncounters(ServerWorld world) {
+        if (!World.OVERWORLD.equals(world.getRegistryKey())) {
+            return;
+        }
+        for (ServerPlayerEntity player : world.getPlayers()) {
+            if (player.age % 200 != 0) {
+                continue;
+            }
+            Box area = new Box(player.getBlockPos()).expand(112.0);
+            List<Entity> nearbyEntities = world.getOtherEntities(null, area,
+                    entity -> entity instanceof MerchantShipEntity || entity instanceof PirateShipEntity);
+            List<MerchantShipEntity> merchants = nearbyEntities.stream()
+                    .filter(MerchantShipEntity.class::isInstance)
+                    .map(MerchantShipEntity.class::cast)
+                    .filter(Entity::isAlive)
+                    .toList();
+            if (merchants.isEmpty() && world.random.nextFloat() < 0.35f) {
+                spawnMerchantShip(world, player.getBlockPos(), 96);
+                continue;
+            }
+            for (MerchantShipEntity merchant : merchants) {
+                if (merchant.isUnderAttack() || world.random.nextFloat() > 0.30f) {
+                    continue;
+                }
+                boolean pirateNearby = nearbyEntities.stream().anyMatch(entity ->
+                        entity instanceof PirateShipEntity pirate && pirate.isAlive()
+                                && pirate.squaredDistanceTo(merchant) < 96.0 * 96.0);
+                if (!pirateNearby) {
+                    spawnPirateRaid(world, merchant);
+                }
+            }
+        }
+    }
+
+    /** Used by the command as a deterministic maritime showcase. */
+    public static int spawnShowcaseConvoy(ServerWorld world, BlockPos origin) {
+        MerchantShipEntity merchant = spawnMerchantShip(world, origin, 112);
+        if (merchant == null) {
+            return 0;
+        }
+        PirateShipEntity pirate = spawnPirateRaid(world, merchant);
+        return pirate == null ? 1 : 2;
+    }
+
+    private static MerchantShipEntity spawnMerchantShip(ServerWorld world, BlockPos origin, int radius) {
+        BlockPos position = findWater(world, origin, radius);
+        if (position == null) {
+            return null;
+        }
+        MerchantShipEntity merchant = ModEntities.MERCHANT_SHIP.create(world);
+        if (merchant == null) {
+            return null;
+        }
+        merchant.refreshPositionAndAngles(position.getX() + 0.5, position.getY(),
+                position.getZ() + 0.5, world.random.nextFloat() * 360.0f, 0.0f);
+        if (!world.spawnEntity(merchant)) {
+            return null;
+        }
+        spawnCrew(world, merchant.getBlockPos(), Archetype.KNIGHT,
+                new SettlementRole[]{SettlementRole.MERCHANT, SettlementRole.JEWELER, SettlementRole.SAILOR});
+        return merchant;
+    }
+
+    private static PirateShipEntity spawnPirateRaid(ServerWorld world, MerchantShipEntity merchant) {
+        BlockPos position = findWater(world, merchant.getBlockPos().add(32, 0, 0), 40);
+        if (position == null) {
+            return null;
+        }
+        PirateShipEntity pirate = ModEntities.PIRATE_SHIP.create(world);
+        if (pirate == null) {
+            return null;
+        }
+        pirate.refreshPositionAndAngles(position.getX() + 0.5, position.getY(),
+                position.getZ() + 0.5, world.random.nextFloat() * 360.0f, 0.0f);
+        pirate.setTargetShip(merchant);
+        merchant.markUnderAttack();
+        if (!world.spawnEntity(pirate)) {
+            return null;
+        }
+        spawnCrew(world, pirate.getBlockPos(), Archetype.PIRATE,
+                new SettlementRole[]{SettlementRole.CAPTAIN, SettlementRole.GUNNER,
+                        SettlementRole.QUARTERMASTER, SettlementRole.SAILOR});
+        return pirate;
+    }
+
+    private static void spawnCrew(ServerWorld world, BlockPos shipCenter, Archetype archetype,
+                                  SettlementRole[] roles) {
+        for (int i = 0; i < roles.length; i++) {
+            SurvivorEntity crew = ModEntities.SURVIVOR.create(world);
+            if (crew == null) {
+                continue;
+            }
+            BlockPos spawn = shipCenter.add((i % 3) - 1, 1, (i / 3) - 1);
+            crew.refreshPositionAndAngles(spawn, world.random.nextFloat() * 360.0f, 0.0f);
+            crew.setArchetype(archetype);
+            crew.assignWorker(shipCenter, null, archetype.faction(), roles[i]);
+            crew.setCustomName(Text.literal(roles[i].displayName() + " · " + archetype.title()));
+            world.spawnEntity(crew);
+        }
+    }
+
+    private static BlockPos findWater(ServerWorld world, BlockPos origin, int radius) {
+        for (int attempt = 0; attempt < 36; attempt++) {
+            int x = origin.getX() + world.random.nextInt(radius * 2 + 1) - radius;
+            int z = origin.getZ() + world.random.nextInt(radius * 2 + 1) - radius;
+            if (!world.getChunkManager().isChunkLoaded(x >> 4, z >> 4)) {
+                continue;
+            }
+            BlockPos top = world.getTopPosition(Heightmap.Type.WORLD_SURFACE, new BlockPos(x, origin.getY(), z));
+            for (int y = top.getY(); y >= Math.max(world.getBottomY() + 1, top.getY() - 8); y--) {
+                BlockPos water = new BlockPos(x, y, z);
+                if (world.getFluidState(water).isIn(FluidTags.WATER)
+                        && world.getBlockState(water.up()).isAir()) {
+                    return water;
+                }
+            }
+        }
+        return null;
     }
 
     private static BlockPos surfacePosition(ServerWorld world, BlockPos requested) {

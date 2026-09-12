@@ -23,6 +23,7 @@ This repository is the Rival Realms project. The former Spider-Man concept is in
    /rivalrealms landmark fortress
    /rivalrealms landmark harbor
    /rivalrealms landmark airship_yard
+   /rivalrealms convoy
    ```
 
 6. In the Rival Realms tab, use one of the faction spawn eggs to place a specific NPC, or use the Airship Spawn Egg on a block.
@@ -44,8 +45,10 @@ They are **not hidden in the vanilla Spawn Eggs tab**. They are all in the dedic
 | **Outlaw Spawn Egg** | A fast ranged outlaw with a frontier revolver | Dustwalkers |
 | **Sky Captain Spawn Egg** | A sky captain with crossbow gear and airship colours | Skybound |
 | **Airship Spawn Egg** | A rideable airship vehicle | Skybound technology |
+| **Jewelry Merchant Ship Spawn Egg** | A trade ship carrying Royal Jewelry crates | Royal merchant convoy |
+| **Pirate Raider Ship Spawn Egg** | A pursuing raider vessel that can plunder a merchant ship | Freebooters |
 
-Every NPC egg has its own item model and culture-coloured texture. The faction-specific eggs are not cosmetic aliases: they assign the matching archetype, equipment, stats, name style, texture, and faction when the entity is created.
+Every NPC egg and ship egg has its own item model and culture-coloured texture. The faction-specific eggs are not cosmetic aliases: they assign the matching archetype, equipment, stats, name style, texture, and faction when the entity is created.
 
 The command equivalent is:
 
@@ -56,6 +59,14 @@ The command equivalent is:
 /rivalrealms spawn sky_captain
 /rivalrealms spawn knight 6
 ```
+
+For the living maritime event, use:
+
+```text
+/rivalrealms convoy
+```
+
+Stand near a loaded ocean, river, or harbour. The command creates a Royal Jewelry merchant vessel, merchant NPCs, a Freebooter raider, and a pirate crew. The raider sails toward the merchant and drops the jewelry cargo when it reaches the convoy.
 
 The command is useful for testing groups of NPCs. The spawn eggs are useful for normal creative play and for building your own scenes.
 
@@ -108,6 +119,7 @@ The tab is deliberately curated so players never have to search through scattere
 - Realm Banner
 - Royal Longsword
 - Royal Coin
+- Royal Jewelry
 - Medieval Realm Map
 - Knight Spawn Egg
 
@@ -117,6 +129,8 @@ The tab is deliberately curated so players never have to search through scattere
 - Freebooter Boat
 - Pirate Flintlock
 - Pirate Spawn Egg
+- Pirate Raider Ship Spawn Egg
+- Jewelry Merchant Ship Spawn Egg
 
 ### Frontier / outlaw
 
@@ -259,6 +273,52 @@ Use these commands to inspect persistent sites afterward:
 
 The **Freebooter Boat** is a working boat item based on Minecraft's boat behaviour. Pirate harbours and shipyards can contain usable boats, piers, cranes, storage yards, and maritime loot.
 
+### Living jewelry convoys and pirate attacks
+
+The overworld is not limited to static buildings. When players are near loaded water, Rival Realms can introduce a **Royal Jewelry Trader** with a visible merchant crew:
+
+- Merchant
+- Jeweler
+- Sailor
+
+The ship carries several crates of **Royal Jewelry**. A maritime encounter can then launch a Freebooter raider with a real pirate crew:
+
+- Captain
+- Gunner
+- Quartermaster
+- Sailor
+
+The pirate ship receives the merchant's target, sails toward it, marks the trader as under attack, and plunders the cargo when it reaches the vessel. Jewelry drops into the world, so the encounter creates an actual reason to intervene. The crew are Survivor NPCs with their own faction, armour, weapons, names, targeting, and persistent behaviour—not invisible event markers.
+
+Test vessels directly from the Rival Realms tab with **Jewelry Merchant Ship Spawn Egg** and **Pirate Raider Ship Spawn Egg**, or use `/rivalrealms convoy` near water. The two custom ship renderers use dedicated merchant and pirate textures.
+
+### Medieval villagers and specialist jobs
+
+Settlement NPCs now have a larger job vocabulary. Medieval settlements can visibly develop:
+
+- Builder
+- Farmer
+- Baker
+- Herbalist
+- Merchant
+- Trader
+- Jeweler
+- Blacksmith
+- Mason
+- Miner
+- Guard
+- Scout
+
+Pirate and maritime settlements use shipboard identities:
+
+- Captain
+- Sailor
+- Gunner
+- Quartermaster
+- Navigator
+
+Jobs affect where an NPC walks, how the settlement economy grows, the title above its head, and which resources it contributes. A jeweler and merchant support the valuables economy, bakers and farmers create food progress, masons and miners provide construction materials, while sailors, quartermasters, gunners, and navigators make a pirate crew feel like a crew instead of a pile of identical mobs.
+
 ### Revolver and flintlock
 
 - The **Frontier Revolver** is a server-authoritative hitscan weapon with range, damage, cooldown, and durability.
@@ -272,9 +332,12 @@ Airships are actual rideable entities with a dedicated renderer and texture. The
 
 ```text
 /rivalrealms airship
+/rivalrealms convoy
 ```
 
-or placed from the **Airship Spawn Egg** by right-clicking a block. Airship docks, skyports, and airship yards are physical structures with elevated decks, chains, hangars, banners, and custom airship metal.
+`/rivalrealms convoy` is the deterministic demo for the merchant-versus-pirate system. It needs loaded water nearby so the ships do not force-load a new ocean.
+
+Airships can also be placed from the **Airship Spawn Egg** by right-clicking a block. Airship docks, skyports, and airship yards are physical structures with elevated decks, chains, hangars, banners, and custom airship metal.
 
 ---
 
@@ -306,7 +369,7 @@ All commands require permission level 2 unless a server configuration changes th
 /rivalrealms bases
 /rivalrealms locate
 /rivalrealms jobs
-/rivalrealms assign <guard|builder|farmer|trader|blacksmith|scout> <survivor>
+/rivalrealms assign <guard|builder|farmer|baker|herbalist|merchant|trader|jeweler|blacksmith|mason|miner|scout|captain|sailor|gunner|quartermaster|navigator> <survivor>
 ```
 
 Stand inside a settlement when using `/rivalrealms jobs`. Assignments only work for survivors inside a settlement owned by the executing player.
@@ -431,6 +494,10 @@ These protections reduce the chance that an ambitious structure or NPC feature t
 | Royal longsword, coin, and map | Yes |
 | Survival recipes for medieval kit | Yes |
 | Pirate boat and harbour | Yes |
+| Merchant jewelry ships | Yes |
+| Pirate ships that pursue and plunder traders | Yes |
+| Merchant, jeweler, baker, mason, and miner NPC jobs | Yes |
+| Captain, sailor, gunner, quartermaster, and navigator crew jobs | Yes |
 | Revolver and flintlock | Yes |
 | Recruitment and trust | Yes |
 | Companion betrayal | Yes |

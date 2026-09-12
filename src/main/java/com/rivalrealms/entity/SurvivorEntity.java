@@ -225,11 +225,23 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
         int offset = switch (settlementRole) {
             case BUILDER -> 8;
             case FARMER -> -8;
-            case TRADER -> 0;
+            case BAKER -> 2;
+            case HERBALIST -> -3;
+            case TRADER, MERCHANT, JEWELER -> 0;
             case BLACKSMITH -> 5;
+            case MASON -> 10;
+            case MINER -> -12;
+            case SAILOR, QUARTERMASTER -> 4;
+            case GUNNER -> -4;
+            case NAVIGATOR -> 0;
             default -> 0;
         };
-        return guardCenter.add(offset, 0, settlementRole == SettlementRole.FARMER ? 7 : -5);
+        int zOffset = switch (settlementRole) {
+            case FARMER, HERBALIST, MINER -> 7;
+            case SAILOR, QUARTERMASTER, NAVIGATOR -> 0;
+            default -> -5;
+        };
+        return guardCenter.add(offset, 0, zOffset);
     }
 
     public void setArchetype(Archetype archetype) {

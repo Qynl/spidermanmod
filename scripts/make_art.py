@@ -110,6 +110,23 @@ def egg(path, shell, shadow, spots):
     png(ROOT / "textures/item" / f"{path}.png", 16, 16, p)
 
 
+def ship_texture(path, hull, trim, sail):
+    p = canvas(64, 32)
+    # BoatEntityRenderer uses a compact 64x32 UV layout. These broad pixel
+    # bands keep the custom hull readable even at normal gameplay distance.
+    rect(p, 64, 2, 18, 62, 28, hull)
+    rect(p, 64, 8, 16, 56, 20, trim)
+    rect(p, 64, 12, 20, 52, 24, hull)
+    rect(p, 64, 18, 20, 46, 22, trim)
+    rect(p, 64, 27, 4, 30, 20, trim)
+    rect(p, 64, 28, 2, 29, 18, (65, 44, 31, 255))
+    rect(p, 64, 31, 5, 45, 18, sail)
+    rect(p, 64, 32, 7, 44, 9, trim)
+    rect(p, 64, 32, 14, 44, 16, trim)
+    rect(p, 64, 49, 6, 53, 21, trim)
+    png(ROOT / "textures/entity" / f"{path}.png", 64, 32, p)
+
+
 def medieval_map():
     p = canvas(16, 16, (0, 0, 0, 0))
     rect(p, 16, 2, 1, 14, 15, (210, 176, 105, 255))
@@ -143,12 +160,17 @@ item("flintlock", (67, 63, 57, 255), (150, 90, 38, 255), [(8, 4), (8, 5), (7, 9)
 item("pirate_boat", (111, 60, 31, 255), (228, 199, 75, 255), [(5, 5), (6, 5), (7, 5), (8, 5), (9, 5), (10, 5)])
 item("royal_longsword", (77, 81, 92, 255), (211, 180, 75, 255), [(8, 2), (8, 3), (8, 4), (8, 5), (8, 6), (8, 7), (7, 8), (6, 9), (5, 10), (4, 11), (3, 12)])
 item("royal_coin", (194, 138, 40, 255), (239, 205, 73, 255), [(6, 5), (7, 4), (8, 5), (7, 6), (8, 7), (9, 6)])
+item("royal_jewelry", (103, 70, 135, 255), (222, 190, 62, 255), [(6, 5), (7, 4), (8, 5), (9, 6), (8, 8), (7, 9)])
 medieval_map()
 egg("survivor_spawn_egg", (214, 172, 111, 255), (104, 66, 52, 255), [(6, 6), (9, 9)])
 egg("knight_spawn_egg", (79, 111, 178, 255), (177, 44, 53, 255), [(6, 6), (9, 9)])
 egg("pirate_spawn_egg", (38, 116, 116, 255), (187, 48, 43, 255), [(6, 7), (9, 5)])
 egg("outlaw_spawn_egg", (183, 109, 45, 255), (213, 177, 64, 255), [(6, 6), (9, 9)])
 egg("sky_captain_spawn_egg", (103, 70, 164, 255), (56, 202, 201, 255), [(6, 6), (9, 8)])
-item("icon", (39, 31, 56, 255), (64, 179, 190, 255), [(7, 3), (6, 4), (7, 4), (8, 4), (5, 5), (6, 5), (7, 5), (8, 5), (9, 5), (7, 6), (7, 7), (7, 8), (6, 9), (7, 9), (8, 9), (7, 10), (7, 11)])
+egg("merchant_ship_spawn_egg", (54, 128, 150, 255), (222, 190, 62, 255), [(6, 6), (9, 9)])
+egg("pirate_ship_spawn_egg", (56, 56, 68, 255), (184, 48, 43, 255), [(6, 7), (9, 5)])
+ship_texture("merchant_ship", (91, 48, 33, 255), (222, 190, 62, 255), (238, 234, 205, 255))
+ship_texture("pirate_ship", (45, 43, 49, 255), (184, 48, 43, 255), (33, 33, 41, 255))
+item("icon",  (39, 31, 56, 255), (64, 179, 190, 255), [(7, 3), (6, 4), (7, 4), (8, 4), (5, 5), (6, 5), (7, 5), (8, 5), (9, 5), (7, 6), (7, 7), (7, 8), (6, 9), (7, 9), (8, 9), (7, 10), (7, 11)])
 # Make the icon larger while retaining the same crisp emblem.
 png(ROOT / "icon.png", 64, 64, [((39, 31, 56, 255) if (x + y) % 7 else (64, 179, 190, 255)) for y in range(64) for x in range(64)])

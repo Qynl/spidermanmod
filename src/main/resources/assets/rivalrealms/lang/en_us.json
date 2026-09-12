@@ -5,7 +5,10 @@
   "item.rivalrealms.pirate_boat": "Freebooter Boat",
   "item.rivalrealms.royal_longsword": "Royal Longsword",
   "item.rivalrealms.royal_coin": "Royal Coin",
+  "item.rivalrealms.royal_jewelry": "Royal Jewelry",
   "item.rivalrealms.medieval_map": "Medieval Realm Map",
+  "item.rivalrealms.merchant_ship_spawn_egg": "Jewelry Merchant Ship Spawn Egg",
+  "item.rivalrealms.pirate_ship_spawn_egg": "Pirate Raider Ship Spawn Egg",
   "item.rivalrealms.survivor_spawn_egg": "Survivor Spawn Egg",
   "item.rivalrealms.knight_spawn_egg": "Knight Spawn Egg",
   "item.rivalrealms.pirate_spawn_egg": "Pirate Spawn Egg",
@@ -22,5 +25,7 @@
   "block.rivalrealms.airship_metal": "Airship Metal",
   "block.rivalrealms.realm_banner": "Realm Banner",
   "entity.rivalrealms.survivor": "Survivor",
-  "entity.rivalrealms.airship": "Airship"
+  "entity.rivalrealms.airship": "Airship",
+  "entity.rivalrealms.merchant_ship": "Jewelry Merchant Ship",
+  "entity.rivalrealms.pirate_ship": "Pirate Raider Ship"
 }

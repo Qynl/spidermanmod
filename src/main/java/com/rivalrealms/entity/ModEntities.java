@@ -26,6 +26,22 @@ public final class ModEntities {
                     .trackingTickInterval(1)
     );
 
+    public static final EntityType<MerchantShipEntity> MERCHANT_SHIP = register(
+            "merchant_ship",
+            EntityType.Builder.create(MerchantShipEntity::new, SpawnGroup.MISC)
+                    .dimensions(1.6f, 0.8f)
+                    .maxTrackingRange(96)
+                    .trackingTickInterval(1)
+    );
+
+    public static final EntityType<PirateShipEntity> PIRATE_SHIP = register(
+            "pirate_ship",
+            EntityType.Builder.create(PirateShipEntity::new, SpawnGroup.MISC)
+                    .dimensions(1.6f, 0.8f)
+                    .maxTrackingRange(96)
+                    .trackingTickInterval(1)
+    );
+
     private ModEntities() {
     }
 
@@ -36,6 +52,6 @@ public final class ModEntities {
 
     public static void register() {
         FabricDefaultAttributeRegistry.register(SURVIVOR, SurvivorEntity.createAttributes());
-        RivalRealms.LOGGER.info("Registered Rival Realms survivors and airships.");
+        RivalRealms.LOGGER.info("Registered Rival Realms survivors, airships, merchant ships and pirate raiders.");
     }
 }

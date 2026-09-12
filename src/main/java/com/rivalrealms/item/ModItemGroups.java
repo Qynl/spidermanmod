@@ -35,6 +35,7 @@ public final class ModItemGroups {
                         entries.add(ModItems.PIRATE_BOAT);
                         entries.add(ModItems.ROYAL_LONGSWORD);
                         entries.add(ModItems.ROYAL_COIN);
+                        entries.add(ModItems.ROYAL_JEWELRY);
                         entries.add(ModItems.MEDIEVAL_MAP);
                         entries.add(ModItems.SURVIVOR_SPAWN_EGG);
                         entries.add(ModItems.KNIGHT_SPAWN_EGG);
@@ -42,6 +43,8 @@ public final class ModItemGroups {
                         entries.add(ModItems.OUTLAW_SPAWN_EGG);
                         entries.add(ModItems.SKY_CAPTAIN_SPAWN_EGG);
                         entries.add(ModItems.AIRSHIP_SPAWN_EGG);
+                        entries.add(ModItems.MERCHANT_SHIP_SPAWN_EGG);
+                        entries.add(ModItems.PIRATE_SHIP_SPAWN_EGG);
                     })
                     .build());
 

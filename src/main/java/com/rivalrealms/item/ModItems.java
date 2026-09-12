@@ -26,6 +26,8 @@ public final class ModItems {
             new SwordItem(ToolMaterials.DIAMOND, new Item.Settings().maxCount(1).maxDamage(720)));
     public static final Item ROYAL_COIN = register("royal_coin",
             new Item(new Item.Settings().maxCount(64)));
+    public static final Item ROYAL_JEWELRY = register("royal_jewelry",
+            new Item(new Item.Settings().maxCount(16)));
     public static final Item MEDIEVAL_MAP = register("medieval_map",
             new MedievalMapItem(new Item.Settings().maxCount(1)));
     public static final Item SURVIVOR_SPAWN_EGG = register("survivor_spawn_egg",
@@ -40,6 +42,10 @@ public final class ModItems {
             new SurvivorSpawnEggItem(new Item.Settings().maxCount(16), Archetype.SKY_CAPTAIN));
     public static final Item AIRSHIP_SPAWN_EGG = register("airship_spawn_egg",
             new AirshipSpawnEggItem(new Item.Settings().maxCount(16)));
+    public static final Item MERCHANT_SHIP_SPAWN_EGG = register("merchant_ship_spawn_egg",
+            new ShipSpawnEggItem(new Item.Settings().maxCount(16), ModEntities.MERCHANT_SHIP));
+    public static final Item PIRATE_SHIP_SPAWN_EGG = register("pirate_ship_spawn_egg",
+            new ShipSpawnEggItem(new Item.Settings().maxCount(16), ModEntities.PIRATE_SHIP));
 
     private ModItems() {
     }
