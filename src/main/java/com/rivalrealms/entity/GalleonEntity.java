@@ -1,5 +1,6 @@
 package com.rivalrealms.entity;
 
+import com.rivalrealms.item.ModItems;
 import net.minecraft.entity.EntityType;
 import net.minecraft.item.Items;
 import net.minecraft.item.ItemStack;

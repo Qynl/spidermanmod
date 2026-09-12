@@ -28,7 +28,7 @@ import java.util.UUID;
  * smash hulls for real, then closes in to plunder the cargo by hand. Board it
  * and the crew jumps over the rails to repel you.
  */
-public final class PirateShipEntity extends SailingShipEntity {
+public class PirateShipEntity extends SailingShipEntity {
     private static final double[][] SEATS = {
             {0.0, 1.15, -1.35},
             {0.7, 0.80, -0.60},
