@@ -71,6 +71,55 @@ def check_mod_json() -> None:
                 fail(f"entrypoint source is missing: {entrypoint}")
 
 
+def check_runtime_safety() -> None:
+    """Catch common server-crash regressions before the Gradle build starts."""
+    java_root = ROOT / "src/main/java"
+    java_files = list(java_root.rglob("*.java"))
+    forbidden = {
+        "System.exit(": "hard process exit",
+        "Runtime.getRuntime().halt(": "hard process halt",
+        "Thread.sleep(": "blocking server thread sleep",
+    }
+    for path in java_files:
+        text = path.read_text(encoding="utf-8")
+        for token, description in forbidden.items():
+            if token in text:
+                fail(f"{description} in {path.relative_to(ROOT)}")
+
+    required_guards = {
+        "src/main/java/com/rivalrealms/world/RealmEvents.java": (
+            "isChunkLoaded",
+            "surfacePosition",
+            "RivalRealms.LOGGER.error",
+        ),
+        "src/main/java/com/rivalrealms/world/StructureBuilder.java": (
+            "getBottomY()",
+            "getTopY()",
+        ),
+        "src/main/java/com/rivalrealms/world/RealmState.java": (
+            "MAX_BASES",
+            "Math.min(savedBases.size(), MAX_BASES)",
+        ),
+        "src/main/java/com/rivalrealms/entity/SurvivorEntity.java": (
+            "nextTargetScan",
+            "owner == null",
+        ),
+    }
+    for relative_path, markers in required_guards.items():
+        path = ROOT / relative_path
+        if not path.exists():
+            fail(f"runtime safety source is missing: {relative_path}")
+        text = path.read_text(encoding="utf-8")
+        missing = [marker for marker in markers if marker not in text]
+        if missing:
+            fail(f"runtime safety guard missing from {relative_path}: {', '.join(missing)}")
+
+    workflow = (ROOT / ".github/workflows/build.yml").read_text(encoding="utf-8")
+    for marker in ("python3 scripts/bughunt.py", "clean check build", "Upload release-ready jars"):
+        if marker not in workflow:
+            fail(f"CI bug-hunt/build step missing: {marker}")
+
+
 def check_jar(jar_path: Path) -> None:
     if not jar_path.exists():
         fail(f"jar does not exist: {jar_path}")
@@ -96,6 +145,7 @@ def main() -> None:
     args = parser.parse_args()
     check_json_files()
     check_mod_json()
+    check_runtime_safety()
     if args.jar:
         check_jar(args.jar)
     print("BUGHUNT PASSED: metadata, JSON, assets and package structure look healthy.")

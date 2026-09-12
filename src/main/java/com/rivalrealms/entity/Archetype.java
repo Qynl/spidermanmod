@@ -132,6 +132,18 @@ public enum Archetype {
         return KNIGHT;
     }
 
+    public static boolean isKnown(String value) {
+        if (value == null) {
+            return false;
+        }
+        for (Archetype archetype : values()) {
+            if (archetype.id.equals(value.toLowerCase(Locale.ROOT))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public static Archetype byFaction(String faction) {
         if (faction != null) {
             for (Archetype archetype : values()) {

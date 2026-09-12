@@ -1,5 +1,6 @@
 package com.rivalrealms.world;
 
+import com.rivalrealms.RivalRealms;
 import com.rivalrealms.entity.Archetype;
 import com.rivalrealms.entity.ModEntities;
 import com.rivalrealms.entity.SurvivorEntity;
@@ -10,6 +11,7 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
+import net.minecraft.world.Heightmap;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,7 +29,13 @@ public final class RealmEvents {
     public static void onServerTick(MinecraftServer server) {
         for (ServerWorld world : server.getWorlds()) {
             if (world.getTime() % 200L == 0) {
-                tickSettlements(world);
+                try {
+                    tickSettlements(world);
+                } catch (RuntimeException exception) {
+                    // One malformed/old settlement must not take down the
+                    // entire server. The base is skipped until the next tick.
+                    RivalRealms.LOGGER.error("Rival Realms settlement tick failed in {}", world.getRegistryKey().getValue(), exception);
+                }
             }
         }
 
@@ -50,13 +58,37 @@ public final class RealmEvents {
     private static void tickSettlements(ServerWorld world) {
         RealmState state = RealmState.get(world);
         for (RealmState.BaseRecord base : new ArrayList<>(state.bases())) {
-            ensureGuards(world, base);
-            ensureWorkforce(world, base);
-            progressSettlement(world, state, base);
-            if (world.getTime() % 1200L == 0 && world.random.nextFloat() < 0.08f) {
-                tryStartRaid(world, state, base);
+            BlockPos center = base.center();
+            // Never force-load abandoned bases from a global server tick. The
+            // player or another ticket must already have the settlement area
+            // loaded before entities or blocks are touched.
+            if (!areaLoaded(world, center, base.radius() + 32)) {
+                continue;
+            }
+            try {
+                ensureGuards(world, base);
+                ensureWorkforce(world, base);
+                progressSettlement(world, state, base);
+                if (world.getTime() % 1200L == 0 && world.random.nextFloat() < 0.08f) {
+                    tryStartRaid(world, state, base);
+                }
+            } catch (RuntimeException exception) {
+                RivalRealms.LOGGER.error("Rival Realms skipped settlement {} at {}", base.name(), center, exception);
             }
         }
+    }
+
+    private static boolean areaLoaded(ServerWorld world, BlockPos center, int radius) {
+        int[] offsets = {-radius, radius};
+        for (int x : offsets) {
+            for (int z : offsets) {
+                if (!world.getChunkManager().isChunkLoaded((center.getX() + x) >> 4,
+                        (center.getZ() + z) >> 4)) {
+                    return false;
+                }
+            }
+        }
+        return world.getChunkManager().isChunkLoaded(center.getX() >> 4, center.getZ() >> 4);
     }
 
     private static void ensureGuards(ServerWorld world, RealmState.BaseRecord base) {
@@ -76,7 +108,8 @@ public final class RealmEvents {
         if (guard == null) {
             return;
         }
-        BlockPos spawn = center.add(world.random.nextInt(9) - 4, 0, world.random.nextInt(9) - 4);
+        BlockPos spawn = surfacePosition(world,
+                center.add(world.random.nextInt(9) - 4, 0, world.random.nextInt(9) - 4));
         guard.refreshPositionAndAngles(spawn, world.random.nextFloat() * 360.0f, 0.0f);
         guard.setArchetype(culture);
         guard.assignGuard(center, base.owner(), base.faction());
@@ -108,7 +141,8 @@ public final class RealmEvents {
         if (worker == null) {
             return;
         }
-        BlockPos spawn = center.add(world.random.nextInt(13) - 6, 0, world.random.nextInt(13) - 6);
+        BlockPos spawn = surfacePosition(world,
+                center.add(world.random.nextInt(13) - 6, 0, world.random.nextInt(13) - 6));
         worker.refreshPositionAndAngles(spawn, world.random.nextFloat() * 360.0f, 0.0f);
         worker.setArchetype(culture);
         worker.assignWorker(center, base.owner(), base.faction(), role);
@@ -195,6 +229,16 @@ public final class RealmEvents {
             return;
         }
 
+        List<Entity> activeRaiders = world.getOtherEntities(null,
+                new Box(base.center()).expand(base.radius() + 40.0),
+                entity -> entity instanceof SurvivorEntity survivor
+                        && !survivor.isRecruited()
+                        && state.isHostile(base.faction(), survivor.effectiveFaction()));
+        if (activeRaiders.size() >= 8) {
+            // Do not stack another raid on top of an unresolved one.
+            return;
+        }
+
         Archetype attacker = null;
         for (Archetype candidate : Archetype.values()) {
             if (state.isHostile(base.faction(), candidate.faction())) {
@@ -219,7 +263,8 @@ public final class RealmEvents {
             if (raider == null) {
                 continue;
             }
-            BlockPos spawn = center.add(24 + world.random.nextInt(9), 0, world.random.nextInt(17) - 8);
+            BlockPos spawn = surfacePosition(world,
+                    center.add(12 + world.random.nextInt(9), 0, world.random.nextInt(17) - 8));
             raider.refreshPositionAndAngles(spawn, world.random.nextFloat() * 360.0f, 0.0f);
             raider.setArchetype(attacker);
             raider.setCustomName(Text.literal("Raiders · " + attacker.title()));
@@ -235,8 +280,20 @@ public final class RealmEvents {
         }
     }
 
+    private static BlockPos surfacePosition(ServerWorld world, BlockPos requested) {
+        BlockPos surface = world.getTopPosition(Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, requested);
+        if (surface.getY() >= world.getBottomY() && surface.getY() < world.getTopY()) {
+            return surface;
+        }
+        return requested;
+    }
+
     private static void spawnEncounter(ServerWorld world, ServerPlayerEntity player) {
-        BlockPos center = player.getBlockPos().add(12 + world.random.nextInt(12), 0, 12 + world.random.nextInt(12));
+        BlockPos requested = player.getBlockPos().add(12 + world.random.nextInt(12), 0, 12 + world.random.nextInt(12));
+        if (!world.getChunkManager().isChunkLoaded(requested.getX() >> 4, requested.getZ() >> 4)) {
+            return;
+        }
+        BlockPos center = surfacePosition(world, requested);
         Archetype culture = Archetype.values()[world.random.nextInt(Archetype.values().length)];
         for (int i = 0; i < 3; i++) {
             SurvivorEntity survivor = ModEntities.SURVIVOR.create(world);

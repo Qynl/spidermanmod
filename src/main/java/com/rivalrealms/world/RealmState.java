@@ -24,6 +24,9 @@ import java.util.UUID;
  */
 public final class RealmState extends PersistentState {
     private static final String ID = "rivalrealms_realms";
+    private static final int MAX_BASES = 128;
+    private static final int MAX_RELATIONS = 128;
+    private static final int MAX_REPUTATIONS = 2048;
     private static final PersistentState.Type<RealmState> TYPE = new PersistentState.Type<>(
             RealmState::new, RealmState::fromNbt, DataFixTypes.LEVEL);
 
@@ -38,7 +41,7 @@ public final class RealmState extends PersistentState {
     private static RealmState fromNbt(NbtCompound nbt, RegistryWrapper.WrapperLookup lookup) {
         RealmState state = new RealmState();
         NbtList savedBases = nbt.getList("Bases", NbtElement.COMPOUND_TYPE);
-        for (int i = 0; i < savedBases.size(); i++) {
+        for (int i = 0; i < Math.min(savedBases.size(), MAX_BASES); i++) {
             NbtCompound base = savedBases.getCompound(i);
             if (!base.containsUuid("Owner")) {
                 continue;
@@ -46,26 +49,26 @@ public final class RealmState extends PersistentState {
             state.bases.add(new BaseRecord(
                     base.getLong("Center"),
                     base.getUuid("Owner"),
-                    base.getString("Faction"),
-                    base.getString("Style"),
-                    base.getString("Name"),
-                    Math.max(1, base.getInt("Level")),
-                    base.getLong("LastRaid"),
-                    Math.max(0, base.getInt("Food")),
-                    Math.max(0, base.getInt("Materials")),
-                    Math.max(0, base.getInt("Work")),
-                    base.getLong("LastExpansion")));
+                    safeText(base.getString("Faction"), "Independent"),
+                    safeText(base.getString("Style"), "custom"),
+                    safeText(base.getString("Name"), "Claimed Settlement"),
+                    Math.min(5, Math.max(1, base.getInt("Level"))),
+                    Math.max(0L, base.getLong("LastRaid")),
+                    Math.min(999, Math.max(0, base.getInt("Food"))),
+                    Math.min(999, Math.max(0, base.getInt("Materials"))),
+                    Math.min(999, Math.max(0, base.getInt("Work"))),
+                    Math.max(0L, base.getLong("LastExpansion"))));
         }
 
         NbtList savedRelations = nbt.getList("Relations", NbtElement.COMPOUND_TYPE);
-        for (int i = 0; i < savedRelations.size(); i++) {
+        for (int i = 0; i < Math.min(savedRelations.size(), MAX_RELATIONS); i++) {
             NbtCompound relation = savedRelations.getCompound(i);
             state.relations.put(relationKey(relation.getString("A"), relation.getString("B")),
                     clampRelation(relation.getInt("Value")));
         }
 
         NbtList savedReputations = nbt.getList("Reputations", NbtElement.COMPOUND_TYPE);
-        for (int i = 0; i < savedReputations.size(); i++) {
+        for (int i = 0; i < Math.min(savedReputations.size(), MAX_REPUTATIONS); i++) {
             NbtCompound reputation = savedReputations.getCompound(i);
             if (reputation.containsUuid("Player")) {
                 state.reputations.put(reputationKey(reputation.getUuid("Player"), reputation.getString("Faction")),
@@ -84,6 +87,12 @@ public final class RealmState extends PersistentState {
     }
 
     private BaseRecord claimBase(BlockPos center, UUID owner, String faction, String style, String name) {
+        if (center == null || owner == null || bases.size() >= MAX_BASES) {
+            return null;
+        }
+        faction = safeText(faction, "Independent");
+        style = safeText(style, "custom");
+        name = safeText(name, "Claimed Settlement");
         for (BaseRecord existing : bases) {
             double minimum = existing.radius() + 24.0;
             if (existing.center().getSquaredDistance(center) <= minimum * minimum) {
@@ -224,8 +233,15 @@ public final class RealmState extends PersistentState {
         return nbt;
     }
 
+    private static String safeText(String value, String fallback) {
+        if (value == null || value.isBlank()) {
+            return fallback;
+        }
+        return value.length() > 64 ? value.substring(0, 64) : value;
+    }
+
     private static String normalize(String value) {
-        return value == null ? "independent" : value.toLowerCase(Locale.ROOT);
+        return value == null || value.isBlank() ? "independent" : value.toLowerCase(Locale.ROOT);
     }
 
     private static String relationKey(String first, String second) {

@@ -97,6 +97,10 @@ public final class ModCommands {
     private static int spawn(ServerCommandSource source, String cultureId, int count) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
         ServerPlayerEntity player = source.getPlayer();
         ServerWorld world = player.getServerWorld();
+        if (!Archetype.isKnown(cultureId)) {
+            source.sendError(Text.literal("Unknown culture. Use knight, pirate, outlaw, or sky_captain."));
+            return 0;
+        }
         Archetype culture = Archetype.byId(cultureId);
         int spawned = 0;
         for (int i = 0; i < count; i++) {
@@ -117,6 +121,10 @@ public final class ModCommands {
 
     private static int build(ServerCommandSource source, String styleId) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
         ServerPlayerEntity player = source.getPlayer();
+        if (!BuildStyle.isKnown(styleId)) {
+            source.sendError(Text.literal("Unknown style. Use knight, pirate, western, or sky."));
+            return 0;
+        }
         BuildStyle style = BuildStyle.fromId(styleId);
         ServerWorld world = player.getServerWorld();
         StructureBuilder.build(world, player.getBlockPos(), style);

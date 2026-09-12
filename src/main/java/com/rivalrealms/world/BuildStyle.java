@@ -41,4 +41,16 @@ public enum BuildStyle {
         }
         return KNIGHT;
     }
+
+    public static boolean isKnown(String value) {
+        if (value == null) {
+            return false;
+        }
+        for (BuildStyle style : values()) {
+            if (style != CUSTOM && style.id.equals(value.toLowerCase(Locale.ROOT))) {
+                return true;
+            }
+        }
+        return false;
+    }
 }

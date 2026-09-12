@@ -64,6 +64,8 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
     private BlockPos guardCenter;
     private String guardFaction;
     private SettlementRole settlementRole = SettlementRole.NONE;
+    private long nextTargetScan;
+    private long nextWorkMove;
 
     public SurvivorEntity(EntityType<? extends SurvivorEntity> entityType, World world) {
         super(entityType, world);
@@ -108,28 +110,35 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
         ensureLoadout();
         PlayerEntity owner = ownerUuid == null ? null : getWorld().getPlayerByUuid(ownerUuid);
 
-        if (recruited && owner != null) {
-            if (getTarget() == owner) {
+        if (recruited) {
+            if (owner == null) {
+                // A companion whose owner is offline must not become an
+                // unowned hostile NPC. Keep it dormant until the owner returns.
                 setTarget(null);
-            }
-            if (guarding) {
                 getNavigation().stop();
-            }
-
-            // Trust is not a static menu value: leaving a companion alone for
-            // days or repeatedly hurting them can turn an alliance sour.
-            if (getWorld().getTime() % 2400L == 0 && trust > 0) {
-                trust--;
-            }
-            if (trust < 25 && random.nextInt(1200) == 0) {
-                betray(owner);
-            }
-        } else {
-            if (guardCenter != null) {
-                guardHomeTick();
             } else {
-                acquireRivalTarget();
+                if (getTarget() == owner) {
+                    setTarget(null);
+                }
+                if (guarding) {
+                    getNavigation().stop();
+                } else if (squaredDistanceTo(owner.getX(), owner.getY(), owner.getZ()) > 7.0 * 7.0) {
+                    getNavigation().startMovingTo(owner, 1.1);
+                }
+
+                // Trust is not a static menu value: leaving a companion alone
+                // for days or repeatedly hurting them can turn an alliance sour.
+                if (getWorld().getTime() % 2400L == 0 && trust > 0) {
+                    trust--;
+                }
+                if (trust < 25 && random.nextInt(1200) == 0) {
+                    betray(owner);
+                }
             }
+        } else if (guardCenter != null) {
+            guardHomeTick();
+        } else {
+            acquireRivalTarget();
         }
 
         // Outlaws occasionally reload a damaged weapon by swapping back to
@@ -160,6 +169,11 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
         if (current != null && current.isAlive()) {
             return;
         }
+        long now = getWorld().getTime();
+        if (now < nextTargetScan) {
+            return;
+        }
+        nextTargetScan = now + 20L;
 
         // Free survivors are dangerous to players; settlement guards are not.
         // Guards only select rival NPCs when diplomacy says the factions are at war.
@@ -191,9 +205,11 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
             return;
         }
 
-        if (settlementRole.isWorkRole()) {
+        long now = getWorld().getTime();
+        if (settlementRole.isWorkRole() && now >= nextWorkMove) {
+            nextWorkMove = now + 20L;
             BlockPos worksite = worksite();
-            if (squaredDistanceTo(worksite.getX() + 0.5, getY(), worksite.getZ() + 0.5) > 8.0 * 8.0) {
+            if (squaredDistanceTo(worksite.getX() + 0.5, worksite.getY(), worksite.getZ() + 0.5) > 8.0 * 8.0) {
                 getNavigation().startMovingTo(worksite.getX() + 0.5, worksite.getY(), worksite.getZ() + 0.5, 0.85);
             } else if (random.nextInt(80) == 0) {
                 getNavigation().startMovingTo(guardCenter.getX() + random.nextInt(13) - 6,
@@ -359,10 +375,18 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
 
     @Override
     public boolean damage(DamageSource source, float amount) {
-        if (!getWorld().isClient && source.getAttacker() instanceof PlayerEntity player && isOwner(player)) {
-            trust = Math.max(0, trust - 35);
-            if (trust < 25 && random.nextInt(4) == 0) {
-                betray(player);
+        if (!getWorld().isClient && source.getAttacker() instanceof PlayerEntity player) {
+            if (guardCenter != null && guardOwnerUuid != null && guardOwnerUuid.equals(player.getUuid())) {
+                // Settlement staff are protected from accidental friendly fire;
+                // RevengeGoal must never turn an owner's mistake into a revolt.
+                setTarget(null);
+                return false;
+            }
+            if (isOwner(player)) {
+                trust = Math.max(0, trust - 35);
+                if (trust < 25 && random.nextInt(4) == 0) {
+                    betray(player);
+                }
             }
         }
         return super.damage(source, amount);

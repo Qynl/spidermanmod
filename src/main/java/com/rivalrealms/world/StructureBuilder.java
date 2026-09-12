@@ -334,6 +334,11 @@ public final class StructureBuilder {
     }
 
     private static void set(ServerWorld world, BlockPos pos, Block block) {
+        // Commands can be used at world-height extremes. Never hand an invalid
+        // Y coordinate to the chunk/section code while drawing a structure.
+        if (pos.getY() < world.getBottomY() || pos.getY() >= world.getTopY()) {
+            return;
+        }
         world.setBlockState(pos, block.getDefaultState(), Block.NOTIFY_ALL);
     }
 
