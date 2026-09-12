@@ -1,0 +1,26 @@
+{
+  "display": {
+    "icon": {
+      "id": "rivalrealms:recruitment_contract"
+    },
+    "title": {
+      "text": "The Frontier Calls"
+    },
+    "description": {
+      "text": "Step into a realm of four quarrelling crowns"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true
+  },
+  "criteria": {
+    "granted": {
+      "trigger": "minecraft:tick"
+    }
+  },
+  "requirements": [
+    [
+      "granted"
+    ]
+  ]
+}

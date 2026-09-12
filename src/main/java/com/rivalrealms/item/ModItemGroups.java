@@ -38,6 +38,7 @@ public final class ModItemGroups {
                         entries.add(ModItems.REVOLVER);
                         entries.add(ModItems.FLINTLOCK);
                         entries.add(ModItems.FARMER_HOE);
+                        entries.add(ModItems.CANNON);
                         entries.add(ModItems.CANNONBALL);
                         // Vehicles
                         entries.add(ModItems.AIRSHIP_KIT);

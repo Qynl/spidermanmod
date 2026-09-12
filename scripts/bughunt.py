@@ -70,7 +70,7 @@ def check_recipes() -> None:
     known_items = set(re.findall(r'register\("([a-z0-9_]+)"', java_sources))
     known_items.update(re.findall(r'registerBlockItem\("([a-z0-9_]+)"', java_sources))
     known_ids = {f"{MOD_ID}:{name}" for name in known_items}
-    recipe_root = RESOURCES / "data" / MOD_ID / "recipes"
+    recipe_root = RESOURCES / "data" / MOD_ID / "recipe"  # 1.21+ uses the singular folder
     for path in recipe_root.glob("*.json"):
         try:
             recipe = json.loads(path.read_text(encoding="utf-8"))
@@ -238,6 +238,8 @@ def check_runtime_safety() -> None:
             "surfacePosition",
             "RivalRealms.LOGGER.error",
             "tickMaritimeEncounters",
+            "makeChampion",
+            "populateSettlement",
             "spawnShowcaseConvoy",
             "findWater",
             "spawnCrew",
@@ -271,6 +273,7 @@ def check_runtime_safety() -> None:
             "owner == null",
             "Temperament",
             "farmTick",
+            "onDeath",
             "openTrades",
             "eatTick",
             "quipTick",

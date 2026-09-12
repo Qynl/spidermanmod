@@ -1,0 +1,34 @@
+{
+  "display": {
+    "icon": {
+      "id": "rivalrealms:ship_in_a_bottle"
+    },
+    "title": {
+      "text": "Set Sail"
+    },
+    "description": {
+      "text": "Commission a sloop from a bottle"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true
+  },
+  "criteria": {
+    "granted": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "rivalrealms:ship_in_a_bottle"
+          }
+        ]
+      }
+    }
+  },
+  "requirements": [
+    [
+      "granted"
+    ]
+  ],
+  "parent": "rivalrealms:root"
+}

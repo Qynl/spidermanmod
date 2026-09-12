@@ -26,6 +26,9 @@ public final class ModBlocks {
             .mapColor(MapColor.ORANGE)));
     public static final Block AIRSHIP_METAL = register("airship_metal", new Block(AbstractBlock.Settings.copy(Blocks.CUT_COPPER)
             .mapColor(MapColor.LIGHT_BLUE).strength(5.0f).requiresTool()));
+    public static final Block CANNON = register("cannon", new CannonBlock(AbstractBlock.Settings.create()
+            .mapColor(MapColor.IRON_GRAY).instrument(NoteBlockInstrument.BASEDRUM)
+            .strength(5.5f).requiresTool().sounds(BlockSoundGroup.COPPER)));
     public static final Block REALM_BANNER = register("realm_banner", new RealmBannerBlock(AbstractBlock.Settings.copy(Blocks.WHITE_WOOL)
             .mapColor(MapColor.PURPLE).strength(1.0f).sounds(BlockSoundGroup.WOOL).nonOpaque().noCollision()));
 

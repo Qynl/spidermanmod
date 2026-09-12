@@ -133,7 +133,7 @@ add('net.minecraft.util.math.random.Random', [], [
     'public int nextInt(int bound);', 'public float nextFloat();', 'public double nextDouble();',
 ])
 add('net.minecraft.util.Formatting', [], [
-    'public static final net.minecraft.util.Formatting RED;', 'public static final net.minecraft.util.Formatting GOLD;', 'public static final net.minecraft.util.Formatting GREEN;', 'public static final net.minecraft.util.Formatting GRAY;',
+    'public static final net.minecraft.util.Formatting RED;', 'public static final net.minecraft.util.Formatting GOLD;', 'public static final net.minecraft.util.Formatting GREEN;', 'public static final net.minecraft.util.Formatting GRAY;', 'public static final net.minecraft.util.Formatting WHITE;', 'public static final net.minecraft.util.Formatting AQUA;', 'public static final net.minecraft.util.Formatting DARK_RED;', 'public static final net.minecraft.util.Formatting YELLOW;',
 ])
 add('net.minecraft.util.Hand', [], [
     'public static final net.minecraft.util.Hand MAIN_HAND;',
@@ -190,7 +190,7 @@ add('net.minecraft.sound.SoundEvents', [], [
     'public static final net.minecraft.sound.SoundEvent ENTITY_PLAYER_ATTACK_SWEEP;',
     'public static final net.minecraft.sound.SoundEvent ENTITY_ARROW_HIT_PLAYER;',
     'public static final net.minecraft.sound.SoundEvent ITEM_CROSSBOW_SHOOT;',
-    'public static final net.minecraft.sound.SoundEvent BLOCK_PISTON_EXTEND;', 'public static final net.minecraft.sound.SoundEvent ITEM_HOE_TILL;',
+    'public static final net.minecraft.sound.SoundEvent BLOCK_PISTON_EXTEND;', 'public static final net.minecraft.sound.SoundEvent ITEM_HOE_TILL;', 'public static final net.minecraft.sound.SoundEvent BLOCK_METAL_PLACE;',
     'public static final net.minecraft.sound.SoundEvent ENTITY_GENERIC_SPLASH;',
     'public static final net.minecraft.sound.SoundEvent BLOCK_FIRE_EXTINGUISH;',
 ])
@@ -231,6 +231,12 @@ add('net.minecraft.block.AbstractBlock.Settings', [], [
 add('net.minecraft.block.Block', ['net.minecraft.block.AbstractBlock'], [
     'public Block(net.minecraft.block.AbstractBlock.Settings settings);',
     'public net.minecraft.block.BlockState getDefaultState();',
+    'public static net.minecraft.util.shape.VoxelShape createCuboidShape(double minX, double minY, double minZ, double maxX, double maxY, double maxZ);',
+    'protected void setDefaultState(net.minecraft.block.BlockState state);',
+    'protected void appendProperties(net.minecraft.state.StateManager.Builder builder);',
+    'public net.minecraft.block.BlockState getPlacementState(net.minecraft.item.ItemPlacementContext context);',
+    'protected net.minecraft.util.shape.VoxelShape getOutlineShape(net.minecraft.block.BlockState state, net.minecraft.world.BlockView world, net.minecraft.util.math.BlockPos pos, net.minecraft.block.ShapeContext context);',
+    'protected net.minecraft.util.ActionResult onUse(net.minecraft.block.BlockState state, net.minecraft.world.World world, net.minecraft.util.math.BlockPos pos, net.minecraft.entity.player.PlayerEntity player, net.minecraft.util.hit.BlockHitResult hit);',
 ])
 add('net.minecraft.block.Blocks', [], [
     'public static final net.minecraft.block.Block AIR;', 'public static final net.minecraft.block.Block WATER;',
@@ -282,6 +288,19 @@ add('net.minecraft.block.MapColor', [], [
 add('net.minecraft.block.enums.NoteBlockInstrument', [], [])
 add('net.minecraft.sound.BlockSoundGroup', [], [])
 add('net.minecraft.block.ShapeContext', [], [])
+add('net.minecraft.item.ItemPlacementContext', [], [
+    'public net.minecraft.util.math.Direction getHorizontalPlayerFacing();',
+    'public net.minecraft.util.Hand getHand();',
+])
+add('net.minecraft.state.StateManager', [], [
+    'public net.minecraft.state.StateManager.Builder appendProperties(net.minecraft.state.property.Property[] properties);',
+])
+add('net.minecraft.state.StateManager.Builder', [], [
+    'public net.minecraft.state.StateManager.Builder add(net.minecraft.state.property.Property[] properties);',
+])
+add('net.minecraft.state.property.BooleanProperty', ['net.minecraft.state.property.Property'], [
+    'public static net.minecraft.state.property.BooleanProperty of(String name);',
+])
 add('net.minecraft.block.CropBlock', [], [
     'public static final net.minecraft.state.property.IntProperty AGE;',
 ])

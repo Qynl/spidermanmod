@@ -408,6 +408,24 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
             }
         }
 
+        // Reputation has teeth: a faction's people hunt players it considers
+        // enemies (rep -40 or worse) - even the patient ones. Good-natured
+        // folk still refuse to fight; they just stop trading with you.
+        if (temperament != Temperament.CHILL
+                && getWorld() instanceof ServerWorld repWorld && now % 40L == 0L) {
+            for (PlayerEntity candidate : repWorld.getPlayers()) {
+                if (candidate.isCreative() || candidate.isSpectator() || !candidate.isAlive()
+                        || this.squaredDistanceTo(candidate) > 24.0 * 24.0) {
+                    continue;
+                }
+                if (com.rivalrealms.world.RealmState.get(repWorld)
+                        .getReputation(candidate.getUuid(), effectiveFaction()) <= -40) {
+                    setTarget(candidate);
+                    return;
+                }
+            }
+        }
+
         if (temperament == Temperament.CHILL) {
             return;
         }
@@ -727,6 +745,32 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
             this.dropStack(new ItemStack(ModItems.RECRUITMENT_CONTRACT, 1));
         }
         player.sendMessage(Text.literal(getName().getString() + " waves goodbye and returns to the frontier."), true);
+    }
+
+    @Override
+    public void onDeath(DamageSource source) {
+        if (!getWorld().isClient && source.getAttacker() instanceof ServerPlayerEntity killer) {
+            boolean wasDefending = getTarget() == killer;
+            int delta = wasDefending ? -5 : -15;
+            String faction = effectiveFaction();
+            com.rivalrealms.world.RealmState realm = com.rivalrealms.world.RealmState.get((ServerWorld) getWorld());
+            int before = realm.getReputation(killer.getUuid(), faction);
+            realm.adjustReputation(killer.getUuid(), faction, delta);
+            int after = realm.getReputation(killer.getUuid(), faction);
+            if (before > -40 && after <= -40) {
+                killer.sendMessage(Text.literal(faction + " will no longer tolerate you. "
+                        + "Their people attack on sight now.").formatted(Formatting.RED), false);
+            } else if (delta == -15) {
+                killer.sendMessage(Text.literal("The " + faction + " frown upon this murder. ("
+                        + faction + " reputation " + after + ")").formatted(Formatting.GRAY), true);
+            }
+            // The enemy of your enemy: the Crownlands respect every fallen
+            // Freebooter, so raiders killed in their name earn goodwill.
+            if ("Freebooters".equals(faction) && wasDefending) {
+                realm.adjustReputation(killer.getUuid(), "Crownlands", 2);
+            }
+        }
+        super.onDeath(source);
     }
 
     @Override

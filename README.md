@@ -155,6 +155,20 @@ Claimed settlements recruit guards and workers up to their level. Jobs (guard, b
 
 ---
 
+## War & glory
+
+### Reputation
+Every kill echoes across the realm. Murder a faction's people and your standing drops (worse if they weren't fighting you); defend yourself and it merely dips. Cross into the negatives past **-40** and that faction **hunts you on sight** — even their patient farm-folk guards. Mending ties costs **4 royal coins** via `/rivalrealms rep gift <faction>` (+8), and the Crownlands quietly respect every Freebooter you take down in a fair fight. `/rivalrealms rep` shows all four standings.
+
+### The Field Cannon
+A craftable, placeable siege gun: aim it while placing (it faces you), **load a cannonball**, use it again to fire a live physics ball downrange — thunderclap, smoke ring, recoil, no aim assist. Recipe: iron + iron block + copper block + spruce base.
+
+### Champions
+12% of settlement guards and a quarter of ship captains are **Champions** — golden name plates, Sharpness-edged weapons, enchanted plate, +12 hearts. Drop everything, obviously.
+
+### Advancements
+The Frontier Calls → Gunslinger → **Master of Powder** (goal), plus Set Sail and Field Hand.
+
 ## Structures & world generation
 
 Every build is terrain-adaptive: it samples the surface, packs a foundation under every column, clears stray vegetation, and sits correctly on slopes.

@@ -8,6 +8,10 @@ import com.rivalrealms.entity.PirateShipEntity;
 import com.rivalrealms.entity.SailingShipEntity;
 import com.rivalrealms.entity.SurvivorEntity;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EquipmentSlot;
+import net.minecraft.entity.attribute.EntityAttributes;
+import net.minecraft.enchantment.Enchantments;
+import net.minecraft.registry.RegistryKeys;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
@@ -100,6 +104,29 @@ public final class RealmEvents {
         spawnSettler(world, center, owner, faction, SettlementRole.GUARD, true);
     }
 
+    /**
+     * A fraction of settlement NPCs and ship captains are champions:
+     * enchanted veteran gear, a golden name plate, and real extra grit.
+     * Drop everything they carry.
+     */
+    private static void makeChampion(ServerWorld world, SurvivorEntity survivor) {
+        survivor.setCustomName(Text.literal("Champion · " + survivor.getArchetype().title())
+                .formatted(net.minecraft.util.Formatting.GOLD));
+        survivor.setCustomNameVisible(true);
+        var health = survivor.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH);
+        if (health != null) {
+            health.setBaseValue(health.getBaseValue() + 12.0);
+            survivor.setHealth((float) health.getBaseValue());
+        }
+        var enchantments = world.getRegistryManager().get(RegistryKeys.ENCHANTMENT);
+        survivor.getMainHandStack().addEnchantment(
+                enchantments.entryOf(Enchantments.SHARPNESS), 2 + world.random.nextInt(2));
+        survivor.getEquippedStack(EquipmentSlot.HEAD).addEnchantment(
+                enchantments.entryOf(Enchantments.PROTECTION), 2);
+        survivor.getEquippedStack(EquipmentSlot.CHEST).addEnchantment(
+                enchantments.entryOf(Enchantments.PROTECTION), 1 + world.random.nextInt(2));
+    }
+
     /** Spawns one permanent resident near the settlement heart. */
     private static void spawnSettler(ServerWorld world, BlockPos center, UUID owner,
                                      String faction, SettlementRole role, boolean guard) {
@@ -183,6 +210,9 @@ public final class RealmEvents {
         guard.refreshPositionAndAngles(spawn, world.random.nextFloat() * 360.0f, 0.0f);
         guard.setArchetype(culture);
         guard.assignGuard(center, base.owner(), base.faction());
+        if (world.random.nextFloat() < 0.12f) {
+            makeChampion(world, guard);
+        }
         world.spawnEntity(guard);
 
         ServerPlayerEntity owner = world.getServer().getPlayerManager().getPlayer(base.owner());
@@ -495,6 +525,9 @@ public final class RealmEvents {
             member.setArchetype(archetype);
             member.assignWorker(shipCenter, null, archetype.faction(), roles[i]);
             member.setCustomName(Text.literal(roles[i].displayName() + " · " + archetype.title()));
+            if (i == 0 && world.random.nextFloat() < 0.25f) {
+                makeChampion(world, member);
+            }
             if (!world.spawnEntity(member)) {
                 continue;
             }

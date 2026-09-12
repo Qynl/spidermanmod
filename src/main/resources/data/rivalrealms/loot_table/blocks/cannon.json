@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:block",
+  "random_sequence": "rivalrealms:blocks/cannon",
+  "pools": [
+    {
+      "rolls": 1,
+      "bonus_rolls": 0,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "rivalrealms:cannon"
+        }
+      ],
+      "conditions": [
+        {
+          "condition": "minecraft:survives_explosion"
+        }
+      ]
+    }
+  ],
+  "item_functions_note": null
+}

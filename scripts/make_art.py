@@ -456,6 +456,42 @@ def bottle_texture(path):
     png(path, 16, 16, p)
 
 
+def cannon_block_textures(folder):
+    """Two 16x16 block textures: dark bronze barrel + oak-and-iron carriage."""
+    barrel = canvas(16, 16)
+    bronze, bronze_d, bronze_l = (86, 92, 92, 255), (56, 62, 64, 255), (128, 136, 136, 255)
+    for y in range(0, 16):
+        for x in range(0, 16):
+            px(barrel, 16, x, y, bronze if (x + y) % 3 else bronze_d)
+    for x in range(0, 16):
+        px(barrel, 16, x, 3, bronze_l); px(barrel, 16, x, 11, bronze_d)
+    for x in (2, 3, 12, 13):  # reinforcing bands
+        for y in range(0, 16):
+            px(barrel, 16, x, y, bronze_l if x in (2, 3) else bronze_d)
+    for y in (7, 8):          # muzzle bore shadow
+        for x in (0, 1, 14, 15):
+            px(barrel, 16, x, y, (18, 18, 20, 255))
+    jitter(barrel, 16, 8, 3)
+    png(folder / "cannon_barrel.png", 16, 16, barrel)
+
+    carriage = canvas(16, 16)
+    oak, oak_d, oak_l = (118, 84, 48, 255), (84, 58, 32, 255), (146, 108, 66, 255)
+    for y in range(0, 16):
+        for x in range(0, 16):
+            px(carriage, 16, x, y, oak if y % 4 else oak_d)
+    for x in range(0, 16, 5):
+        for y in range(0, 16):
+            px(carriage, 16, x, y, oak_d)
+    for y in range(2, 15, 12):  # iron straps
+        for x in range(0, 16):
+            px(carriage, 16, x, y, (70, 74, 78, 255))
+    for cx in (3, 12):          # wheel hubs
+        disc(carriage, 16, cx, 8, 2, oak_d)
+        disc(carriage, 16, cx, 8, 1, (54, 56, 60, 255))
+    jitter(carriage, 16, 12, 3)
+    png(folder / "cannon_carriage.png", 16, 16, carriage)
+
+
 def farmer_hoe_texture(path):
     """16x16: iron blade with a green field ribbon, worn oak handle.""" 
     p = canvas(16, 16)
@@ -1112,6 +1148,7 @@ def main():
     bottle_texture(TEX / "item/ship_in_a_bottle.png")
     cannonball_texture(TEX / "item/cannonball.png")
     farmer_hoe_texture(TEX / "item/farmer_hoe.png")
+    cannon_block_textures(TEX / "block")
     airship_kit_texture(TEX / "item/airship_kit.png")
 
     # spawn eggs

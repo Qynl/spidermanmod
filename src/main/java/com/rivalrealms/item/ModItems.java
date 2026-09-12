@@ -34,6 +34,7 @@ public final class ModItems {
             new Item(new Item.Settings().maxCount(16)));
     public static final Item MEDIEVAL_MAP = register("medieval_map",
             new MedievalMapItem(new Item.Settings().maxCount(1)));
+    public static final Item CANNON = registerBlockItem("cannon", ModBlocks.CANNON);
     public static final Item CANNONBALL = register("cannonball",
             new CannonballItem(new Item.Settings().maxCount(16)));
     public static final Item SHIP_IN_A_BOTTLE = register("ship_in_a_bottle",

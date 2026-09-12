@@ -20,6 +20,7 @@ import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.item.ItemStack;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
@@ -81,6 +82,18 @@ public final class ModCommands {
                         .executes(context -> locate(context.getSource())))
                 .then(CommandManager.literal("jobs")
                         .executes(context -> jobs(context.getSource())))
+                .then(CommandManager.literal("rep")
+                        .executes(context -> reputation(context.getSource()))
+                        .then(CommandManager.literal("gift")
+                                .then(CommandManager.argument("faction", StringArgumentType.word())
+                                        .suggests((context, builder) -> {
+                                            for (Archetype archetype : Archetype.values()) {
+                                                builder.suggest(archetype.faction());
+                                            }
+                                            return builder.buildFuture();
+                                        })
+                                        .executes(context -> giftReputation(context.getSource(),
+                                                StringArgumentType.getString(context, "faction"))))))
                 .then(CommandManager.literal("assign")
                         .then(CommandManager.argument("role", StringArgumentType.word())
                                 .suggests((context, builder) -> {
@@ -370,4 +383,67 @@ public final class ModCommands {
                 + "/rivalrealms diplomacy <a> <b> <value>, /rivalrealms airship, /rivalrealms ship, /rivalrealms convoy"), false);
         return 1;
     }
+
+    private static final String[] FACTIONS = {"Crownlands", "Freebooters", "Dustwalkers", "Skybound"};
+
+    private static int reputation(ServerCommandSource source) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
+        ServerPlayerEntity player = source.getPlayer();
+        com.rivalrealms.world.RealmState realms = com.rivalrealms.world.RealmState.get(player.getServerWorld());
+        player.sendMessage(Text.literal("== Your standing in the realms ==").formatted(net.minecraft.util.Formatting.GOLD), false);
+        for (String faction : FACTIONS) {
+            int rep = realms.getReputation(player.getUuid(), faction);
+            net.minecraft.util.Formatting color = rep <= -40 ? net.minecraft.util.Formatting.RED
+                    : rep < 0 ? net.minecraft.util.Formatting.GRAY
+                    : rep >= 40 ? net.minecraft.util.Formatting.GREEN
+                    : net.minecraft.util.Formatting.WHITE;
+            String tier = rep <= -40 ? "Hunted" : rep < 0 ? "Disliked"
+                    : rep >= 40 ? "Trusted" : rep > 0 ? "Warming" : "Unknown";
+            player.sendMessage(Text.literal("  " + faction + ": " + rep + " (" + tier + ")").formatted(color), false);
+        }
+        player.sendMessage(Text.literal("Hold royal coins and use /rivalrealms rep gift <faction> to mend ties."), true);
+        return 1;
+    }
+
+    private static int giftReputation(ServerCommandSource source, String factionId)
+            throws com.mojang.brigadier.exceptions.CommandSyntaxException {
+        ServerPlayerEntity player = source.getPlayer();
+        Archetype match = null;
+        for (Archetype archetype : Archetype.values()) {
+            if (archetype.faction().equalsIgnoreCase(factionId)) {
+                match = archetype;
+                break;
+            }
+        }
+        if (match == null) {
+            source.sendError(Text.literal("Unknown faction. Try Crownlands, Freebooters, Dustwalkers or Skybound."));
+            return 0;
+        }
+        int coins = 0;
+        for (ItemStack stack : player.getInventory().main) {
+            if (stack.isOf(com.rivalrealms.item.ModItems.ROYAL_COIN)) {
+                coins += stack.getCount();
+            }
+        }
+        if (coins < 4) {
+            source.sendError(Text.literal("A peace offering costs 4 royal coins."));
+            return 0;
+        }
+        int left = 4;
+        for (int i = 0; i < player.getInventory().main.size() && left > 0; i++) {
+            ItemStack stack = player.getInventory().main.get(i);
+            if (stack.isOf(com.rivalrealms.item.ModItems.ROYAL_COIN)) {
+                int take = Math.min(left, stack.getCount());
+                stack.decrement(take);
+                left -= take;
+            }
+        }
+        com.rivalrealms.world.RealmState realms = com.rivalrealms.world.RealmState.get(player.getServerWorld());
+        realms.adjustReputation(player.getUuid(), match.faction(), 8);
+        player.sendMessage(Text.literal("The " + match.faction() + " accept your gift. Reputation now "
+                + realms.getReputation(player.getUuid(), match.faction()) + ".").formatted(net.minecraft.util.Formatting.GREEN), false);
+        player.getServerWorld().playSound(null, player.getBlockPos(), net.minecraft.sound.SoundEvents.ENTITY_VILLAGER_YES,
+                net.minecraft.sound.SoundCategory.NEUTRAL, 0.9f, 1.1f);
+        return 1;
+    }
+
 }
