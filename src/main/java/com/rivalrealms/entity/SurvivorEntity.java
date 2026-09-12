@@ -28,6 +28,7 @@ import net.minecraft.item.Items;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.particle.ParticleTypes;
+import net.minecraft.registry.RegistryKeys;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -479,7 +480,7 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
                 getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE).setBaseValue(archetype == Archetype.KNIGHT ? 5.0 : 3.5);
             }
             setHealth((float) archetype.health());
-            archetype.equip(this, random);
+            archetype.equip(this, random, getRegistryManager().get(RegistryKeys.ENCHANTMENT));
         }
     }
 

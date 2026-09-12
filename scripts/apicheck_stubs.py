@@ -28,6 +28,16 @@ add('net.minecraft.registry.entry.RegistryEntry.Reference', ['net.minecraft.regi
 add('net.minecraft.entity.EntityPose', [], [])
 
 add('net.minecraft.enchantment.Enchantment', [], [])
+add('net.minecraft.registry.RegistryEntryLookup', [], [
+    'public net.minecraft.registry.entry.RegistryEntry.Reference getOrThrow(net.minecraft.registry.RegistryKey key);',
+], iface=True)
+add('net.minecraft.registry.Registry', ['net.minecraft.registry.RegistryEntryLookup'], [])
+add('net.minecraft.registry.RegistryWrapper.Impl', ['net.minecraft.registry.Registry'], [
+    'public net.minecraft.registry.Registry get(net.minecraft.registry.RegistryKey key);',
+])
+add('net.minecraft.registry.RegistryKeys', [], [
+    'public static final net.minecraft.registry.RegistryKey ENCHANTMENT;',
+])
 add('net.minecraft.enchantment.Enchantments', [], [
     'public static final net.minecraft.registry.RegistryKey<net.minecraft.enchantment.Enchantment> PROTECTION;',
     'public static final net.minecraft.registry.RegistryKey<net.minecraft.enchantment.Enchantment> SHARPNESS;',
@@ -430,6 +440,7 @@ add('net.minecraft.entity.Entity', [], [
     'public net.minecraft.item.ItemStack getPickBlockStack();',
     'public double getEyeY();',
     'public boolean isOnGround();',
+    'public net.minecraft.registry.RegistryWrapper.Impl getRegistryManager();',
     'public net.minecraft.util.math.Vec3d getPos();',
     'public float getEyeHeight(net.minecraft.entity.EntityPose pose);',
     'protected void updatePassengerPosition(net.minecraft.entity.Entity passenger, net.minecraft.entity.Entity.PositionUpdater positionUpdater);',

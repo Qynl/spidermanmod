@@ -3,7 +3,7 @@ package com.rivalrealms.entity;
 import com.rivalrealms.RivalRealms;
 import com.rivalrealms.item.ModItems;
 import net.minecraft.enchantment.Enchantments;
-import net.minecraft.registry.entry.RegistryEntry;
+import net.minecraft.registry.RegistryEntryLookup;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -149,7 +149,7 @@ public enum Archetype {
      * survivor struts the frontier in diamond. The good pieces may already
      * carry an enchantment — drop them for real loot.
      */
-    public void equip(SurvivorEntity survivor, Random random) {
+    public void equip(SurvivorEntity survivor, Random random, RegistryEntryLookup<net.minecraft.enchantment.Enchantment> enchantments) {
         survivor.equipStack(EquipmentSlot.MAINHAND, rollWeapon(random));
         survivor.equipStack(EquipmentSlot.OFFHAND, ranged ? rangedStack() : new ItemStack(Items.SHIELD));
         equipSlot(survivor, random, EquipmentSlot.HEAD,
@@ -191,7 +191,7 @@ public enum Archetype {
                 : Items.WOODEN_SWORD;
         ItemStack bladeStack = new ItemStack(blade);
         if (blade != Items.WOODEN_SWORD && random.nextInt(100) < 18) {
-            bladeStack.addEnchantment(RegistryEntry.of(Enchantments.SHARPNESS), 1);
+            bladeStack.addEnchantment(enchantments.getOrThrow(Enchantments.SHARPNESS), 1);
         }
         return bladeStack;
     }
@@ -215,7 +215,7 @@ public enum Archetype {
             stack = random.nextFloat() < 0.5f ? new ItemStack(base) : ItemStack.EMPTY;
         }
         if (!stack.isEmpty() && !stack.isOf(leather) && random.nextInt(100) < 22) {
-            stack.addEnchantment(RegistryEntry.of(Enchantments.PROTECTION), 1 + random.nextInt(2));
+            stack.addEnchantment(enchantments.getOrThrow(Enchantments.PROTECTION), 1 + random.nextInt(2));
         }
         survivor.equipStack(slot, stack);
     }
