@@ -64,6 +64,32 @@ def check_asset_references() -> None:
         fail("missing referenced assets: " + ", ".join(sorted(set(missing))))
 
 
+def check_recipes() -> None:
+    java_sources = "\n".join(path.read_text(encoding="utf-8")
+                                 for path in (ROOT / "src/main/java").rglob("*.java"))
+    known_items = set(re.findall(r'register\("([a-z0-9_]+)"', java_sources))
+    known_items.update(re.findall(r'registerBlockItem\("([a-z0-9_]+)"', java_sources))
+    known_ids = {f"{MOD_ID}:{name}" for name in known_items}
+    recipe_root = RESOURCES / "data" / MOD_ID / "recipes"
+    for path in recipe_root.glob("*.json"):
+        try:
+            recipe = json.loads(path.read_text(encoding="utf-8"))
+        except Exception as exc:
+            fail(f"invalid recipe JSON in {path.relative_to(ROOT)}: {exc}")
+        result = recipe.get("result", {})
+        result_id = result.get("id") or result.get("item")
+        if result_id and result_id not in known_ids:
+            fail(f"recipe result is not a registered Rival Realms item: {result_id}")
+
+    required_recipes = {
+        "castle_stone.json", "castle_tiles.json", "royal_wood.json",
+        "royal_longsword.json", "royal_coin.json", "medieval_map.json",
+    }
+    missing = sorted(name for name in required_recipes if not (recipe_root / name).exists())
+    if missing:
+        fail("medieval recipe is missing: " + ", ".join(missing))
+
+
 def check_png_assets() -> None:
     """Validate PNG signatures and dimensions without external image tools."""
     for path in RESOURCES.rglob("*.png"):
@@ -82,6 +108,11 @@ def check_png_assets() -> None:
         "assets/rivalrealms/textures/entity/survivor/outlaw.png": (64, 64),
         "assets/rivalrealms/textures/entity/survivor/sky_captain.png": (64, 64),
         "assets/rivalrealms/textures/entity/airship.png": (64, 32),
+        "assets/rivalrealms/textures/item/survivor_spawn_egg.png": (16, 16),
+        "assets/rivalrealms/textures/item/knight_spawn_egg.png": (16, 16),
+        "assets/rivalrealms/textures/item/pirate_spawn_egg.png": (16, 16),
+        "assets/rivalrealms/textures/item/outlaw_spawn_egg.png": (16, 16),
+        "assets/rivalrealms/textures/item/sky_captain_spawn_egg.png": (16, 16),
         "assets/rivalrealms/textures/item/airship_spawn_egg.png": (16, 16),
     }
     for relative_path, expected in expected_dimensions.items():
@@ -114,20 +145,31 @@ def check_content_catalog() -> None:
     if not group.exists() or "FabricItemGroup.builder" not in group.read_text(encoding="utf-8"):
         fail("Rival Realms creative tab is missing")
     group_text = group.read_text(encoding="utf-8")
-    for entry in ("CROWN_BRICK", "SHIP_PLANKS", "FRONTIER_PLANKS", "AIRSHIP_METAL",
-                  "REALM_BANNER", "RECRUITMENT_CONTRACT", "REVOLVER", "FLINTLOCK",
-                  "PIRATE_BOAT", "SURVIVOR_SPAWN_EGG", "AIRSHIP_SPAWN_EGG"):
+    for entry in ("CROWN_BRICK", "CASTLE_STONE", "CASTLE_TILES", "ROYAL_WOOD",
+                  "SHIP_PLANKS", "FRONTIER_PLANKS", "AIRSHIP_METAL", "REALM_BANNER",
+                  "RECRUITMENT_CONTRACT", "REVOLVER", "FLINTLOCK", "PIRATE_BOAT",
+                  "ROYAL_LONGSWORD", "ROYAL_COIN", "MEDIEVAL_MAP", "SURVIVOR_SPAWN_EGG",
+                  "KNIGHT_SPAWN_EGG", "PIRATE_SPAWN_EGG", "OUTLAW_SPAWN_EGG",
+                  "SKY_CAPTAIN_SPAWN_EGG", "AIRSHIP_SPAWN_EGG"):
         if entry not in group_text:
             fail(f"creative tab is missing catalog entry: {entry}")
-    if "AIRSHIP_SPAWN_EGG" not in items.read_text(encoding="utf-8"):
-        fail("airship spawn item is not registered")
-    if not (RESOURCES / "assets/rivalrealms/models/item/airship_spawn_egg.json").exists():
-        fail("airship spawn item model is missing")
+    item_text = items.read_text(encoding="utf-8")
+    for entry in ("SURVIVOR_SPAWN_EGG", "KNIGHT_SPAWN_EGG", "PIRATE_SPAWN_EGG",
+                  "OUTLAW_SPAWN_EGG", "SKY_CAPTAIN_SPAWN_EGG", "AIRSHIP_SPAWN_EGG"):
+        if entry not in item_text:
+            fail(f"spawn item is not registered: {entry}")
+    for model in ("survivor_spawn_egg", "knight_spawn_egg", "pirate_spawn_egg",
+                  "outlaw_spawn_egg", "sky_captain_spawn_egg", "airship_spawn_egg"):
+        if not (RESOURCES / f"assets/rivalrealms/models/item/{model}.json").exists():
+            fail(f"spawn item model is missing: {model}")
     airship_item = (ROOT / "src/main/java/com/rivalrealms/item/AirshipSpawnEggItem.java").read_text(encoding="utf-8")
     if "world.isClient" not in airship_item or "spawnEntity" not in airship_item:
         fail("airship spawn item lacks a guarded server-side spawn path")
     if "ModItemGroups.register()" not in items.read_text(encoding="utf-8"):
         fail("creative tab is not initialized after item registration")
+    map_item = (ROOT / "src/main/java/com/rivalrealms/item/MedievalMapItem.java").read_text(encoding="utf-8")
+    if "RealmState" not in map_item or "nearest" not in map_item:
+        fail("medieval map has no settlement locator behaviour")
     lang = json.loads((RESOURCES / "assets/rivalrealms/lang/en_us.json").read_text(encoding="utf-8"))
     if "itemGroup.rivalrealms.rival_realms" not in lang:
         fail("creative tab translation is missing")
@@ -231,9 +273,12 @@ def check_jar(jar_path: Path) -> None:
             "assets/rivalrealms/textures/entity/survivor/knight.png",
             "assets/rivalrealms/textures/entity/airship.png",
             "assets/rivalrealms/models/item/airship_spawn_egg.json",
+            "assets/rivalrealms/models/item/knight_spawn_egg.json",
+            "assets/rivalrealms/blockstates/castle_stone.json",
             "com/rivalrealms/RivalRealms.class",
             "com/rivalrealms/client/AirshipRenderer.class",
             "com/rivalrealms/item/ModItemGroups.class",
+            "com/rivalrealms/item/SurvivorSpawnEggItem.class",
             "com/rivalrealms/item/AirshipSpawnEggItem.class",
         }
         missing = sorted(required - names)
@@ -250,6 +295,7 @@ def main() -> None:
     args = parser.parse_args()
     check_json_files()
     check_asset_references()
+    check_recipes()
     check_png_assets()
     check_mod_json()
     check_content_catalog()

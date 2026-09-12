@@ -1,0 +1,10 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [" G", "IG", "SI"],
+  "key": {
+    "G": {"item": "minecraft:gold_ingot"},
+    "I": {"item": "minecraft:iron_ingot"},
+    "S": {"item": "minecraft:stick"}
+  },
+  "result": {"id": "rivalrealms:royal_longsword", "count": 1}
+}

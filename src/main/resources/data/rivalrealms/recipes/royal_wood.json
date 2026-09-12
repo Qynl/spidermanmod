@@ -1,0 +1,6 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": ["DD", "DD"],
+  "key": {"D": {"item": "minecraft:dark_oak_planks"}},
+  "result": {"id": "rivalrealms:royal_wood", "count": 4}
+}

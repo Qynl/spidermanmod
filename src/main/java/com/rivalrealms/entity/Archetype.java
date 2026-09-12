@@ -15,7 +15,7 @@ import java.util.Locale;
  * represent a knight, pirate, outlaw, or sky captain without duplicating AI.
  */
 public enum Archetype {
-    KNIGHT("knight", "Crownlands", "Knight", Items.IRON_SWORD, Items.SHIELD,
+    KNIGHT("knight", "Crownlands", "Knight", ModItems.ROYAL_LONGSWORD, Items.SHIELD,
             Items.IRON_HELMET, Items.IRON_CHESTPLATE, Items.IRON_LEGGINGS, Items.IRON_BOOTS,
             false, 28.0, 0.31, 4.0, 0x5c73a8),
     PIRATE("pirate", "Freebooters", "Pirate", Items.IRON_SWORD, ModItems.FLINTLOCK,

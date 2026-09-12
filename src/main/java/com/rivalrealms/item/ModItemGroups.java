@@ -22,6 +22,9 @@ public final class ModItemGroups {
                     .icon(() -> new ItemStack(ModBlocks.REALM_BANNER))
                     .entries((context, entries) -> {
                         entries.add(ModBlocks.CROWN_BRICK);
+                        entries.add(ModBlocks.CASTLE_STONE);
+                        entries.add(ModBlocks.CASTLE_TILES);
+                        entries.add(ModBlocks.ROYAL_WOOD);
                         entries.add(ModBlocks.SHIP_PLANKS);
                         entries.add(ModBlocks.FRONTIER_PLANKS);
                         entries.add(ModBlocks.AIRSHIP_METAL);
@@ -30,7 +33,14 @@ public final class ModItemGroups {
                         entries.add(ModItems.REVOLVER);
                         entries.add(ModItems.FLINTLOCK);
                         entries.add(ModItems.PIRATE_BOAT);
+                        entries.add(ModItems.ROYAL_LONGSWORD);
+                        entries.add(ModItems.ROYAL_COIN);
+                        entries.add(ModItems.MEDIEVAL_MAP);
                         entries.add(ModItems.SURVIVOR_SPAWN_EGG);
+                        entries.add(ModItems.KNIGHT_SPAWN_EGG);
+                        entries.add(ModItems.PIRATE_SPAWN_EGG);
+                        entries.add(ModItems.OUTLAW_SPAWN_EGG);
+                        entries.add(ModItems.SKY_CAPTAIN_SPAWN_EGG);
                         entries.add(ModItems.AIRSHIP_SPAWN_EGG);
                     })
                     .build());

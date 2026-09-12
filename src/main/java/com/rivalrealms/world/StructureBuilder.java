@@ -72,7 +72,7 @@ public final class StructureBuilder {
     }
 
     private static void buildScatteredFortress(ServerWorld world, BlockPos base) {
-        Block stone = Blocks.STONE_BRICKS;
+        Block stone = ModBlocks.CASTLE_STONE;
         Block trim = ModBlocks.CROWN_BRICK;
         fill(world, base.add(-16, 0, -12), 33, 1, 25, trim);
         wall(world, base.add(-16, 1, -12), 33, 7, 25, stone);
@@ -82,10 +82,10 @@ public final class StructureBuilder {
         tower(world, base.add(-16, 1, 10), stone, trim);
         tower(world, base.add(14, 1, 10), stone, trim);
         keep(world, base.add(-5, 1, -4), trim, stone);
-        house(world, base.add(8, 0, -3), Blocks.SPRUCE_PLANKS, Blocks.SPRUCE_LOG, Blocks.SPRUCE_STAIRS);
+        house(world, base.add(8, 0, -3), ModBlocks.ROYAL_WOOD, Blocks.SPRUCE_LOG, Blocks.SPRUCE_STAIRS);
         house(world, base.add(8, 0, 5), ModBlocks.FRONTIER_PLANKS, Blocks.OAK_LOG, Blocks.OAK_STAIRS);
         farmPlot(world, base.add(-13, 0, 13), 11, 7);
-        fill(world, base.add(-5, 0, 4), 10, 1, 5, Blocks.POLISHED_ANDESITE);
+        fill(world, base.add(-5, 0, 4), 10, 1, 5, ModBlocks.CASTLE_TILES);
         set(world, base.add(0, 1, -12), ModBlocks.REALM_BANNER);
         set(world, base.add(0, 1, 0), Blocks.CHEST);
         stockChest(world, base.add(0, 1, 0), new ItemStack(Items.IRON_SWORD), new ItemStack(Items.SHIELD),
@@ -153,7 +153,7 @@ public final class StructureBuilder {
 
     private static void buildCitadel(ServerWorld world, BlockPos base) {
         buildScatteredFortress(world, base);
-        Block stone = Blocks.STONE_BRICKS;
+        Block stone = ModBlocks.CASTLE_STONE;
         Block trim = ModBlocks.CROWN_BRICK;
         wall(world, base.add(-22, 0, -18), 45, 5, 37, trim);
         opening(world, base.add(-2, 1, -18), 5, 4);
@@ -169,7 +169,7 @@ public final class StructureBuilder {
 
     private static void buildRoyalCity(ServerWorld world, BlockPos base) {
         buildScatteredTown(world, base, BuildStyle.KNIGHT);
-        palace(world, base.add(-6, 0, 9), ModBlocks.CROWN_BRICK, Blocks.STONE_BRICKS);
+        palace(world, base.add(-6, 0, 9), ModBlocks.CASTLE_STONE, ModBlocks.CROWN_BRICK);
         marketStall(world, base.add(-14, 0, 1), Blocks.RED_WOOL, Blocks.OAK_LOG);
         marketStall(world, base.add(8, 0, 1), Blocks.BLUE_WOOL, Blocks.OAK_LOG);
         marketStall(world, base.add(-14, 0, 5), Blocks.YELLOW_WOOL, Blocks.OAK_LOG);
@@ -285,7 +285,7 @@ public final class StructureBuilder {
 
     private static void buildKnightFortress(ServerWorld world, BlockPos base) {
         Block brick = ModBlocks.CROWN_BRICK;
-        Block stone = Blocks.STONE_BRICKS;
+        Block stone = ModBlocks.CASTLE_STONE;
         fill(world, base.add(-10, 0, -7), 21, 1, 15, brick);
         wall(world, base.add(-10, 1, -7), 21, 6, 15, stone);
         opening(world, base.add(0, 1, -7), 3, 4);

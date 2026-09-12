@@ -14,6 +14,12 @@ public final class ModBlocks {
     public static final Block CROWN_BRICK = register("crown_brick", new Block(AbstractBlock.Settings.create()
             .mapColor(MapColor.DEEPSLATE_GRAY).instrument(NoteBlockInstrument.BASEDRUM)
             .strength(4.5f).requiresTool().sounds(BlockSoundGroup.STONE)));
+    public static final Block CASTLE_STONE = register("castle_stone", new Block(AbstractBlock.Settings.copy(Blocks.STONE_BRICKS)
+            .mapColor(MapColor.STONE_GRAY).strength(4.8f).requiresTool()));
+    public static final Block CASTLE_TILES = register("castle_tiles", new Block(AbstractBlock.Settings.copy(Blocks.DEEPSLATE_TILES)
+            .mapColor(MapColor.DEEPSLATE_GRAY).strength(5.0f).requiresTool()));
+    public static final Block ROYAL_WOOD = register("royal_wood", new Block(AbstractBlock.Settings.copy(Blocks.DARK_OAK_PLANKS)
+            .mapColor(MapColor.BROWN)));
     public static final Block SHIP_PLANKS = register("ship_planks", new Block(AbstractBlock.Settings.copy(Blocks.SPRUCE_PLANKS)
             .mapColor(MapColor.SPRUCE_BROWN)));
     public static final Block FRONTIER_PLANKS = register("frontier_planks", new Block(AbstractBlock.Settings.copy(Blocks.ACACIA_PLANKS)
