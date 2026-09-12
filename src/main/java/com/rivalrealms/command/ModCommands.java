@@ -7,6 +7,7 @@ import com.rivalrealms.entity.ModEntities;
 import com.rivalrealms.entity.SurvivorEntity;
 import com.rivalrealms.world.BuildStyle;
 import com.rivalrealms.world.RealmState;
+import com.rivalrealms.world.SettlementRole;
 import com.rivalrealms.world.StructureBuilder;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.minecraft.command.CommandRegistryAccess;
@@ -63,6 +64,22 @@ public final class ModCommands {
                         .executes(context -> claim(context.getSource())))
                 .then(CommandManager.literal("bases")
                         .executes(context -> listBases(context.getSource())))
+                .then(CommandManager.literal("jobs")
+                        .executes(context -> jobs(context.getSource())))
+                .then(CommandManager.literal("assign")
+                        .then(CommandManager.argument("role", StringArgumentType.word())
+                                .suggests((context, builder) -> {
+                                    for (SettlementRole role : SettlementRole.values()) {
+                                        if (role != SettlementRole.NONE) {
+                                            builder.suggest(role.id());
+                                        }
+                                    }
+                                    return builder.buildFuture();
+                                })
+                                .then(CommandManager.argument("survivor", EntityArgumentType.entity())
+                                        .executes(context -> assign(context.getSource(),
+                                                StringArgumentType.getString(context, "role"),
+                                                EntityArgumentType.getEntity(context, "survivor"))))))
                 .then(CommandManager.literal("diplomacy")
                         .then(CommandManager.argument("first", StringArgumentType.word())
                                 .then(CommandManager.argument("second", StringArgumentType.word())
@@ -140,6 +157,63 @@ public final class ModCommands {
         return bases.size();
     }
 
+    private static int jobs(ServerCommandSource source) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
+        ServerPlayerEntity player = source.getPlayer();
+        ServerWorld world = player.getServerWorld();
+        RealmState state = RealmState.get(world);
+        RealmState.BaseRecord base = state.findBase(player.getBlockPos());
+        if (base == null) {
+            source.sendError(Text.literal("You must stand inside a claimed settlement to inspect its workforce."));
+            return 0;
+        }
+        int[] counts = new int[SettlementRole.values().length];
+        for (net.minecraft.entity.Entity entity : world.getOtherEntities(null,
+                new net.minecraft.util.math.Box(base.center()).expand(base.radius()),
+                candidate -> candidate instanceof SurvivorEntity worker
+                        && (worker.isBaseGuard() || worker.isSettlementWorker())
+                        && base.faction().equalsIgnoreCase(worker.effectiveFaction()))) {
+            SurvivorEntity worker = (SurvivorEntity) entity;
+            counts[worker.settlementRole().ordinal()]++;
+        }
+        source.sendFeedback(() -> Text.literal(base.name() + " · level " + base.level()
+                + " · food " + base.food() + " · materials " + base.materials()
+                + " · construction " + base.workProgress()), false);
+        for (SettlementRole role : SettlementRole.values()) {
+            int count = counts[role.ordinal()];
+            if (count > 0) {
+                source.sendFeedback(() -> Text.literal(role.displayName() + ": " + count), false);
+            }
+        }
+        return 1;
+    }
+
+    private static int assign(ServerCommandSource source, String roleId, net.minecraft.entity.Entity entity)
+            throws com.mojang.brigadier.exceptions.CommandSyntaxException {
+        ServerPlayerEntity player = source.getPlayer();
+        if (!(entity instanceof SurvivorEntity survivor)) {
+            source.sendError(Text.literal("The target must be a survivor."));
+            return 0;
+        }
+        SettlementRole role = SettlementRole.byId(roleId);
+        if (role == SettlementRole.NONE) {
+            source.sendError(Text.literal("Unknown job. Use guard, builder, farmer, trader, blacksmith, or scout."));
+            return 0;
+        }
+        RealmState state = RealmState.get(player.getServerWorld());
+        RealmState.BaseRecord base = state.findBase(survivor.getBlockPos());
+        if (base == null || !base.owner().equals(player.getUuid())) {
+            source.sendError(Text.literal("You can only assign survivors inside a settlement you own."));
+            return 0;
+        }
+        if (role == SettlementRole.GUARD) {
+            survivor.assignGuard(base.center(), player.getUuid(), base.faction());
+        } else {
+            survivor.assignWorker(base.center(), player.getUuid(), base.faction(), role);
+        }
+        source.sendFeedback(() -> Text.literal(survivor.getName().getString() + " is now a " + role.displayName() + "."), true);
+        return 1;
+    }
+
     private static int setDiplomacy(ServerCommandSource source, String first, String second, int value) {
         RealmState realms = RealmState.get(source.getWorld());
         realms.setRelation(first, second, value);
@@ -163,7 +237,8 @@ public final class ModCommands {
 
     private static int info(ServerCommandSource source) {
         source.sendFeedback(() -> Text.literal("Rival Realms: /rivalrealms spawn <culture> [count], /rivalrealms build <style>, "
-                + "/rivalrealms claim, /rivalrealms bases, /rivalrealms diplomacy <a> <b> <value>, /rivalrealms airship"), false);
+                + "/rivalrealms claim, /rivalrealms bases, /rivalrealms jobs, /rivalrealms assign <role> <survivor>, "
+                + "/rivalrealms diplomacy <a> <b> <value>, /rivalrealms airship"), false);
         return 1;
     }
 }

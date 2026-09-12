@@ -29,8 +29,111 @@ public final class StructureBuilder {
             case PIRATE -> buildPirateHarbor(world, base);
             case WESTERN -> buildWesternTown(world, base);
             case SKY -> buildSkyDock(world, base);
+            case CUSTOM -> buildCommonExpansion(world, base, 1);
         }
         world.playSound(null, base, SoundEvents.BLOCK_ANVIL_LAND, SoundCategory.BLOCKS, 0.65f, 1.15f);
+    }
+
+    /**
+     * Adds a new physical district whenever the settlement economy can pay for
+     * it. Each level is intentionally visible in the world: farms, workshops,
+     * storage yards, towers, and culture-specific landmarks appear around the
+     * original set piece rather than merely changing a number in NBT.
+     */
+    public static void expand(ServerWorld world, BlockPos center, BuildStyle style, int level) {
+        switch (style) {
+            case KNIGHT -> expandKnight(world, center, level);
+            case PIRATE -> expandPirate(world, center, level);
+            case WESTERN -> expandWestern(world, center, level);
+            case SKY -> expandSky(world, center, level);
+            case CUSTOM -> buildCommonExpansion(world, center, level);
+        }
+        world.playSound(null, center, SoundEvents.BLOCK_ANVIL_LAND, SoundCategory.BLOCKS, 0.45f, 1.35f);
+    }
+
+    private static void expandKnight(ServerWorld world, BlockPos base, int level) {
+        switch (level) {
+            case 2 -> {
+                farmPlot(world, base.add(-22, 0, 10), 11, 8);
+                workshop(world, base.add(13, 0, 10), ModBlocks.CROWN_BRICK, Blocks.STONE_BRICKS);
+            }
+            case 3 -> tower(world, base.add(-15, 1, 12), Blocks.STONE_BRICKS, ModBlocks.CROWN_BRICK);
+            case 4 -> {
+                wall(world, base.add(-17, 0, 12), 35, 5, 1, ModBlocks.CROWN_BRICK);
+                set(world, base.add(0, 1, 12), ModBlocks.REALM_BANNER);
+            }
+            case 5 -> keep(world, base.add(14, 1, 12), ModBlocks.CROWN_BRICK, Blocks.STONE_BRICKS);
+            default -> {
+            }
+        }
+    }
+
+    private static void expandPirate(ServerWorld world, BlockPos base, int level) {
+        switch (level) {
+            case 2 -> {
+                warehouse(world, base.add(14, 1, 8), ModBlocks.SHIP_PLANKS, Blocks.DARK_OAK_LOG);
+                storageYard(world, base.add(-17, 0, 7), Blocks.SPRUCE_PLANKS);
+            }
+            case 3 -> {
+                fill(world, base.add(-17, 0, -7), 35, 1, 4, ModBlocks.SHIP_PLANKS);
+                fill(world, base.add(-15, -1, -6), 31, 1, 2, Blocks.SPRUCE_LOG);
+                set(world, base.add(0, 1, -7), ModBlocks.REALM_BANNER);
+            }
+            case 4 -> workshop(world, base.add(14, 1, -7), ModBlocks.SHIP_PLANKS, Blocks.DARK_OAK_LOG);
+            case 5 -> flag(world, base.add(0, 4, -10), Blocks.RED_WOOL, Blocks.DARK_OAK_LOG);
+            default -> {
+            }
+        }
+    }
+
+    private static void expandWestern(ServerWorld world, BlockPos base, int level) {
+        switch (level) {
+            case 2 -> farmPlot(world, base.add(-22, 0, 6), 12, 9);
+            case 3 -> workshop(world, base.add(14, 0, 8), ModBlocks.FRONTIER_PLANKS, Blocks.OAK_LOG);
+            case 4 -> {
+                storageYard(world, base.add(-21, 0, -9), Blocks.OAK_PLANKS);
+                fill(world, base.add(-20, 0, -11), 24, 1, 1, Blocks.OAK_FENCE);
+            }
+            case 5 -> {
+                tower(world, base.add(14, 1, -12), Blocks.RED_SANDSTONE, Blocks.OAK_LOG);
+                set(world, base.add(15, 4, -12), Blocks.LANTERN);
+            }
+            default -> {
+            }
+        }
+    }
+
+    private static void expandSky(ServerWorld world, BlockPos base, int level) {
+        switch (level) {
+            case 2 -> {
+                fill(world, base.add(-16, 8, -4), 14, 1, 9, ModBlocks.AIRSHIP_METAL);
+                storageYard(world, base.add(-14, 9, -2), Blocks.SPRUCE_PLANKS);
+            }
+            case 3 -> {
+                fill(world, base.add(10, 0, -8), 1, 12, 1, Blocks.CHAIN);
+                fill(world, base.add(10, 11, -8), 7, 1, 1, Blocks.SPRUCE_PLANKS);
+                set(world, base.add(13, 12, -8), Blocks.LANTERN);
+            }
+            case 4 -> workshop(world, base.add(-6, 8, 11), ModBlocks.AIRSHIP_METAL, Blocks.SPRUCE_LOG);
+            case 5 -> flag(world, base.add(0, 17, -10), Blocks.CYAN_WOOL, ModBlocks.AIRSHIP_METAL);
+            default -> {
+            }
+        }
+    }
+
+    private static void buildCommonExpansion(ServerWorld world, BlockPos base, int level) {
+        if (level >= 2) {
+            farmPlot(world, base.add(-14, 0, 10), 10, 8);
+        }
+        if (level >= 3) {
+            workshop(world, base.add(8, 0, 8), Blocks.OAK_PLANKS, Blocks.OAK_LOG);
+        }
+        if (level >= 4) {
+            storageYard(world, base.add(-14, 0, -8), Blocks.OAK_PLANKS);
+        }
+        if (level >= 5) {
+            flag(world, base.add(0, 4, 0), Blocks.PURPLE_WOOL, Blocks.OAK_LOG);
+        }
     }
 
     private static void buildKnightFortress(ServerWorld world, BlockPos base) {
@@ -109,6 +212,35 @@ public final class StructureBuilder {
             set(world, base.add(x, 10, -7), Blocks.LANTERN);
         }
         spawnAirship(world, base.add(0, 17, 0));
+    }
+
+    private static void farmPlot(ServerWorld world, BlockPos base, int width, int depth) {
+        fill(world, base, width, 1, depth, Blocks.FARMLAND);
+        for (int x = 1; x < width - 1; x += 2) {
+            for (int z = 1; z < depth - 1; z += 2) {
+                set(world, base.add(x, 1, z), Blocks.WHEAT);
+            }
+        }
+        for (int z = 0; z < depth; z++) {
+            set(world, base.add(width / 2, 1, z), Blocks.WATER);
+        }
+        set(world, base.add(width / 2 + 2, 1, depth / 2), Blocks.COMPOSTER);
+    }
+
+    private static void workshop(ServerWorld world, BlockPos base, Block wall, Block log) {
+        house(world, base, wall, log, Blocks.DARK_OAK_STAIRS);
+        set(world, base.add(2, 1, 2), Blocks.SMITHING_TABLE);
+        set(world, base.add(4, 1, 2), Blocks.BLAST_FURNACE);
+        set(world, base.add(3, 1, 4), Blocks.CRAFTING_TABLE);
+    }
+
+    private static void storageYard(ServerWorld world, BlockPos base, Block floor) {
+        fill(world, base, 7, 1, 5, floor);
+        for (int x = 1; x < 6; x += 2) {
+            set(world, base.add(x, 1, 1), Blocks.BARREL);
+            set(world, base.add(x, 1, 3), Blocks.CHEST);
+        }
+        set(world, base.add(3, 1, 0), Blocks.LANTERN);
     }
 
     private static void tower(ServerWorld world, BlockPos base, Block wall, Block trim) {

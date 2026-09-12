@@ -50,7 +50,11 @@ public final class RealmState extends PersistentState {
                     base.getString("Style"),
                     base.getString("Name"),
                     Math.max(1, base.getInt("Level")),
-                    base.getLong("LastRaid")));
+                    base.getLong("LastRaid"),
+                    Math.max(0, base.getInt("Food")),
+                    Math.max(0, base.getInt("Materials")),
+                    Math.max(0, base.getInt("Work")),
+                    base.getLong("LastExpansion")));
         }
 
         NbtList savedRelations = nbt.getList("Relations", NbtElement.COMPOUND_TYPE);
@@ -86,7 +90,8 @@ public final class RealmState extends PersistentState {
                 return null;
             }
         }
-        BaseRecord record = new BaseRecord(center.asLong(), owner, faction, style, name, 1, 0L);
+        BaseRecord record = new BaseRecord(center.asLong(), owner, faction, style, name,
+                1, 0L, 12, 24, 0, 0L);
         bases.add(record);
         markDirty();
         return record;
@@ -140,7 +145,29 @@ public final class RealmState extends PersistentState {
 
     public void upgrade(BaseRecord base) {
         base.level = Math.min(5, base.level + 1);
+        base.workProgress = 0;
         markDirty();
+    }
+
+    public void recordSettlementWork(BaseRecord base, int food, int materials, int work) {
+        base.food = Math.min(999, base.food + Math.max(0, food));
+        base.materials = Math.min(999, base.materials + Math.max(0, materials));
+        base.workProgress = Math.min(999, base.workProgress + Math.max(0, work));
+        markDirty();
+    }
+
+    public boolean beginExpansion(BaseRecord base, int foodCost, int materialCost, long worldTime) {
+        if (base.level >= 5 || base.food < foodCost || base.materials < materialCost
+                || (base.lastExpansion > 0L && worldTime - base.lastExpansion < 12000L)) {
+            return false;
+        }
+        base.food -= foodCost;
+        base.materials -= materialCost;
+        base.workProgress = 0;
+        base.lastExpansion = worldTime;
+        base.level++;
+        markDirty();
+        return true;
     }
 
     @Override
@@ -155,6 +182,10 @@ public final class RealmState extends PersistentState {
             entry.putString("Name", base.name);
             entry.putInt("Level", base.level);
             entry.putLong("LastRaid", base.lastRaid);
+            entry.putInt("Food", base.food);
+            entry.putInt("Materials", base.materials);
+            entry.putInt("Work", base.workProgress);
+            entry.putLong("LastExpansion", base.lastExpansion);
             savedBases.add(entry);
         }
         nbt.put("Bases", savedBases);
@@ -231,9 +262,14 @@ public final class RealmState extends PersistentState {
         private final String name;
         private int level;
         private long lastRaid;
+        private int food;
+        private int materials;
+        private int workProgress;
+        private long lastExpansion;
 
         private BaseRecord(long centerLong, UUID owner, String faction, String styleId,
-                           String name, int level, long lastRaid) {
+                           String name, int level, long lastRaid, int food, int materials,
+                           int workProgress, long lastExpansion) {
             this.centerLong = centerLong;
             this.owner = owner;
             this.faction = faction;
@@ -241,6 +277,10 @@ public final class RealmState extends PersistentState {
             this.name = name;
             this.level = level;
             this.lastRaid = lastRaid;
+            this.food = food;
+            this.materials = materials;
+            this.workProgress = workProgress;
+            this.lastExpansion = lastExpansion;
         }
 
         public BlockPos center() {
@@ -277,6 +317,22 @@ public final class RealmState extends PersistentState {
 
         public void setLastRaid(long lastRaid) {
             this.lastRaid = lastRaid;
+        }
+
+        public int food() {
+            return food;
+        }
+
+        public int materials() {
+            return materials;
+        }
+
+        public int workProgress() {
+            return workProgress;
+        }
+
+        public long lastExpansion() {
+            return lastExpansion;
         }
 
         public int radius() {

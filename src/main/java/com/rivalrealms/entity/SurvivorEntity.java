@@ -35,6 +35,7 @@ import net.minecraft.util.math.Box;
 import net.minecraft.world.World;
 
 import com.rivalrealms.world.RealmState;
+import com.rivalrealms.world.SettlementRole;
 
 import java.util.List;
 import java.util.UUID;
@@ -62,6 +63,7 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
     private UUID guardOwnerUuid;
     private BlockPos guardCenter;
     private String guardFaction;
+    private SettlementRole settlementRole = SettlementRole.NONE;
 
     public SurvivorEntity(EntityType<? extends SurvivorEntity> entityType, World world) {
         super(entityType, world);
@@ -186,8 +188,32 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
         double distance = squaredDistanceTo(guardCenter.getX() + 0.5, getY(), guardCenter.getZ() + 0.5);
         if (distance > 32.0 * 32.0) {
             getNavigation().startMovingTo(guardCenter.getX() + 0.5, guardCenter.getY(), guardCenter.getZ() + 0.5, 0.9);
+            return;
         }
-        acquireRivalTarget();
+
+        if (settlementRole.isWorkRole()) {
+            BlockPos worksite = worksite();
+            if (squaredDistanceTo(worksite.getX() + 0.5, getY(), worksite.getZ() + 0.5) > 8.0 * 8.0) {
+                getNavigation().startMovingTo(worksite.getX() + 0.5, worksite.getY(), worksite.getZ() + 0.5, 0.85);
+            } else if (random.nextInt(80) == 0) {
+                getNavigation().startMovingTo(guardCenter.getX() + random.nextInt(13) - 6,
+                        guardCenter.getY(), guardCenter.getZ() + random.nextInt(13) - 6, 0.75);
+            }
+        }
+        if (settlementRole.isCombatant()) {
+            acquireRivalTarget();
+        }
+    }
+
+    private BlockPos worksite() {
+        int offset = switch (settlementRole) {
+            case BUILDER -> 8;
+            case FARMER -> -8;
+            case TRADER -> 0;
+            case BLACKSMITH -> 5;
+            default -> 0;
+        };
+        return guardCenter.add(offset, 0, settlementRole == SettlementRole.FARMER ? 7 : -5);
     }
 
     public void setArchetype(Archetype archetype) {
@@ -221,17 +247,38 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
     }
 
     public boolean isBaseGuard() {
-        return guardCenter != null;
+        return guardCenter != null && settlementRole == SettlementRole.GUARD;
+    }
+
+    public boolean isSettlementWorker() {
+        return guardCenter != null && settlementRole.isWorkRole();
+    }
+
+    public SettlementRole settlementRole() {
+        return settlementRole;
     }
 
     public void assignGuard(BlockPos center, UUID owner, String faction) {
+        assignSettlement(center, owner, faction, SettlementRole.GUARD);
+    }
+
+    public void assignWorker(BlockPos center, UUID owner, String faction, SettlementRole role) {
+        if (!role.isWorkRole()) {
+            return;
+        }
+        assignSettlement(center, owner, faction, role);
+    }
+
+    private void assignSettlement(BlockPos center, UUID owner, String faction, SettlementRole role) {
         guardCenter = center.toImmutable();
         guardOwnerUuid = owner;
         guardFaction = faction;
+        settlementRole = role;
         recruited = false;
         ownerUuid = null;
         guarding = false;
-        setCustomName(Text.literal("Guard · " + getArchetype().title()));
+        setTarget(null);
+        setCustomName(Text.literal(role.displayName() + " · " + getArchetype().title()));
     }
 
     public UUID guardOwnerUuid() {
@@ -278,6 +325,7 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
                 guardCenter = null;
                 guardOwnerUuid = null;
                 guardFaction = null;
+                settlementRole = SettlementRole.NONE;
                 trust = Math.max(trust, 80);
                 setTarget(null);
                 if (!player.isCreative()) {
@@ -346,6 +394,7 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
             nbt.putUuid("Owner", ownerUuid);
         }
         nbt.putBoolean("BaseGuard", guardCenter != null);
+        nbt.putString("SettlementRole", settlementRole.id());
         if (guardCenter != null) {
             nbt.putLong("GuardCenter", guardCenter.asLong());
         }
@@ -368,6 +417,10 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
         guardCenter = nbt.getBoolean("BaseGuard") ? BlockPos.fromLong(nbt.getLong("GuardCenter")) : null;
         guardOwnerUuid = nbt.containsUuid("GuardOwner") ? nbt.getUuid("GuardOwner") : null;
         guardFaction = nbt.contains("GuardFaction", NbtElement.STRING_TYPE) ? nbt.getString("GuardFaction") : null;
+        settlementRole = SettlementRole.byId(nbt.getString("SettlementRole"));
+        if (nbt.getBoolean("BaseGuard") && settlementRole == SettlementRole.NONE) {
+            settlementRole = SettlementRole.GUARD;
+        }
         loadoutApplied = false;
     }
 
