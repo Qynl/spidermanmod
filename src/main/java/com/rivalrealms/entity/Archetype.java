@@ -18,7 +18,7 @@ public enum Archetype {
     KNIGHT("knight", "Crownlands", "Knight", Items.IRON_SWORD, Items.SHIELD,
             Items.IRON_HELMET, Items.IRON_CHESTPLATE, Items.IRON_LEGGINGS, Items.IRON_BOOTS,
             false, 28.0, 0.31, 4.0, 0x5c73a8),
-    PIRATE("pirate", "Freebooters", "Pirate", Items.IRON_SWORD, Items.CROSSBOW,
+    PIRATE("pirate", "Freebooters", "Pirate", Items.IRON_SWORD, ModItems.FLINTLOCK,
             Items.LEATHER_HELMET, Items.LEATHER_CHESTPLATE, Items.LEATHER_LEGGINGS, Items.LEATHER_BOOTS,
             true, 24.0, 0.34, 3.5, 0x9b3f35),
     OUTLAW("outlaw", "Dustwalkers", "Outlaw", ModItems.REVOLVER, Items.IRON_AXE,
