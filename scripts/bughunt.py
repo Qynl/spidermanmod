@@ -144,6 +144,12 @@ def check_runtime_safety() -> None:
         "src/main/java/com/rivalrealms/world/StructureBuilder.java": (
             "getBottomY()",
             "getTopY()",
+            "buildScattered",
+            "buildScatteredFortress",
+            "buildScatteredTown",
+            "buildScatteredHarbor",
+            "buildScatteredSkyport",
+            "buildScatteredOutpost",
         ),
         "src/main/java/com/rivalrealms/world/RealmState.java": (
             "MAX_BASES",
@@ -152,6 +158,12 @@ def check_runtime_safety() -> None:
         "src/main/java/com/rivalrealms/entity/SurvivorEntity.java": (
             "nextTargetScan",
             "owner == null",
+        ),
+        "src/main/java/com/rivalrealms/world/WorldSettlementGenerator.java": (
+            "SITE_SPACING",
+            "areaLoaded",
+            "markGeneratedSite",
+            "planFor",
         ),
     }
     for relative_path, markers in required_guards.items():
@@ -162,6 +174,10 @@ def check_runtime_safety() -> None:
         missing = [marker for marker in markers if marker not in text]
         if missing:
             fail(f"runtime safety guard missing from {relative_path}: {', '.join(missing)}")
+
+    initializer = (ROOT / "src/main/java/com/rivalrealms/RivalRealms.java").read_text(encoding="utf-8")
+    if "ServerChunkEvents.CHUNK_LOAD" not in initializer:
+        fail("scattered settlement generator is not registered")
 
     workflow = (ROOT / ".github/workflows/build.yml").read_text(encoding="utf-8")
     for marker in ("python3 scripts/bughunt.py", "clean check build", "Upload release-ready jars"):
@@ -195,6 +211,7 @@ def main() -> None:
     parser.add_argument("--jar", type=Path)
     args = parser.parse_args()
     check_json_files()
+    check_asset_references()
     check_png_assets()
     check_mod_json()
     check_visual_renderers()

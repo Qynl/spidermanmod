@@ -12,9 +12,11 @@ import net.minecraft.world.PersistentState;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -27,12 +29,14 @@ public final class RealmState extends PersistentState {
     private static final int MAX_BASES = 128;
     private static final int MAX_RELATIONS = 128;
     private static final int MAX_REPUTATIONS = 2048;
+    private static final int MAX_GENERATED_SITES = 256;
     private static final PersistentState.Type<RealmState> TYPE = new PersistentState.Type<>(
             RealmState::new, RealmState::fromNbt, DataFixTypes.LEVEL);
 
     private final List<BaseRecord> bases = new ArrayList<>();
     private final Map<String, Integer> relations = new HashMap<>();
     private final Map<String, Integer> reputations = new HashMap<>();
+    private final Set<Long> generatedSites = new HashSet<>();
 
     public static RealmState get(ServerWorld world) {
         return world.getPersistentStateManager().getOrCreate(TYPE, ID);
@@ -58,6 +62,11 @@ public final class RealmState extends PersistentState {
                     Math.min(999, Math.max(0, base.getInt("Materials"))),
                     Math.min(999, Math.max(0, base.getInt("Work"))),
                     Math.max(0L, base.getLong("LastExpansion"))));
+        }
+
+        long[] savedSites = nbt.getLongArray("GeneratedSites");
+        for (int i = 0; i < Math.min(savedSites.length, MAX_GENERATED_SITES); i++) {
+            state.generatedSites.add(savedSites[i]);
         }
 
         NbtList savedRelations = nbt.getList("Relations", NbtElement.COMPOUND_TYPE);
@@ -86,8 +95,21 @@ public final class RealmState extends PersistentState {
         return claimBase(center, owner, faction, "custom", name);
     }
 
+    public boolean canClaimBase(BlockPos center) {
+        if (center == null || bases.size() >= MAX_BASES) {
+            return false;
+        }
+        for (BaseRecord existing : bases) {
+            double minimum = existing.radius() + 24.0;
+            if (existing.center().getSquaredDistance(center) <= minimum * minimum) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     private BaseRecord claimBase(BlockPos center, UUID owner, String faction, String style, String name) {
-        if (center == null || owner == null || bases.size() >= MAX_BASES) {
+        if (center == null || owner == null || !canClaimBase(center)) {
             return null;
         }
         faction = safeText(faction, "Independent");
@@ -117,6 +139,25 @@ public final class RealmState extends PersistentState {
 
     public List<BaseRecord> bases() {
         return Collections.unmodifiableList(bases);
+    }
+
+    public boolean hasGeneratedSite(BlockPos center) {
+        return generatedSites.contains(center.asLong());
+    }
+
+    public boolean canGenerateSite() {
+        return generatedSites.size() < MAX_GENERATED_SITES;
+    }
+
+    public void markGeneratedSite(BlockPos center) {
+        if (generatedSites.size() < MAX_GENERATED_SITES) {
+            generatedSites.add(center.asLong());
+            markDirty();
+        }
+    }
+
+    public BaseRecord claimGeneratedBase(BlockPos center, UUID owner, BuildStyle style, String name) {
+        return claimBase(center, owner, style.faction(), style.id(), name);
     }
 
     public int getRelation(String first, String second) {
@@ -198,6 +239,15 @@ public final class RealmState extends PersistentState {
             savedBases.add(entry);
         }
         nbt.put("Bases", savedBases);
+        long[] savedSites = new long[Math.min(generatedSites.size(), MAX_GENERATED_SITES)];
+        int siteIndex = 0;
+        for (Long site : generatedSites) {
+            if (siteIndex >= savedSites.length) {
+                break;
+            }
+            savedSites[siteIndex++] = site;
+        }
+        nbt.putLongArray("GeneratedSites", savedSites);
 
         NbtList savedRelations = new NbtList();
         for (Map.Entry<String, Integer> entry : relations.entrySet()) {

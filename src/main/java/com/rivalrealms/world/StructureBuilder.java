@@ -56,6 +56,97 @@ public final class StructureBuilder {
         world.playSound(null, center, SoundEvents.BLOCK_ANVIL_LAND, SoundCategory.BLOCKS, 0.45f, 1.35f);
     }
 
+    public static void buildScattered(ServerWorld world, BlockPos center, BuildStyle style, SettlementVariant variant) {
+        switch (variant) {
+            case FORTRESS -> buildScatteredFortress(world, center);
+            case TOWN -> buildScatteredTown(world, center, style);
+            case HARBOR -> buildScatteredHarbor(world, center);
+            case SKYPORT -> buildScatteredSkyport(world, center);
+            case OUTPOST -> buildScatteredOutpost(world, center, style);
+        }
+        world.playSound(null, center, SoundEvents.BLOCK_ANVIL_LAND, SoundCategory.BLOCKS, 0.55f, 0.9f);
+    }
+
+    private static void buildScatteredFortress(ServerWorld world, BlockPos base) {
+        Block stone = Blocks.STONE_BRICKS;
+        Block trim = ModBlocks.CROWN_BRICK;
+        fill(world, base.add(-16, 0, -12), 33, 1, 25, trim);
+        wall(world, base.add(-16, 1, -12), 33, 7, 25, stone);
+        opening(world, base.add(-2, 1, -12), 5, 5);
+        tower(world, base.add(-16, 1, -12), stone, trim);
+        tower(world, base.add(14, 1, -12), stone, trim);
+        tower(world, base.add(-16, 1, 10), stone, trim);
+        tower(world, base.add(14, 1, 10), stone, trim);
+        keep(world, base.add(-5, 1, -4), trim, stone);
+        house(world, base.add(8, 0, -3), Blocks.SPRUCE_PLANKS, Blocks.SPRUCE_LOG, Blocks.SPRUCE_STAIRS);
+        house(world, base.add(8, 0, 5), ModBlocks.FRONTIER_PLANKS, Blocks.OAK_LOG, Blocks.OAK_STAIRS);
+        farmPlot(world, base.add(-13, 0, 13), 11, 7);
+        fill(world, base.add(-5, 0, 4), 10, 1, 5, Blocks.POLISHED_ANDESITE);
+        set(world, base.add(0, 1, -12), ModBlocks.REALM_BANNER);
+        set(world, base.add(0, 1, 0), Blocks.CHEST);
+        stockChest(world, base.add(0, 1, 0), new ItemStack(Items.IRON_SWORD), new ItemStack(Items.SHIELD),
+                new ItemStack(Items.IRON_INGOT, 12), new ItemStack(ModItems.RECRUITMENT_CONTRACT));
+    }
+
+    private static void buildScatteredTown(ServerWorld world, BlockPos base, BuildStyle style) {
+        Block road = style == BuildStyle.WESTERN ? Blocks.COARSE_DIRT : Blocks.COBBLESTONE;
+        Block wood = style == BuildStyle.WESTERN ? ModBlocks.FRONTIER_PLANKS : Blocks.OAK_PLANKS;
+        fill(world, base.add(-2, 0, -17), 5, 1, 35, road);
+        fill(world, base.add(-17, 0, -2), 35, 1, 5, road);
+        house(world, base.add(-14, 0, -13), wood, Blocks.OAK_LOG, Blocks.OAK_STAIRS);
+        house(world, base.add(7, 0, -13), Blocks.SPRUCE_PLANKS, Blocks.SPRUCE_LOG, Blocks.SPRUCE_STAIRS);
+        house(world, base.add(-14, 0, 7), wood, Blocks.OAK_LOG, Blocks.DARK_OAK_STAIRS);
+        warehouse(world, base.add(7, 1, 7), wood, Blocks.OAK_LOG);
+        saloon(world, base.add(-4, 0, -7), wood);
+        well(world, base.add(-1, 0, 2));
+        farmPlot(world, base.add(14, 0, -7), 9, 8);
+        lampPost(world, base.add(-8, 1, -1));
+        lampPost(world, base.add(8, 1, -1));
+        lampPost(world, base.add(-8, 1, 7));
+        lampPost(world, base.add(8, 1, 7));
+        set(world, base.add(0, 1, 0), ModBlocks.REALM_BANNER);
+        set(world, base.add(2, 1, 2), Blocks.CHEST);
+        stockChest(world, base.add(2, 1, 2), new ItemStack(Items.BREAD, 8), new ItemStack(Items.IRON_NUGGET, 8),
+                new ItemStack(ModItems.RECRUITMENT_CONTRACT));
+    }
+
+    private static void buildScatteredHarbor(ServerWorld world, BlockPos base) {
+        buildPirateHarbor(world, base);
+        tavern(world, base.add(-18, 0, 6));
+        pierCrane(world, base.add(14, 0, -5));
+        storageYard(world, base.add(13, 0, 10), ModBlocks.SHIP_PLANKS);
+        set(world, base.add(-15, 2, 8), Blocks.CHEST);
+        stockChest(world, base.add(-15, 2, 8), new ItemStack(ModItems.FLINTLOCK),
+                new ItemStack(Items.COOKED_COD, 8), new ItemStack(Items.GOLD_NUGGET, 12));
+    }
+
+    private static void buildScatteredSkyport(ServerWorld world, BlockPos base) {
+        buildSkyDock(world, base);
+        fill(world, base.add(-19, 8, -5), 9, 1, 9, ModBlocks.AIRSHIP_METAL);
+        fill(world, base.add(11, 8, 3), 9, 1, 9, ModBlocks.AIRSHIP_METAL);
+        house(world, base.add(-18, 8, -4), Blocks.SPRUCE_PLANKS, Blocks.SPRUCE_LOG, Blocks.SPRUCE_STAIRS);
+        workshop(world, base.add(10, 8, 4), ModBlocks.AIRSHIP_METAL, Blocks.SPRUCE_LOG);
+        set(world, base.add(0, 10, 0), ModBlocks.REALM_BANNER);
+    }
+
+    private static void buildScatteredOutpost(ServerWorld world, BlockPos base, BuildStyle style) {
+        Block wallBlock = style == BuildStyle.WESTERN ? ModBlocks.FRONTIER_PLANKS : ModBlocks.CROWN_BRICK;
+        Block log = style == BuildStyle.WESTERN ? Blocks.OAK_LOG : Blocks.SPRUCE_LOG;
+        fill(world, base.add(-8, 0, -8), 17, 1, 17, style == BuildStyle.WESTERN ? Blocks.COARSE_DIRT : Blocks.GRAVEL);
+        tower(world, base.add(-2, 0, -2), wallBlock, log);
+        house(world, base.add(6, 0, -6), wallBlock, log, Blocks.DARK_OAK_STAIRS);
+        campfire(world, base.add(-6, 1, 5));
+        farmPlot(world, base.add(5, 0, 5), 7, 6);
+        for (int x = -8; x <= 8; x += 4) {
+            set(world, base.add(x, 1, -8), Blocks.OAK_FENCE);
+            set(world, base.add(x, 1, 8), Blocks.OAK_FENCE);
+        }
+        set(world, base.add(0, 1, 0), ModBlocks.REALM_BANNER);
+        set(world, base.add(4, 1, -5), Blocks.CHEST);
+        stockChest(world, base.add(4, 1, -5), new ItemStack(Items.IRON_AXE), new ItemStack(Items.BREAD, 4),
+                new ItemStack(ModItems.RECRUITMENT_CONTRACT));
+    }
+
     private static void expandKnight(ServerWorld world, BlockPos base, int level) {
         switch (level) {
             case 2 -> {
@@ -235,6 +326,46 @@ public final class StructureBuilder {
             set(world, base.add(x, 10, -7), Blocks.LANTERN);
         }
         spawnAirship(world, base.add(0, 17, 0));
+    }
+
+    private static void well(ServerWorld world, BlockPos base) {
+        fill(world, base, 5, 1, 5, Blocks.STONE_BRICKS);
+        fill(world, base.add(1, 1, 1), 3, 1, 3, Blocks.WATER);
+        for (int x : new int[]{0, 4}) {
+            for (int z : new int[]{0, 4}) {
+                fill(world, base.add(x, 1, z), 1, 3, 1, Blocks.STONE_BRICKS);
+            }
+        }
+        fill(world, base.add(0, 4, 0), 5, 1, 1, Blocks.SPRUCE_SLAB);
+        fill(world, base.add(0, 4, 4), 5, 1, 1, Blocks.SPRUCE_SLAB);
+    }
+
+    private static void lampPost(ServerWorld world, BlockPos base) {
+        fill(world, base, 1, 3, 1, Blocks.OAK_FENCE);
+        set(world, base.add(0, 3, 0), Blocks.LANTERN);
+    }
+
+    private static void tavern(ServerWorld world, BlockPos base) {
+        saloon(world, base, ModBlocks.SHIP_PLANKS);
+        set(world, base.add(3, 1, 2), Blocks.BARREL);
+        set(world, base.add(4, 1, 2), Blocks.BARREL);
+        set(world, base.add(3, 1, 4), Blocks.CHEST);
+        stockChest(world, base.add(3, 1, 4), new ItemStack(Items.COOKED_COD, 8),
+                new ItemStack(Items.GOLD_NUGGET, 8));
+    }
+
+    private static void pierCrane(ServerWorld world, BlockPos base) {
+        fill(world, base, 1, 8, 1, Blocks.DARK_OAK_LOG);
+        fill(world, base.add(0, 7, 0), 7, 1, 1, Blocks.DARK_OAK_LOG);
+        fill(world, base.add(5, 0, 0), 1, 7, 1, Blocks.CHAIN);
+        set(world, base.add(5, 0, 0), Blocks.BARREL);
+        set(world, base.add(0, 7, 0), Blocks.LANTERN);
+    }
+
+    private static void campfire(ServerWorld world, BlockPos base) {
+        set(world, base, Blocks.CAMPFIRE);
+        set(world, base.add(1, 0, 0), Blocks.OAK_LOG);
+        set(world, base.add(-1, 0, 0), Blocks.OAK_LOG);
     }
 
     private static void farmPlot(ServerWorld world, BlockPos base, int width, int depth) {

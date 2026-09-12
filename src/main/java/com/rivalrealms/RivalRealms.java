@@ -5,7 +5,9 @@ import com.rivalrealms.command.ModCommands;
 import com.rivalrealms.entity.ModEntities;
 import com.rivalrealms.item.ModItems;
 import com.rivalrealms.world.RealmEvents;
+import com.rivalrealms.world.WorldSettlementGenerator;
 import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerChunkEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.util.Identifier;
@@ -26,6 +28,7 @@ public final class RivalRealms implements ModInitializer {
         ModEntities.register();
         ModCommands.register();
         ServerLifecycleEvents.SERVER_STARTED.register(RealmEvents::onServerStarted);
+        ServerChunkEvents.CHUNK_LOAD.register(WorldSettlementGenerator::onChunkLoad);
         ServerTickEvents.END_SERVER_TICK.register(RealmEvents::onServerTick);
         LOGGER.info("Rival Realms is ready: survivors, settlements, betrayals and frontiers await.");
     }
