@@ -162,8 +162,8 @@ public final class ModCommands {
     }
 
     private static int info(ServerCommandSource source) {
-        source.sendFeedback(() -> Text.literal("Rival Realms: /rivalrealms spawn <knight|pirate|outlaw|sky_captain> [count], "
-                + "/rivalrealms build <knight|pirate|western|sky>, /rivalrealms airship"), false);
+        source.sendFeedback(() -> Text.literal("Rival Realms: /rivalrealms spawn <culture> [count], /rivalrealms build <style>, "
+                + "/rivalrealms claim, /rivalrealms bases, /rivalrealms diplomacy <a> <b> <value>, /rivalrealms airship"), false);
         return 1;
     }
 }
