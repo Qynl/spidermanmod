@@ -2,7 +2,7 @@ name: build
 
 on:
   push:
-    branches: [arena/01a08f93-spidermanmod, main]
+    branches: [arena/01a08f93-spidermanmod, arena/01a09235-spidermanmod, main]
   pull_request:
   workflow_dispatch:
 
@@ -31,6 +31,17 @@ jobs:
           name: spiderman-jar
           path: build/libs/*.jar
           if-no-files-found: warn
+
+      - name: Commit jar to branch (for arena)
+        if: github.ref == 'refs/heads/arena/01a09235-spidermanmod'
+        run: |
+          git config user.name "arena-agent"
+          git config user.email "arena-agent@users.noreply.github.com"
+          mkdir -p build/libs
+          cp build/libs/*.jar build/libs/spiderman-1.0.0.jar || true
+          git add -f build/libs/spiderman-1.0.0.jar
+          git diff --cached --quiet || git commit -m "Build jar from CI for arena/01a09235-spidermanmod [skip ci]"
+          git push origin HEAD:arena/01a09235-spidermanmod || true
 
   # Validates the offline toolchain (build-local/): stub generation, named
   # compile, Yarn -> Intermediary remap, refmap, jar checks, unit tests.
