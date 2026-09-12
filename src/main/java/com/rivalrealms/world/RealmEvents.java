@@ -15,6 +15,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.registry.tag.FluidTags;
 import net.minecraft.util.math.Box;
 import net.minecraft.world.Heightmap;
+import net.minecraft.world.World;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -400,10 +401,10 @@ public final class RealmEvents {
         pirate.refreshPositionAndAngles(position.getX() + 0.5, position.getY(),
                 position.getZ() + 0.5, world.random.nextFloat() * 360.0f, 0.0f);
         pirate.setTargetShip(merchant);
-        merchant.markUnderAttack();
         if (!world.spawnEntity(pirate)) {
             return null;
         }
+        merchant.markUnderAttack();
         spawnCrew(world, pirate.getBlockPos(), Archetype.PIRATE,
                 new SettlementRole[]{SettlementRole.CAPTAIN, SettlementRole.GUNNER,
                         SettlementRole.QUARTERMASTER, SettlementRole.SAILOR});

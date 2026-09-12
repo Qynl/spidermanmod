@@ -18,7 +18,6 @@ public final class MerchantShipEntity extends BoatEntity {
     public MerchantShipEntity(EntityType<? extends MerchantShipEntity> type, World world) {
         super(type, world);
         setVariant(Type.SPRUCE);
-        setPersistent();
         setCustomName(Text.literal("Royal Jewellery Trader"));
         setCustomNameVisible(true);
     }

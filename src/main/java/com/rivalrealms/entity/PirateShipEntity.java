@@ -19,7 +19,6 @@ public final class PirateShipEntity extends BoatEntity {
     public PirateShipEntity(EntityType<? extends PirateShipEntity> type, World world) {
         super(type, world);
         setVariant(Type.SPRUCE);
-        setPersistent();
         setCustomName(Text.literal("Freebooter Raider"));
         setCustomNameVisible(true);
     }
