@@ -20,6 +20,7 @@ import net.minecraft.world.World;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 /** Handles low-frequency living-world encounters, jobs, expansion, and raids. */
 public final class RealmEvents {
@@ -65,6 +66,62 @@ public final class RealmEvents {
             if (nearby.isEmpty()) {
                 spawnEncounter(world, player);
             }
+        }
+    }
+
+    /**
+     * Initial population for a freshly generated site. The world should feel
+     * inhabited the moment the player first crests the hill: a guard on the
+     * wall and the first workers already about their trade — farmsteads
+     * always get their farmhands at once.
+     */
+    public static void populateSettlement(ServerWorld world, BlockPos center,
+                                          BuildStyle style, SettlementVariant variant) {
+        String faction = style.faction();
+        UUID owner = UUID.nameUUIDFromBytes(("rivalrealms:population:" + center.asLong())
+                .getBytes(java.nio.charset.StandardCharsets.UTF_8));
+
+        if (variant == SettlementVariant.FARMSTEAD) {
+            spawnSettler(world, center, owner, faction, SettlementRole.GUARD, true);
+            spawnSettler(world, center, owner, faction, SettlementRole.FARMER, false);
+            spawnSettler(world, center, owner, faction, SettlementRole.FARMER, false);
+            return;
+        }
+
+        SettlementRole[] starters = switch (variant) {
+            case HARBOR, SHIPYARD -> new SettlementRole[]{SettlementRole.SAILOR, SettlementRole.FARMER};
+            case SKYPORT, AIRSHIP_YARD -> new SettlementRole[]{SettlementRole.NAVIGATOR, SettlementRole.FARMER};
+            case RUIN, GRAVEYARD -> new SettlementRole[]{SettlementRole.GUARD};
+            default -> new SettlementRole[]{SettlementRole.FARMER, SettlementRole.BUILDER};
+        };
+        for (SettlementRole role : starters) {
+            spawnSettler(world, center, owner, faction, role, role == SettlementRole.GUARD);
+        }
+        spawnSettler(world, center, owner, faction, SettlementRole.GUARD, true);
+    }
+
+    /** Spawns one permanent resident near the settlement heart. */
+    private static void spawnSettler(ServerWorld world, BlockPos center, UUID owner,
+                                     String faction, SettlementRole role, boolean guard) {
+        SurvivorEntity settler = ModEntities.SURVIVOR.create(world);
+        if (settler == null) {
+            return;
+        }
+        BlockPos spawn = surfacePosition(world,
+                center.add(world.random.nextInt(15) - 7, 0, world.random.nextInt(15) - 7));
+        if (spawn == null) {
+            return;
+        }
+        settler.refreshPositionAndAngles(spawn.getX() + 0.5, spawn.getY(), spawn.getZ() + 0.5,
+                world.random.nextFloat() * 360.0f, 0.0f);
+        settler.setArchetype(Archetype.byFaction(faction));
+        if (guard || role == SettlementRole.GUARD) {
+            settler.assignGuard(center, owner, faction);
+        } else {
+            settler.assignWorker(center, owner, faction, role);
+        }
+        if (!world.spawnEntity(settler)) {
+            RivalRealms.LOGGER.error("Rival Realms failed to spawn a {} at {}", role.displayName(), center);
         }
     }
 

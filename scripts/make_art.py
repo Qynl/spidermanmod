@@ -456,6 +456,34 @@ def bottle_texture(path):
     png(path, 16, 16, p)
 
 
+def farmer_hoe_texture(path):
+    """16x16: iron blade with a green field ribbon, worn oak handle.""" 
+    p = canvas(16, 16)
+    handle = (122, 84, 48, 255)
+    handle_d = (92, 62, 34, 255)
+    blade = (208, 208, 214, 255)
+    blade_l = (238, 238, 242, 255)
+    blade_d = (156, 156, 164, 255)
+    ribbon = (96, 152, 82, 255)
+    # handle diagonal
+    for i in range(8):
+        x, y = 3 + i, 12 - i
+        px(p, 16, x, y, handle)
+        px(p, 16, x, y + 1, handle_d)
+    px(p, 16, 2, 13, handle_d)
+    # iron blade: top-left arc
+    for (bx, by) in ((2, 2), (3, 2), (4, 2), (5, 2), (2, 3), (3, 3), (4, 3), (2, 4), (3, 4), (2, 5)):
+        px(p, 16, bx, by, blade)
+    px(p, 16, 2, 2, blade_l); px(p, 16, 3, 3, blade_l)
+    px(p, 16, 5, 2, blade_d); px(p, 16, 3, 4, blade_d); px(p, 16, 2, 5, blade_d)
+    # binding + green ribbon on the shaft
+    px(p, 16, 5, 9, (72, 50, 28, 255))
+    px(p, 16, 6, 8, ribbon); px(p, 16, 5, 8, ribbon); px(p, 16, 6, 7, ribbon)
+    px(p, 16, 4, 10, ribbon)
+    jitter(p, 16, 4, 3)
+    png(path, 16, 16, p)
+
+
 def cannonball_texture(path):
     p = canvas(16, 16, (0, 0, 0, 0))
     iron_ball = (44, 44, 50, 255)
@@ -1083,6 +1111,7 @@ def main():
     contract_texture(TEX / "item/recruitment_contract.png")
     bottle_texture(TEX / "item/ship_in_a_bottle.png")
     cannonball_texture(TEX / "item/cannonball.png")
+    farmer_hoe_texture(TEX / "item/farmer_hoe.png")
     airship_kit_texture(TEX / "item/airship_kit.png")
 
     # spawn eggs

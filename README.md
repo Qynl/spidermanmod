@@ -138,6 +138,18 @@ Gear is luck of the draw on first spawn: leather is common, chain and iron less 
 - Empty hand toggles **follow / hold position**; **sneak + empty hand** releases them honourably
 - Companions avenge their owner's last attacker
 
+### Farmer houses & player-style farming
+Every settlement type now includes **farmhand cottages** — cozy plank-and-log houses with a composter, barrel, lantern and hay-bed, a porch, and a scarecrow watching the rows. Mill, town, fortress, outpost, harbor and skyport all have them; standalone **Farmsteads** (two cottages, wheat field, vegetable rotation plot, hay stacks, fenced stock pen) generate naturally in temperate biomes.
+
+Farmers are not villagers. They carry the custom **Farmhand's Hoe** (iron hoe that tills a 3×3 patch for you) and work like players:
+- patrol the fields by day, knock off at night
+- **harvest crops the instant they mature** and replant the same crop on the spot
+- **till fresh soil** when the plot needs more farmland
+- **sow a rotation** — mostly wheat, sometimes carrots and potatoes
+- drops land in the world and they pick them up like players do
+
+Farmers roll temperaments like everyone else, so yes — some are **angry**.
+
 ### Settlements & jobs
 Claimed settlements recruit guards and workers up to their level. Jobs (guard, builder, farmer, baker, herbalist, merchant, jeweler, blacksmith, mason, miner, scout — plus captain/sailor/gunner/quartermaster/navigator for Freebooter sites) move NPCs to worksites and feed the settlement economy. When food, materials and work are enough, the settlement **physically expands**: farms, workshops, towers, walls, warehouses, piers, hangars and moored airships appear district by district. Rival factions raid hostile settlements when diplomacy is at war.
 
@@ -155,8 +167,9 @@ Every build is terrain-adaptive: it samples the surface, packs a foundation unde
 - **Mill** — stone windmill tower with a fence-and-canvas sail pinwheel, miller's cottage, wheat terraces
 - **Ruin** — a shattered watchtower breached like it lost an old siege, rubble drifts, cobwebs, a squatter camp under a wool lean-to
 - **Graveyard** — podzol memorial ground behind a weathered ring wall: rows of headstones, dead bushes, a soul lantern, and one keeper; loot chest for the brave
+- **Farmstead** — two farmhand cottages, a wheat field, a carrot/potato/beetroot rotation plot with a water channel, scarecrows, hay stacks, a fenced stock pen, and the farmhands + guard who live there
 
-New chunks can receive a deterministic, biome-aware site: oceans get harbors, deserts get frontier towns, mountains get skyports, snow gets fortresses, and the temperate roll now spans **eight** silhouettes — towns, royal cities, fortresses, citadels, mills, ruins and graveyards. Sites persist in world data with duplicate prevention, and generation never force-loads distant chunks.
+New chunks can receive a deterministic, biome-aware site: oceans get harbors, deserts get frontier towns, mountains get skyports, snow gets fortresses, and the temperate roll now spans **eight** silhouettes — towns, royal cities, fortresses, citadels, mills, ruins, graveyards and **farmsteads**. Every site is **inhabited from the moment it generates**: a guard and its first workers (farmhands first) spawn with the buildings, then the slow cadence grows the population. Sites persist in world data with duplicate prevention, and generation never force-loads distant chunks.
 
 ---
 

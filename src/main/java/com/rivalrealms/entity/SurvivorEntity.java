@@ -39,6 +39,8 @@ import net.minecraft.util.Formatting;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.block.Blocks;
+import net.minecraft.block.CropBlock;
 import net.minecraft.village.SimpleMerchant;
 import net.minecraft.village.TradeOffer;
 import net.minecraft.village.TradeOfferList;
@@ -95,6 +97,8 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
     private Vec3d fleeFrom;
     private int eatTimer;
     private ItemStack savedHand = ItemStack.EMPTY;
+    private BlockPos farmTarget;
+    private long nextFarmAction;
 
     public SurvivorEntity(EntityType<? extends SurvivorEntity> entityType, World world) {
         super(entityType, world);
@@ -153,6 +157,7 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
         }
 
         eatTick();
+        farmTick();
 
         if (recruited) {
             if (owner == null) {
@@ -538,6 +543,10 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
                 ? Archetype.pirateShipTitle(random)
                 : role.displayName();
         setCustomName(Text.literal(nameBase + " · " + getArchetype().title()));
+        if (role == SettlementRole.FARMER && !getWorld().isClient) {
+            // Farmhands carry the farmhand's hoe; harvesting is their trade.
+            equipStack(net.minecraft.entity.EquipmentSlot.MAINHAND, new ItemStack(ModItems.FARMER_HOE));
+        }
     }
 
     public UUID guardOwnerUuid() {
@@ -853,6 +862,103 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
         // Equipment itself is saved by the vanilla Mob NBT (HandItems/ArmorItems);
         // only re-roll the loadout for survivors that never had one.
         loadoutApplied = nbt.getBoolean("LoadoutApplied");
+    }
+
+    // ------------------------------------------------------------------ farming
+
+    /**
+     * Real farmer labour, not villager wandering: walk the fields, harvest
+     * crops the moment they reach full growth, replant the same crop on the
+     * spot, till fresh soil when the plot runs out of farmland, and sow a
+     * varied rotation. Works the worksite by day, knocks off at night.
+     */
+    private void farmTick() {
+        if (settlementRole != SettlementRole.FARMER || guardCenter == null || recruited
+                || eatTimer > 0 || getTarget() != null || this.hasVehicle()) {
+            return;
+        }
+        World world = getWorld();
+        if (world.isClient || !world.isDay() || !isOnGround()) {
+            return;
+        }
+        long now = world.getTime();
+        if (now < nextFarmAction) {
+            return;
+        }
+        BlockPos plot = worksite();
+
+        // 1) A mature crop within the plot: walk to it, then cut it down and
+        //    replant the same crop in the same breath, like a player does.
+        if (this.farmTarget == null) {
+            if (now % 20L == 0L) {
+                this.farmTarget = findBlock(plot, 8, state -> {
+                    if (state.getBlock() instanceof CropBlock crop) {
+                        return crop.isMature(state);
+                    }
+                    return false;
+                });
+            }
+            if (this.farmTarget == null) {
+                nextFarmAction = now + 10L;
+                return;
+            }
+        }
+
+        double reach = this.squaredDistanceTo(farmTarget.getX() + 0.5, farmTarget.getY(), farmTarget.getZ() + 0.5);
+        if (reach > 3.2 * 3.2) {
+            getNavigation().startMovingTo(farmTarget.getX() + 0.5, farmTarget.getY(), farmTarget.getZ() + 0.5, 0.85);
+            // Abandon unreachable spots so the farmer never grinds against a wall.
+            if (getNavigation().isIdle()) {
+                this.farmTarget = null;
+                nextFarmAction = now + 40L;
+            }
+            return;
+        }
+        getNavigation().stop();
+        swingHand(Hand.MAIN_HAND);
+
+        if (world.getBlockState(farmTarget).getBlock() instanceof CropBlock crop
+                && crop.isMature(world.getBlockState(farmTarget))) {
+            world.breakBlock(farmTarget, true, this);
+            world.setBlockState(farmTarget, crop.getDefaultState());
+            world.playSound(null, farmTarget.getX(), farmTarget.getY(), farmTarget.getZ(),
+                    SoundEvents.ENTITY_ITEM_PICKUP, SoundCategory.BLOCKS, 0.7f, 1.1f);
+        } else if (world.getBlockState(farmTarget).isOf(Blocks.FARMLAND)
+                && world.getBlockState(farmTarget.up()).isAir()) {
+            // Sow a rotation: mostly wheat, sometimes roots, like mixed farms.
+            int roll = random.nextInt(10);
+            net.minecraft.block.Block seed = roll < 6 ? Blocks.WHEAT
+                    : roll < 8 ? Blocks.CARROTS : Blocks.POTATOES;
+            world.setBlockState(farmTarget.up(), seed.getDefaultState());
+            world.playSound(null, farmTarget.getX(), farmTarget.getY(), farmTarget.getZ(),
+                    SoundEvents.ENTITY_ITEM_PICKUP, SoundCategory.BLOCKS, 0.7f, 1.2f);
+        } else if (world.getBlockState(farmTarget).isOf(Blocks.GRASS_BLOCK)
+                || world.getBlockState(farmTarget).isOf(Blocks.DIRT)) {
+            // Fresh soil to till first.
+            world.setBlockState(farmTarget, Blocks.FARMLAND.getDefaultState());
+            world.playSound(null, farmTarget.getX(), farmTarget.getY(), farmTarget.getZ(),
+                    SoundEvents.ITEM_HOE_TILL, SoundCategory.BLOCKS, 0.9f, 1.0f);
+            ((ServerWorld) world).spawnParticles(ParticleTypes.POOF,
+                    farmTarget.getX() + 0.5, farmTarget.getY() + 1.1, farmTarget.getZ() + 0.5, 3, 0.2, 0.05, 0.2, 0.01);
+        }
+        this.farmTarget = null;
+        nextFarmAction = now + 20L;
+    }
+
+    /** Finds a block matching {@code filter} within {@code radius} of {@code center}. */
+    private BlockPos findBlock(BlockPos center, int radius, java.util.function.Predicate<net.minecraft.block.BlockState> filter) {
+        int found = 0;
+        BlockPos best = null;
+        for (BlockPos pos : BlockPos.iterate(center.add(-radius, -1, -radius), center.add(radius, 1, radius))) {
+            if (filter.test(getWorld().getBlockState(pos))) {
+                found++;
+                // Random-ish pick: every tenth match wins, keeps rows untidy.
+                if (best == null || random.nextInt(found) == 0) {
+                    best = pos.toImmutable();
+                }
+            }
+        }
+        return best;
     }
 
     /** Wary and hostile survivors repay attacks; good-natured ones run instead. */

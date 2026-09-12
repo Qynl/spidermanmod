@@ -24,6 +24,8 @@ public final class ModItems {
             new RevolverItem(new Item.Settings().maxCount(1).maxDamage(220), 7.5f, 12, 30.0f));
     public static final Item FLINTLOCK = register("flintlock",
             new FlintlockItem(new Item.Settings().maxCount(1).maxDamage(120)));
+    public static final Item FARMER_HOE = register("farmer_hoe",
+            new FarmerHoeItem(new Item.Settings().maxCount(1).maxDamage(320)));
     public static final Item ROYAL_LONGSWORD = register("royal_longsword",
             new RoyalLongswordItem(ToolMaterials.DIAMOND, new Item.Settings().maxCount(1).maxDamage(860)));
     public static final Item ROYAL_COIN = register("royal_coin",

@@ -190,7 +190,7 @@ add('net.minecraft.sound.SoundEvents', [], [
     'public static final net.minecraft.sound.SoundEvent ENTITY_PLAYER_ATTACK_SWEEP;',
     'public static final net.minecraft.sound.SoundEvent ENTITY_ARROW_HIT_PLAYER;',
     'public static final net.minecraft.sound.SoundEvent ITEM_CROSSBOW_SHOOT;',
-    'public static final net.minecraft.sound.SoundEvent BLOCK_PISTON_EXTEND;',
+    'public static final net.minecraft.sound.SoundEvent BLOCK_PISTON_EXTEND;', 'public static final net.minecraft.sound.SoundEvent ITEM_HOE_TILL;',
     'public static final net.minecraft.sound.SoundEvent ENTITY_GENERIC_SPLASH;',
     'public static final net.minecraft.sound.SoundEvent BLOCK_FIRE_EXTINGUISH;',
 ])
@@ -254,7 +254,7 @@ add('net.minecraft.block.Blocks', [], [
     'public static final net.minecraft.block.Block CHEST;', 'public static final net.minecraft.block.Block BARREL;',
     'public static final net.minecraft.block.Block LANTERN;', 'public static final net.minecraft.block.Block CHAIN;',
     'public static final net.minecraft.block.Block CAMPFIRE;', 'public static final net.minecraft.block.Block FARMLAND;',
-    'public static final net.minecraft.block.Block WHEAT;', 'public static final net.minecraft.block.Block COARSE_DIRT;', 'public static final net.minecraft.block.Block SOUL_LANTERN;', 'public static final net.minecraft.block.Block COBBLESTONE_SLAB;', 'public static final net.minecraft.block.Block STONE_BRICK_SLAB;', 'public static final net.minecraft.block.Block DEAD_BUSH;', 'public static final net.minecraft.block.Block MOSSY_COBBLESTONE;', 'public static final net.minecraft.block.Block PODZOL;', 'public static final net.minecraft.block.Block COBWEB;', 'public static final net.minecraft.block.Block GRASS_BLOCK;',
+    'public static final net.minecraft.block.Block WHEAT;', 'public static final net.minecraft.block.Block COARSE_DIRT;', 'public static final net.minecraft.block.Block SOUL_LANTERN;', 'public static final net.minecraft.block.Block COBBLESTONE_SLAB;', 'public static final net.minecraft.block.Block STONE_BRICK_SLAB;', 'public static final net.minecraft.block.Block DEAD_BUSH;', 'public static final net.minecraft.block.Block MOSSY_COBBLESTONE;', 'public static final net.minecraft.block.Block PODZOL;', 'public static final net.minecraft.block.Block COBWEB;', 'public static final net.minecraft.block.Block GRASS_BLOCK;', 'public static final net.minecraft.block.Block CARVED_PUMPKIN;', 'public static final net.minecraft.block.Block WATER;', 'public static final net.minecraft.block.Block CARROTS;', 'public static final net.minecraft.block.Block POTATOES;', 'public static final net.minecraft.block.Block BEETROOTS;', 'public static final net.minecraft.block.Block BARREL;', 'public static final net.minecraft.block.Block LANTERN;',
     'public static final net.minecraft.block.Block GRAVEL;', 'public static final net.minecraft.block.Block RED_SANDSTONE;',
     'public static final net.minecraft.block.Block WHITE_CARPET;', 'public static final net.minecraft.block.Block CRAFTING_TABLE;',
     'public static final net.minecraft.block.Block FURNACE;', 'public static final net.minecraft.block.Block ANVIL;',
@@ -362,7 +362,9 @@ add('net.minecraft.item.Items', [], [
     'public static final net.minecraft.item.Item IRON_INGOT;', 'public static final net.minecraft.item.Item COPPER_INGOT;',
     'public static final net.minecraft.item.Item GOLD_INGOT;', 'public static final net.minecraft.item.Item GOLD_NUGGET;',
     'public static final net.minecraft.item.Item IRON_NUGGET;', 'public static final net.minecraft.item.Item EMERALD;',
-    'public static final net.minecraft.item.Item DIAMOND;', 'public static final net.minecraft.item.Item COAL;', 'public static final net.minecraft.item.Item WHEAT;', 
+    'public static final net.minecraft.item.Item DIAMOND;', 'public static final net.minecraft.item.Item COAL;', 'public static final net.minecraft.item.Item WHEAT;',
+    'public static final net.minecraft.item.Item WHEAT_SEEDS;', 'public static final net.minecraft.item.Item CARROT;',
+    'public static final net.minecraft.item.Item POTATO;', 'public static final net.minecraft.item.Item BEETROOT_SEEDS;', 
     'public static final net.minecraft.item.Item COAL_BLOCK;', 'public static final net.minecraft.item.Item STICK;',
     'public static final net.minecraft.item.Item PAPER;', 'public static final net.minecraft.item.Item LEATHER;',
     'public static final net.minecraft.item.Item GLASS;', 'public static final net.minecraft.item.Item FLINT;',
@@ -380,8 +382,15 @@ add('net.minecraft.item.SwordItem', ['net.minecraft.item.Item'], [
     'public SwordItem(net.minecraft.item.ToolMaterial material, net.minecraft.item.Item.Settings settings);',
 ])
 add('net.minecraft.item.ToolMaterial', [], [], iface=True)
+add('net.minecraft.item.HoeItem', ['net.minecraft.item.MiningToolItem'], [
+    'public HoeItem(net.minecraft.item.ToolMaterial material, float attackDamage, float attackSpeed, net.minecraft.item.Item.Settings settings);',
+    'public net.minecraft.util.ActionResult useOnBlock(net.minecraft.item.ItemUsageContext context);',
+])
+add('net.minecraft.item.MiningToolItem', ['net.minecraft.item.ToolItem'], [])
+add('net.minecraft.item.ToolItem', ['net.minecraft.item.Item'], [])
 add('net.minecraft.item.ToolMaterials', ['net.minecraft.item.ToolMaterial'], [
     'public static final net.minecraft.item.ToolMaterials DIAMOND;',
+    'public static final net.minecraft.item.ToolMaterials IRON;',
 ])
 add('net.minecraft.item.ItemUsageContext', [], [
     'public net.minecraft.util.math.BlockPos getBlockPos();',
@@ -443,6 +452,9 @@ add('net.minecraft.entity.Entity', [], [
     'public double getEyeY();',
     'public boolean isOnGround();',
     'public net.minecraft.registry.RegistryWrapper.Impl getRegistryManager();',
+    'public boolean isDay();',
+    'public boolean breakBlock(net.minecraft.util.math.BlockPos pos, boolean drop, net.minecraft.entity.Entity breakingEntity);',
+    'public void swingHand(net.minecraft.util.Hand hand);',
     'public net.minecraft.util.math.Vec3d getPos();',
     'public float getEyeHeight(net.minecraft.entity.EntityPose pose);',
     'protected void updatePassengerPosition(net.minecraft.entity.Entity passenger, net.minecraft.entity.Entity.PositionUpdater positionUpdater);',

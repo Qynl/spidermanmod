@@ -258,6 +258,9 @@ def check_runtime_safety() -> None:
             "buildScatteredMill",
             "buildScatteredRuin",
             "buildScatteredGraveyard",
+            "buildScatteredFarmstead",
+            "farmhouse",
+            "vegPlot",
         ),
         "src/main/java/com/rivalrealms/world/RealmState.java": (
             "MAX_BASES",
@@ -267,6 +270,7 @@ def check_runtime_safety() -> None:
             "nextTargetScan",
             "owner == null",
             "Temperament",
+            "farmTick",
             "openTrades",
             "eatTick",
             "quipTick",

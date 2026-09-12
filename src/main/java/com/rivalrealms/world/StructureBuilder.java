@@ -81,6 +81,7 @@ public final class StructureBuilder {
             case MILL -> buildScatteredMill(world, center);
             case RUIN -> buildScatteredRuin(world, center);
             case GRAVEYARD -> buildScatteredGraveyard(world, center);
+            case FARMSTEAD -> buildScatteredFarmstead(world, center);
         }
         world.playSound(null, center.getX() + 0.5, center.getY(), center.getZ() + 0.5, SoundEvents.BLOCK_ANVIL_LAND, SoundCategory.BLOCKS, 0.55f, 0.9f);
     }
@@ -105,6 +106,8 @@ public final class StructureBuilder {
         house(world, base.add(8, 0, -3), 6, 7, ModBlocks.ROYAL_WOOD, Blocks.SPRUCE_LOG,
                 Blocks.SPRUCE_STAIRS, ModBlocks.CASTLE_TILES);
         farmPlot(world, base.add(-13, 0, 14), 9, 6);
+        farmhouse(world, base.add(-14, 0, 8));
+        scarecrow(world, base.add(-8, 0, 16));
         set(world, base.add(0, y + 1, -6), ModBlocks.REALM_BANNER);
         stockChest(world, base.add(-3, y + 1, -1), new ItemStack(Items.IRON_SWORD),
                 new ItemStack(Items.SHIELD), new ItemStack(Items.IRON_INGOT, 12),
@@ -135,6 +138,8 @@ public final class StructureBuilder {
         marketStall(world, base.add(5, 0, 1), western ? Blocks.ORANGE_WOOL : Blocks.RED_WOOL, log);
         marketStall(world, base.add(5, 0, 5), western ? Blocks.LIME_WOOL : Blocks.BLUE_WOOL, log);
         farmPlot(world, base.add(-17, 0, -17), 9, 7);
+        farmhouse(world, base.add(-19, 0, -6));
+        scarecrow(world, base.add(-13, 0, -14));
         lampPost(world, base.add(-8, 0, -1));
         lampPost(world, base.add(8, 0, -1));
         lampPost(world, base.add(-8, 0, 7));
@@ -150,6 +155,8 @@ public final class StructureBuilder {
         buildPirateHarbor(world, base);
         int y = groundAt(world, base.getX(), base.getZ());
         tavern(world, base.add(-18, 0, 6));
+        farmhouse(world, base.add(-19, 0, -6));
+        vegPlot(world, base.add(-13, 0, -8), 6, 5);
         pier(world, base.add(10, 0, -2), 12, Direction.EAST);
         pierCrane(world, base.add(14, 0, -5));
         storageYard(world, base.add(13, 0, 10), ModBlocks.SHIP_PLANKS);
@@ -168,6 +175,9 @@ public final class StructureBuilder {
         house(world, base.add(-18, 0, -4), 6, 6, Blocks.SPRUCE_PLANKS, Blocks.SPRUCE_LOG,
                 Blocks.SPRUCE_STAIRS, ModBlocks.AIRSHIP_METAL);
         workshop(world, base.add(10, 0, 4), 6, 7, ModBlocks.AIRSHIP_METAL, Blocks.SPRUCE_LOG);
+        farmhouse(world, base.add(-14, 0, 8));
+        vegPlot(world, base.add(-6, 0, 10), 7, 5);
+        scarecrow(world, base.add(-2, 0, 12));
         set(world, base.add(0, y + 1, 0), ModBlocks.REALM_BANNER);
         mooredAirship(world, base.add(2, 0, -8));
     }
@@ -184,6 +194,8 @@ public final class StructureBuilder {
         house(world, base.add(4, 0, -6), 5, 6, wallBlock, log, Blocks.DARK_OAK_STAIRS, wallBlock);
         campfire(world, base.add(-5, 0, 4));
         farmPlot(world, base.add(3, 0, 3), 6, 5);
+        farmhouse(world, base.add(-7, 0, 9));
+        scarecrow(world, base.add(7, 0, 5));
         set(world, base.add(0, y + 1, 0), ModBlocks.REALM_BANNER);
         stockChest(world, base.add(4, y + 1, -4), new ItemStack(Items.IRON_AXE),
                 new ItemStack(Items.BREAD, 4), new ItemStack(ModItems.RECRUITMENT_CONTRACT),
@@ -214,6 +226,9 @@ public final class StructureBuilder {
                 Blocks.SPRUCE_STAIRS, Blocks.SPRUCE_PLANKS);
         farmPlot(world, base.add(-11, 0, 4), 9, 8);
         farmPlot(world, base.add(4, 0, 8), 8, 6);
+        vegPlot(world, base.add(-13, 0, -6), 7, 5);
+        farmhouse(world, base.add(-4, 0, -8));
+        scarecrow(world, base.add(-6, 0, 6));
         campfire(world, base.add(3, 0, 2));
         stockChest(world, base.add(8, y + 2, -2), new ItemStack(Items.WHEAT, 12),
                 new ItemStack(Items.BREAD, 6), new ItemStack(ModItems.ROYAL_COIN, 1));
@@ -1212,6 +1227,128 @@ public final class StructureBuilder {
             lampPost(world, base.add(x, 0, -spacing / 2));
             lampPost(world, base.add(x, 0, spacing / 2));
         }
+    }
+
+    /** A little farmhand cottage: porch, composter, barrel, lantern, loft bed. */
+    private static void farmhouse(ServerWorld world, BlockPos corner) {
+        Block wall = ModBlocks.FRONTIER_PLANKS;
+        Block log = Blocks.SPRUCE_LOG;
+        int y = groundAt(world, corner.getX(), corner.getZ());
+        BlockPos origin = new BlockPos(corner.getX(), y, corner.getZ());
+
+        foundationRing(world, origin, 6, 5, wall);
+        // plank walls with log corner posts, door gap facing the farm
+        fill(world, origin, 6, 4, 1, log); fill(world, origin.add(0, 0, 4), 6, 4, 1, log);
+        fill(world, origin, 1, 4, 5, log); fill(world, origin.add(5, 0, 0), 1, 4, 5, log);
+        for (int x = 1; x <= 4; x++) {
+            fill(world, origin.add(x, 0, 0), 1, 4, 1, wall);
+            fill(world, origin.add(x, 0, 4), 1, 4, 1, wall);
+        }
+        for (int z = 1; z <= 3; z++) {
+            fill(world, origin.add(0, 0, z), 1, 4, 1, wall);
+            fill(world, origin.add(5, 0, z), 1, 4, 1, wall);
+        }
+        clearColumn(world, origin.getX() + 2, origin.getZ(), y + 1, y + 2);   // doorway
+        clearColumn(world, origin.getX() + 4, origin.getZ(), y + 1, y + 2);   // window
+        // gabled stair roof
+        for (int step = 0; step < 3; step++) {
+            fill(world, origin.add(-1 + step, 4 + step, -1), 8 - step * 2, 1, 7,
+                    step % 2 == 0 ? Blocks.SPRUCE_STAIRS : wall);
+        }
+        set(world, origin.add(2, 7, 2), wall);
+        // homely interior: composter, barrel, lantern, hay-bed corner
+        set(world, origin.add(1, 1, 3), Blocks.COMPOSTER);
+        set(world, origin.add(4, 1, 3), Blocks.BARREL);
+        set(world, origin.add(4, 1, 1), Blocks.LANTERN);
+        set(world, origin.add(1, 1, 1), Blocks.HAY_BLOCK);
+        // porch posts
+        set(world, origin.add(1, 1, -1), Blocks.OAK_FENCE);
+        set(world, origin.add(4, 1, -1), Blocks.OAK_FENCE);
+        set(world, origin.add(1, 2, -1), Blocks.SPRUCE_STAIRS);
+        set(world, origin.add(4, 2, -1), Blocks.SPRUCE_STAIRS);
+    }
+
+    private static void foundationRing(ServerWorld world, BlockPos corner, int sizeX, int sizeZ, Block fill_) {
+        for (int x = 0; x < sizeX; x++) {
+            foundation(world, corner.getX() + x, corner.getZ(), corner.getY() - 1, fill_);
+            foundation(world, corner.getX() + x, corner.getZ() + sizeZ - 1, corner.getY() - 1, fill_);
+        }
+        for (int z = 1; z < sizeZ - 1; z++) {
+            foundation(world, corner.getX(), corner.getZ() + z, corner.getY() - 1, fill_);
+            foundation(world, corner.getX() + sizeX - 1, corner.getZ() + z, corner.getY() - 1, fill_);
+        }
+    }
+
+    /** Carrot, potato and beetroot rows — the mixed rotation real farms run. */
+    private static void vegPlot(ServerWorld world, BlockPos corner, int sizeX, int sizeZ) {
+        int y = groundAt(world, corner.getX(), corner.getZ());
+        net.minecraft.block.Block[] rotation = {Blocks.CARROTS, Blocks.POTATOES, Blocks.BEETROOTS};
+        int idx = 0;
+        for (int x = 0; x < sizeX; x++) {
+            for (int z = 0; z < sizeZ; z++) {
+                BlockPos soil = corner.add(x, y - corner.getY(), z);
+                foundation(world, soil.getX(), soil.getZ(), y - 1, Blocks.DIRT);
+                clearColumn(world, soil.getX(), soil.getZ(), y + 1, y + 2);
+                set(world, soil, Blocks.FARMLAND);
+                if ((x + z) % 2 == 0) {
+                    set(world, soil.up(), rotation[idx % rotation.length].getDefaultState());
+                }
+                idx++;
+            }
+        }
+        // water channel so the crops never dry out
+        fill(world, corner.add(-1, 0, 0), 1, 1, sizeZ, Blocks.WATER);
+    }
+
+    /** A fence-and-pumpkin scarecrow keeping watch over the rows. */
+    private static void scarecrow(ServerWorld world, BlockPos base) {
+        int y = groundAt(world, base.getX(), base.getZ());
+        BlockPos pos = new BlockPos(base.getX(), y + 1, base.getZ());
+        set(world, pos, Blocks.OAK_FENCE);
+        set(world, pos.up(), Blocks.OAK_FENCE);
+        set(world, pos.up(2), Blocks.CARVED_PUMPKIN);
+        set(world, pos.up().west(), Blocks.OAK_FENCE);
+        set(world, pos.up().east(), Blocks.OAK_FENCE);
+    }
+
+    private static void haystack(ServerWorld world, BlockPos base) {
+        int y = groundAt(world, base.getX(), base.getZ());
+        BlockPos pos = new BlockPos(base.getX(), y + 1, base.getZ());
+        set(world, pos, Blocks.HAY_BLOCK);
+        set(world, pos.up(), Blocks.HAY_BLOCK);
+    }
+
+    /**
+     * A standalone farmstead: two farmhand cottages, a wheat field, a vegetable
+     * rotation plot, scarecrows, hay, a small stock pen and a lantern or two.
+     * This is where the realm's farmers actually live.
+     */
+    private static void buildScatteredFarmstead(ServerWorld world, BlockPos base) {
+        int y = plateau(world, base, 25, 21, Blocks.GRASS_BLOCK);
+        Block path = Blocks.COARSE_DIRT;
+        fill(world, base.add(-2, y, -10), 5, 1, 21, path);
+
+        farmhouse(world, base.add(-11, 0, -8));
+        farmhouse(world, base.add(6, 0, -6));
+        farmPlot(world, base.add(-10, 0, 2), 9, 7);
+        vegPlot(world, base.add(4, 0, 5), 8, 7);
+        scarecrow(world, base.add(-6, 0, 4));
+        scarecrow(world, base.add(8, 0, 6));
+        haystack(world, base.add(2, 0, -6));
+        haystack(world, base.add(-4, 0, -6));
+        // fenced stock pen with a water trough
+        fill(world, base.add(-2, y + 1, 12), 10, 1, 1, Blocks.OAK_FENCE);
+        fill(world, base.add(-2, y + 1, 16), 10, 1, 1, Blocks.OAK_FENCE);
+        fill(world, base.add(-2, y + 1, 12), 1, 1, 5, Blocks.OAK_FENCE);
+        fill(world, base.add(7, y + 1, 12), 1, 1, 5, Blocks.OAK_FENCE);
+        set(world, base.add(-2, y + 1, 14), Blocks.AIR);
+        set(world, base.add(2, y + 1, 14), Blocks.WATER);
+        lampPost(world, base.add(0, 0, -8));
+        set(world, base.add(-3, y + 1, -6), Blocks.COMPOSTER);
+        stockChest(world, base.add(-9, groundAt(world, base.getX() - 9, base.getZ() - 8) + 2, -8),
+                new ItemStack(Items.BREAD, 5), new ItemStack(Items.WHEAT_SEEDS, 8),
+                new ItemStack(ModItems.FARMER_HOE), new ItemStack(ModItems.ROYAL_COIN, 1));
+        spawnGuard(world, base, y, BuildStyle.CUSTOM);
     }
 
     private static void spawnGuard(ServerWorld world, BlockPos base, int y, BuildStyle style) {

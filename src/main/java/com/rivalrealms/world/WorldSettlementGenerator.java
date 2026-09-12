@@ -70,6 +70,9 @@ public final class WorldSettlementGenerator {
             StructureBuilder.buildScattered(world, center, plan.style(), plan.variant());
             String name = plan.style().displayName() + " · " + plan.variant().name().toLowerCase(Locale.ROOT);
             state.claimGeneratedBase(center, owner, plan.style(), name);
+            // The settlement starts inhabited: guard on the walls, farmers in
+            // the fields. The slow cadence still grows it from here.
+            RealmEvents.populateSettlement(world, center, plan.style(), plan.variant());
             RivalRealms.LOGGER.info("Generated {} at {} in {}", name, center, biome);
         } catch (RuntimeException exception) {
             RivalRealms.LOGGER.error("Failed to generate Rival Realms site at {}", center, exception);
@@ -103,7 +106,7 @@ public final class WorldSettlementGenerator {
                     case 4 -> SettlementVariant.MILL;
                     case 5 -> SettlementVariant.RUIN;
                     case 6 -> SettlementVariant.GRAVEYARD;
-                    default -> SettlementVariant.TOWN;
+                    default -> SettlementVariant.FARMSTEAD;
                 });
     }
 

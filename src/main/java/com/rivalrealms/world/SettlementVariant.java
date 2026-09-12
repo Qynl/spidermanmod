@@ -13,5 +13,6 @@ public enum SettlementVariant {
     OUTPOST,
     MILL,
     RUIN,
-    GRAVEYARD
+    GRAVEYARD,
+    FARMSTEAD
 }
