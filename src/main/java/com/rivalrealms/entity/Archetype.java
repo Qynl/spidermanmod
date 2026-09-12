@@ -150,7 +150,7 @@ public enum Archetype {
      * carry an enchantment — drop them for real loot.
      */
     public void equip(SurvivorEntity survivor, Random random, Registry<net.minecraft.enchantment.Enchantment> enchantments) {
-        survivor.equipStack(EquipmentSlot.MAINHAND, rollWeapon(random));
+        survivor.equipStack(EquipmentSlot.MAINHAND, rollWeapon(random, enchantments));
         survivor.equipStack(EquipmentSlot.OFFHAND, ranged ? rangedStack() : new ItemStack(Items.SHIELD));
         equipSlot(survivor, random, EquipmentSlot.HEAD,
                 Items.LEATHER_HELMET, Items.CHAINMAIL_HELMET, Items.IRON_HELMET, Items.DIAMOND_HELMET, helmet);
@@ -178,7 +178,7 @@ public enum Archetype {
         };
     }
 
-    private ItemStack rollWeapon(Random random) {
+    private ItemStack rollWeapon(Random random, Registry<net.minecraft.enchantment.Enchantment> enchantments) {
         // Pirates roll a proper blade tier; every other culture keeps its
         // signature weapon.
         if (this != PIRATE) {
@@ -197,7 +197,8 @@ public enum Archetype {
     }
 
     private void equipSlot(SurvivorEntity survivor, Random random, EquipmentSlot slot,
-                           Item leather, Item chain, Item iron, Item diamond, Item base) {
+                           Item leather, Item chain, Item iron, Item diamond, Item base,
+                           Registry<net.minecraft.enchantment.Enchantment> enchantments) {
         double roll = random.nextDouble();
         double diamondChance = 0.04 + wealth() * 0.07; // roughly 5–8% per slot
         ItemStack stack;
