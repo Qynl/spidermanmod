@@ -806,7 +806,7 @@ add('net.minecraft.client.model.ModelTransform', [], [
 add('net.minecraft.client.model.TexturedModelData', [], [
     'public static net.minecraft.client.model.TexturedModelData of(net.minecraft.client.model.ModelData data, int u, int v);',
 ])
-add('net.minecraft.client.model.EntityModel', ['net.minecraft.client.model.Model'], [
+add('net.minecraft.client.render.entity.model.EntityModel', ['net.minecraft.client.model.Model'], [
     'public void setAngles(T entity, float limbAngle, float limbDistance, float animationProgress, float headYaw, float headPitch);',
 ])
 add('net.minecraft.client.model.Model', [], [

@@ -1,7 +1,7 @@
 package com.rivalrealms.client;
 
 import com.rivalrealms.entity.SailingShipEntity;
-import net.minecraft.client.model.EntityModel;
+import net.minecraft.client.render.entity.model.EntityModel;
 import net.minecraft.client.model.ModelData;
 import net.minecraft.client.model.ModelPart;
 import net.minecraft.client.model.ModelPartBuilder;
