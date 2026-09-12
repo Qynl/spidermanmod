@@ -807,10 +807,10 @@ add('net.minecraft.client.model.TexturedModelData', [], [
     'public static net.minecraft.client.model.TexturedModelData of(net.minecraft.client.model.ModelData data, int u, int v);',
 ])
 add('net.minecraft.client.render.entity.model.EntityModel', ['net.minecraft.client.model.Model'], [
-    'public void setAngles(T entity, float limbAngle, float limbDistance, float animationProgress, float headYaw, float headPitch);',
+    'public abstract void setAngles(T entity, float limbAngle, float limbDistance, float animationProgress, float headYaw, float headPitch);',
 ])
 add('net.minecraft.client.model.Model', [], [
-    'public void render(net.minecraft.client.util.math.MatrixStack matrices, net.minecraft.client.render.VertexConsumer vertices, int light, int overlay);',
+    'public abstract void render(net.minecraft.client.util.math.MatrixStack matrices, net.minecraft.client.render.VertexConsumer vertices, int light, int overlay, int color);',
     'public net.minecraft.client.render.RenderLayer getLayer(net.minecraft.util.Identifier texture);',
 ])
 add('net.minecraft.client.model.ModelPart', [], [
@@ -825,6 +825,8 @@ add('net.minecraft.client.render.entity.EntityRenderer', [], [
 add('net.minecraft.client.render.entity.EntityRendererFactory.Context', [], [
     'public net.minecraft.client.model.ModelPart getPart(net.minecraft.client.render.entity.model.EntityModelLayer layer);',
     'public net.minecraft.client.font.TextRenderer getTextRenderer();',
+    'public net.minecraft.client.render.model.BakedModelManager getModelManager();',
+    'public net.minecraft.client.render.entity.model.EntityModelLoader getModelLoader();',
 ])
 add('net.minecraft.client.font.TextRenderer', [], [])
 add('net.minecraft.client.render.entity.model.EntityModelLayer', [], [
@@ -845,8 +847,9 @@ add('net.minecraft.client.render.entity.LivingEntityRenderer', ['net.minecraft.c
     'protected boolean addFeature(net.minecraft.client.render.entity.feature.FeatureRenderer feature);',
 ])
 add('net.minecraft.client.render.entity.feature.FeatureRenderer', [], [])
+add('net.minecraft.client.render.model.BakedModelManager', [], [])
 add('net.minecraft.client.render.entity.feature.ArmorFeatureRenderer', ['net.minecraft.client.render.entity.feature.FeatureRenderer'], [
-    'public ArmorFeatureRenderer(net.minecraft.client.render.entity.LivingEntityRenderer renderer, net.minecraft.client.render.entity.model.BipedEntityModel innerArmor, net.minecraft.client.render.entity.model.BipedEntityModel outerArmor, net.minecraft.client.render.entity.model.EntityModelLoader loader);',
+    'public ArmorFeatureRenderer(net.minecraft.client.render.entity.BipedEntityRenderer renderer, net.minecraft.client.render.entity.model.BipedEntityModel innerArmor, net.minecraft.client.render.entity.model.BipedEntityModel outerArmor, net.minecraft.client.render.model.BakedModelManager manager);',
 ])
 add('net.minecraft.client.render.entity.model.EntityModelLoader', [], [
     'public net.minecraft.client.model.ModelPart getPart(net.minecraft.client.render.entity.model.EntityModelLayer layer);',

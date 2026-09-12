@@ -99,7 +99,7 @@ public final class AirshipEntityModel extends EntityModel<AirshipEntity> {
     }
 
     @Override
-    public void render(MatrixStack matrices, VertexConsumer vertices, int light, int overlay) {
-        this.root.render(matrices, vertices, light, overlay);
+    public void render(MatrixStack matrices, VertexConsumer vertices, int light, int overlay, int color) {
+        this.root.render(matrices, vertices, light, overlay, color);
     }
 }

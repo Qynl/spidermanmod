@@ -15,7 +15,7 @@ public final class SurvivorRenderer extends BipedEntityRenderer<SurvivorEntity, 
         addFeature(new ArmorFeatureRenderer<>(this,
                 new BipedEntityModel<>(context.getPart(EntityModelLayers.PLAYER_INNER_ARMOR)),
                 new BipedEntityModel<>(context.getPart(EntityModelLayers.PLAYER_OUTER_ARMOR)),
-                context.getModelLoader()));
+                context.getModelManager()));
         addFeature(new HeldItemFeatureRenderer<>(this, context.getHeldItemRenderer()));
     }
 
