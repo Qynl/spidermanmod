@@ -123,6 +123,14 @@ def check_content_catalog() -> None:
         fail("airship spawn item is not registered")
     if not (RESOURCES / "assets/rivalrealms/models/item/airship_spawn_egg.json").exists():
         fail("airship spawn item model is missing")
+    airship_item = (ROOT / "src/main/java/com/rivalrealms/item/AirshipSpawnEggItem.java").read_text(encoding="utf-8")
+    if "world.isClient" not in airship_item or "spawnEntity" not in airship_item:
+        fail("airship spawn item lacks a guarded server-side spawn path")
+    if "ModItemGroups.register()" not in items.read_text(encoding="utf-8"):
+        fail("creative tab is not initialized after item registration")
+    lang = json.loads((RESOURCES / "assets/rivalrealms/lang/en_us.json").read_text(encoding="utf-8"))
+    if "itemGroup.rivalrealms.rival_realms" not in lang:
+        fail("creative tab translation is missing")
 
 
 def check_mod_json() -> None:
@@ -222,6 +230,7 @@ def check_jar(jar_path: Path) -> None:
             "assets/rivalrealms/lang/en_us.json",
             "assets/rivalrealms/textures/entity/survivor/knight.png",
             "assets/rivalrealms/textures/entity/airship.png",
+            "assets/rivalrealms/models/item/airship_spawn_egg.json",
             "com/rivalrealms/RivalRealms.class",
             "com/rivalrealms/client/AirshipRenderer.class",
             "com/rivalrealms/item/ModItemGroups.class",
