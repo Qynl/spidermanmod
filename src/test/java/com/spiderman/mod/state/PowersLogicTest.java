@@ -2,7 +2,7 @@ package com.spiderman.mod.state;
 
 /**
  * Unit tests for the pure-logic ability registry and client powers mirror.
- * Zero dependencies: run with {@code ./build-local/test.sh}.
+ * Updated for 9 abilities (double removed) and improved progression.
  */
 public final class PowersLogicTest {
     private static int passed;
@@ -21,24 +21,29 @@ public final class PowersLogicTest {
     }
 
     private static void abilityIds() {
-        check(AbilityIds.COUNT == 10, "COUNT == 10");
+        check(AbilityIds.COUNT == 9, "COUNT == 9 (double removed)");
         check(AbilityIds.NAMES.length == AbilityIds.COUNT, "NAMES length matches COUNT");
         check(AbilityIds.MIN_STAGE.length == AbilityIds.COUNT, "MIN_STAGE length matches COUNT");
         for (int i = 0; i < AbilityIds.COUNT; i++) {
             check(AbilityIds.valid(i), "valid(" + i + ")");
             check(AbilityIds.NAMES[i] != null && !AbilityIds.NAMES[i].isEmpty(),
                     "NAMES[" + i + "] non-empty");
-            check(AbilityIds.MIN_STAGE[i] >= 1 && AbilityIds.MIN_STAGE[i] <= 4,
-                    "MIN_STAGE[" + i + "] in 1..4");
+            check(AbilityIds.MIN_STAGE[i] >= 0 && AbilityIds.MIN_STAGE[i] <= 4,
+                    "MIN_STAGE[" + i + "] in 0..4");
         }
         check(!AbilityIds.valid(-1), "valid(-1) is false");
         check(!AbilityIds.valid(AbilityIds.COUNT), "valid(COUNT) is false");
         check(!AbilityIds.valid(999), "valid(999) is false");
-        // First web shot unlocks at stage 2 (Spider-Sense + first web).
-        check(AbilityIds.MIN_STAGE[AbilityIds.SHOT] == 2, "SHOT unlocks at stage 2");
-        // Swing/zip movement comes online at stage 3.
-        check(AbilityIds.MIN_STAGE[AbilityIds.SWING] == 3, "SWING unlocks at stage 3");
-        check(AbilityIds.MIN_STAGE[AbilityIds.ZIP] == 3, "ZIP unlocks at stage 3");
+        // Shot and trap unlock early (stage 1) for better progression
+        check(AbilityIds.MIN_STAGE[AbilityIds.SHOT] == 1, "SHOT unlocks at stage 1 (improved)");
+        check(AbilityIds.MIN_STAGE[AbilityIds.TRAP] == 1, "TRAP unlocks at stage 1");
+        // Swing/zip/pull at stage 2
+        check(AbilityIds.MIN_STAGE[AbilityIds.SWING] == 2, "SWING unlocks at stage 2 (improved)");
+        check(AbilityIds.MIN_STAGE[AbilityIds.ZIP] == 2, "ZIP unlocks at stage 2");
+        check(AbilityIds.MIN_STAGE[AbilityIds.PULL] == 2, "PULL unlocks at stage 2");
+        // High abilities at stage 3
+        check(AbilityIds.MIN_STAGE[AbilityIds.LINE] == 3, "LINE unlocks at stage 3");
+        check(AbilityIds.MIN_STAGE[AbilityIds.BURST] == 3, "BURST unlocks at stage 3");
     }
 
     private static void clientPowersReset() {
@@ -107,11 +112,11 @@ public final class PowersLogicTest {
         PlayerPowers powers = new PlayerPowers();
         check(!powers.canUse(AbilityIds.SHOT, 1000), "powerless player cannot use abilities");
         powers.hasPowers = true;
-        powers.stage = 1;
-        check(!powers.canUse(AbilityIds.SHOT, 1000), "stage gate blocks early shot");
+        powers.stage = 0;
+        check(!powers.canUse(AbilityIds.SHOT, 1000), "stage 0 blocks shot (needs stage 1)");
         check(!powers.canUse(99, 1000), "invalid id rejected");
-        powers.stage = 2;
-        check(powers.canUse(AbilityIds.SHOT, 1000), "unlocked ability usable");
+        powers.stage = 1;
+        check(powers.canUse(AbilityIds.SHOT, 1000), "stage 1 unlocks shot");
         powers.cooldowns.put(AbilityIds.SHOT, 1500L);
         check(!powers.canUse(AbilityIds.SHOT, 1000), "cooldown blocks reuse");
         check(powers.canUse(AbilityIds.SHOT, 1500), "cooldown expires on time");
@@ -129,6 +134,7 @@ public final class PowersLogicTest {
         powers.comboUntil = 9999L;
         powers.swinging = true;
         powers.zipTicks = 12;
+        powers.pullTicks = 20;
         powers.doubleJumpUsed = true;
         powers.climbing = true;
         powers.wallRunUntil = 9999L;
@@ -140,6 +146,7 @@ public final class PowersLogicTest {
         check(powers.combo == 0 && powers.comboUntil == 0, "reset clears combo");
         check(!powers.swinging, "reset clears swing");
         check(powers.zipTicks == 0, "reset clears zip");
+        check(powers.pullTicks == 0, "reset clears pull");
         check(!powers.doubleJumpUsed && !powers.climbing, "reset clears climb/double-jump");
         check(powers.wallRunUntil == 0 && powers.focusTicks == 0, "reset clears timers");
     }

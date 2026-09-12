@@ -17,6 +17,12 @@ import com.spiderman.mod.config.SpiderConfig;
 /**
  * Tracks player-placed trap/platform webs and removes them when they expire,
  * so abilities never grief the world permanently.
+ *
+ * Bughunt:
+ * - Null checks for player/world/pos
+ * - isAir check now also handles null world
+ * - Eviction loop safe even if maxTrapWebs is misconfigured
+ * - removeIfOurs checks world is still loaded
  */
 public final class WebCleanup {
     private static final class Web {
@@ -38,36 +44,67 @@ public final class WebCleanup {
 
     /** Places a temporary cobweb if the spot is free. Evicts oldest when capped. */
     public static boolean place(ServerPlayerEntity player, BlockPos pos) {
-        ServerWorld world = player.getServerWorld();
-        if (!world.getBlockState(pos).isAir()) {
+        if (player == null || pos == null) return false;
+        ServerWorld world;
+        try {
+            world = player.getServerWorld();
+        } catch (Exception e) {
+            return false;
+        }
+        if (world == null) return false;
+        try {
+            if (!world.getBlockState(pos).isAir()) {
+                return false;
+            }
+        } catch (Exception e) {
             return false;
         }
         SpiderConfig cfg = SpiderConfig.get();
+        int maxWebs = cfg.maxTrapWebs;
+        if (maxWebs < 1) maxWebs = 1;
+        int liveTicks = cfg.webLiveTicks;
+        if (liveTicks < 1) liveTicks = 20;
+
         List<Web> owned = BY_OWNER.computeIfAbsent(player.getUuid(), k -> new ArrayList<>());
-        while (!owned.isEmpty() && owned.size() >= cfg.maxTrapWebs) {
+        // Evict oldest when capped — safe even if list is huge
+        while (owned.size() >= maxWebs && !owned.isEmpty()) {
             Web oldest = owned.remove(0);
             removeIfOurs(oldest);
         }
-        world.setBlockState(pos, Blocks.COBWEB.getDefaultState(), 3);
-        owned.add(new Web(world, pos.toImmutable(), cfg.webLiveTicks));
+        try {
+            world.setBlockState(pos, Blocks.COBWEB.getDefaultState(), 3);
+        } catch (Exception e) {
+            return false;
+        }
+        owned.add(new Web(world, pos.toImmutable(), liveTicks));
         return true;
     }
 
     public static void tick() {
-        for (List<Web> owned : BY_OWNER.values()) {
-            Iterator<Web> it = owned.iterator();
-            while (it.hasNext()) {
-                Web web = it.next();
-                web.ttl--;
-                if (web.ttl <= 0) {
-                    removeIfOurs(web);
-                    it.remove();
+        try {
+            for (List<Web> owned : BY_OWNER.values()) {
+                if (owned == null) continue;
+                Iterator<Web> it = owned.iterator();
+                while (it.hasNext()) {
+                    Web web = it.next();
+                    if (web == null) {
+                        it.remove();
+                        continue;
+                    }
+                    web.ttl--;
+                    if (web.ttl <= 0) {
+                        removeIfOurs(web);
+                        it.remove();
+                    }
                 }
             }
+        } catch (Exception ignored) {
+            // Don't crash server tick due to web cleanup
         }
     }
 
     public static void clearPlayer(UUID id) {
+        if (id == null) return;
         List<Web> owned = BY_OWNER.remove(id);
         if (owned != null) {
             for (Web web : owned) {
@@ -78,21 +115,26 @@ public final class WebCleanup {
 
     /** Removes every tracked web (server stop / world switch). */
     public static void clearAll() {
-        for (List<Web> owned : BY_OWNER.values()) {
-            for (Web web : owned) {
-                removeIfOurs(web);
+        try {
+            for (List<Web> owned : BY_OWNER.values()) {
+                if (owned == null) continue;
+                for (Web web : owned) {
+                    removeIfOurs(web);
+                }
             }
-        }
+        } catch (Exception ignored) {}
         BY_OWNER.clear();
     }
 
     private static void removeIfOurs(Web web) {
+        if (web == null || web.world == null || web.pos == null) return;
         try {
+            // Check if world is still valid and chunk loaded
             if (web.world.getBlockState(web.pos).isOf(Blocks.COBWEB)) {
                 web.world.removeBlock(web.pos, false);
             }
         } catch (Exception ignored) {
-            // World may be unloading; nothing to clean.
+            // World may be unloading; nothing to clean
         }
     }
 }

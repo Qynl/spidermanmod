@@ -13,6 +13,9 @@ import com.spiderman.mod.SpiderManMod;
 /**
  * Server-side JSON config ({@code config/spiderman.json}). All gameplay tuning
  * lives here so server owners can rebalance without rebuilding.
+ *
+ * Bughunt: thresholds now forced to be strictly increasing to prevent
+ * progression deadlocks; masteryMult clamped to prevent zero progression.
  */
 public final class SpiderConfig {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
@@ -23,10 +26,10 @@ public final class SpiderConfig {
     public double biteChance = 1.0;
     public boolean spiderDiesAfterBite = true;
 
-    // Ranges (blocks)
-    public double webRange = 24.0;
-    public double swingRange = 40.0;
-    public double zipRange = 32.0;
+    // Ranges (blocks) — increased for better web-slinging feel
+    public double webRange = 32.0;
+    public double swingRange = 80.0;
+    public double zipRange = 50.0;
 
     // Cooldowns (ticks)
     public int shotCooldown = 10;
@@ -66,10 +69,15 @@ public final class SpiderConfig {
     public int webLiveTicks = 100;
     public int maxTrapWebs = 24;
 
-    // Progression
+    // Progression — now with time-based defaults that feel natural
+    // 100 → 1-2 min, 300 → 5 min, 700 → 12 min, 1400 → 23 min with passive + active
     public int[] stageThresholds = {100, 300, 700, 1400};
     public double masteryMult = 1.0;
     public boolean transformEffects = true;
+
+    // Passive progression tuning
+    public int passiveMasteryPerSecond = 1;
+    public int movementBonusMastery = 1;
 
     // Experimental powers (opt-in)
     public boolean experimentalDoubleJump = false;
@@ -148,8 +156,20 @@ public final class SpiderConfig {
                     stageThresholds[i] = 1;
                 }
             }
+            // Bughunt: ensure strictly increasing thresholds to prevent deadlock
+            // where you can never reach next stage because threshold <= previous
+            for (int i = 1; i < stageThresholds.length; i++) {
+                if (stageThresholds[i] <= stageThresholds[i - 1]) {
+                    stageThresholds[i] = stageThresholds[i - 1] + 50;
+                }
+            }
         }
         masteryMult = nonNegative(masteryMult, 1.0);
+        // Prevent zero mult from breaking time progression — at least 0.1
+        if (masteryMult < 0.1) masteryMult = 0.1;
+
+        passiveMasteryPerSecond = atLeast(passiveMasteryPerSecond, 0, 1);
+        movementBonusMastery = atLeast(movementBonusMastery, 0, 1);
     }
 
     private static int atLeast(int value, int min, int dflt) {
@@ -171,7 +191,6 @@ public final class SpiderConfig {
             case 6: return burstCooldown;
             case 7: return impactCooldown;
             case 8: return platformCooldown;
-            case 9: return doubleCooldown;
             default: return 20;
         }
     }
