@@ -44,6 +44,9 @@ public final class ModItemGroups {
                         entries.add(ModItems.WARHORN);
                         entries.add(ModItems.MARAUDER_SPAWN_EGG);
                         entries.add(ModItems.HEARTHFOLK_SPAWN_EGG);
+                        entries.add(ModItems.HARDTACK);
+                        entries.add(ModItems.FRONTIER_STEW);
+                        entries.add(ModItems.MEAD);
                         entries.add(ModItems.CANNONBALL);
                         // Vehicles
                         entries.add(ModItems.AIRSHIP_KIT);

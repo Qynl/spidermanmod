@@ -190,6 +190,22 @@ def castle_tiles(path):
     png(path, 16, 16, p)
 
 
+def _block_depth(p, w, base, hi, lo, seed=3):
+    """Shared bevel: lit top edge, shadowed bottom, occasional chips."""
+    hline(p, w, 0, w, 0, hi)
+    hline(p, w, 0, w, w - 1, lo)
+    vline(p, w, 0, 0, w, hi)
+    vline(p, w, w - 1, 0, w, lo)
+    rnd = {"n": seed}
+    def nxt():
+        rnd["n"] = (rnd["n"] * 1103515245 + 12345) & 0x7fffffff
+        return rnd["n"]
+    for _ in range(3):
+        x, y = nxt() % w, nxt() % w
+        px(p, w, x, y, lo)
+        px(p, w, (x + 1) % w, y, darken(lo, 0.9))
+
+
 def plank_texture(path, pal, seed, gold_inlay=False):
     p = canvas(16, 16, pal["base"])
     for row in range(4):
@@ -227,7 +243,13 @@ def airship_metal(path):
     # copper corner trims
     rect(p, 16, 0, 0, 1, 1, METAL["copper"])
     rect(p, 16, 14, 14, 15, 15, METAL["copper"])
+    # brushed steel streaks
+    for i in range(5):
+        x = (i * 7 + 3) % 16
+        for y in range((i * 5) % 8, (i * 5) % 8 + 5):
+            px(p, 16, x, y, brighten(METAL["base"], 1.06))
     jitter(p, 16, 41, 4)
+    _block_depth(p, 16, METAL["base"], METAL["hi"], METAL["dark"], 11)
     png(path, 16, 16, p)
 
 
@@ -296,7 +318,7 @@ def revolver_texture(path):
     px(p, 16, 5, 9, IRON_D)
     px(p, 16, 6, 10, IRON_D)
     outline(p, 16, (20, 16, 14, 255))
-    png(path, 16, 16, p)
+    save16(path, p)
 
 
 def flintlock_texture(path):
@@ -319,7 +341,7 @@ def flintlock_texture(path):
     # brass butt cap
     rect(p, 16, 0, 14, 4, 15, GOLD_D)
     outline(p, 16, (18, 14, 10, 255))
-    png(path, 16, 16, p)
+    save16(path, p)
 
 
 def longsword_texture(path):
@@ -342,7 +364,7 @@ def longsword_texture(path):
     px(p, 16, 3, 13, (74, 48, 30, 255))
     px(p, 16, 2, 14, GOLD)
     outline(p, 16, (24, 26, 34, 255))
-    png(path, 16, 16, p)
+    save16(path, p)
 
 
 def coin_texture(path):
@@ -362,7 +384,7 @@ def coin_texture(path):
     px(p, 16, 7, 8, brighten(GOLD, 1.3))
     hline(p, 16, 6, 9, 4, brighten(GOLD, 1.4))
     px(p, 16, 3, 10, brighten(GOLD, 1.25))
-    png(path, 16, 16, p)
+    save16(path, p)
 
 
 def jewelry_texture(path):
@@ -382,7 +404,7 @@ def jewelry_texture(path):
     px(p, 16, 5, 11, GOLD_D)
     px(p, 16, 11, 11, GOLD_D)
     outline(p, 16, (40, 26, 10, 255))
-    png(path, 16, 16, p)
+    save16(path, p)
 
 
 def map_texture(path):
@@ -415,7 +437,7 @@ def map_texture(path):
     px(p, 16, 4, 12, ink)
     jitter(p, 16, 91, 5)
     outline(p, 16, (92, 72, 40, 255))
-    png(path, 16, 16, p)
+    save16(path, p)
 
 
 def contract_texture(path):
@@ -433,7 +455,7 @@ def contract_texture(path):
     px(p, 16, 11, 12, (206, 92, 92, 255))
     jitter(p, 16, 17, 3)
     outline(p, 16, (70, 62, 48, 255))
-    png(path, 16, 16, p)
+    save16(path, p)
 
 
 def bottle_texture(path):
@@ -453,7 +475,7 @@ def bottle_texture(path):
     vline(p, 16, 7, 6, 9, WOOD_D)
     rect(p, 16, 8, 6, 10, 9, (236, 228, 208, 255))
     outline(p, 16, (44, 60, 70, 255))
-    png(path, 16, 16, p)
+    save16(path, p)
 
 
 def war_weapon_textures():
@@ -507,6 +529,54 @@ def war_weapon_textures():
     png(TEX / "item/warhorn.png", 16, 16, p)
 
 
+def food_textures():
+    """Hardtack biscuit, iron-pot stew, drinking horn of mead."""
+    # --- hardtack: pale cracker with scorched pierce-holes
+    p = canvas(16, 16)
+    tack, tack_d = (222, 202, 158, 255), (176, 152, 112, 255)
+    disc(p, 16, 8, 8, 6, tack)
+    hline(p, 16, 4, 12, 4, (238, 222, 184, 255))
+    for (x, y) in ((5, 6), (10, 6), (7, 9), (10, 10), (5, 11)):
+        px(p, 16, x, y, tack_d)
+    px(p, 16, 3, 8, tack_d); px(p, 16, 13, 8, tack_d)
+    save16(TEX / "item/hardtack.png", p)
+
+    # --- frontier stew: iron pot, chunky surface, steam
+    p = canvas(16, 16)
+    iron, iron_l, iron_d = (74, 76, 82, 255), (108, 112, 120, 255), (48, 50, 56, 255)
+    stew = (150, 84, 48, 255)
+    rect(p, 16, 3, 7, 13, 13, iron)
+    hline(p, 16, 3, 13, 7, iron_l)
+    hline(p, 16, 3, 13, 13, iron_d)
+    rect(p, 16, 2, 6, 14, 7, iron_l)               # rim
+    rect(p, 16, 4, 8, 12, 9, stew)                 # stew surface
+    px(p, 16, 5, 8, (196, 132, 70, 255)); px(p, 16, 9, 9, (120, 70, 40, 255))
+    px(p, 16, 11, 8, (222, 178, 96, 255))          # carrot bit
+    px(p, 16, 6, 9, (226, 214, 180, 255))          # potato chunk
+    for (hx, hy) in ((6, 3), (9, 2), (12, 4)):     # steam curls
+        px(p, 16, hx, hy, (214, 214, 220, 255))
+        px(p, 16, hx + 1, hy - 1, (196, 196, 204, 255))
+    save16(TEX / "item/frontier_stew.png", p)
+
+    # --- mead: drinking horn with gold rim and honey glow
+    p = canvas(16, 16)
+    horn, horn_d = (214, 178, 108, 255), (160, 124, 66, 255)
+    mead = (222, 158, 60, 255)
+    for i in range(10):
+        x = 3 + i
+        y = 11 - i
+        px(p, 16, x, y, horn)
+        px(p, 16, x, y + 1, horn_d)
+        if y < 11 and i > 4:
+            px(p, 16, x, y + 1, mead)              # honey filling along the belly
+    px(p, 16, 3, 12, (240, 210, 130, 255))         # rim glint
+    px(p, 16, 12, 2, (238, 238, 226, 255))         # ivory tip
+    px(p, 16, 11, 3, (226, 226, 210, 255))
+    for (cx, cy) in ((6, 8), (8, 7)):              # cord wraps
+        px(p, 16, cx, cy, (140, 52, 44, 255))
+    save16(TEX / "item/mead.png", p)
+
+
 def cannon_block_textures(folder):
     """Two 16x16 block textures: dark bronze barrel + oak-and-iron carriage."""
     barrel = canvas(16, 16)
@@ -523,7 +593,7 @@ def cannon_block_textures(folder):
         for x in (0, 1, 14, 15):
             px(barrel, 16, x, y, (18, 18, 20, 255))
     jitter(barrel, 16, 8, 3)
-    png(folder / "cannon_barrel.png", 16, 16, barrel)
+    save16(folder / "cannon_barrel.png", barrel)
 
     carriage = canvas(16, 16)
     oak, oak_d, oak_l = (118, 84, 48, 255), (84, 58, 32, 255), (146, 108, 66, 255)
@@ -540,7 +610,7 @@ def cannon_block_textures(folder):
         disc(carriage, 16, cx, 8, 2, oak_d)
         disc(carriage, 16, cx, 8, 1, (54, 56, 60, 255))
     jitter(carriage, 16, 12, 3)
-    png(folder / "cannon_carriage.png", 16, 16, carriage)
+    save16(folder / "cannon_carriage.png", carriage)
 
 
 def farmer_hoe_texture(path):
@@ -568,7 +638,7 @@ def farmer_hoe_texture(path):
     px(p, 16, 6, 8, ribbon); px(p, 16, 5, 8, ribbon); px(p, 16, 6, 7, ribbon)
     px(p, 16, 4, 10, ribbon)
     jitter(p, 16, 4, 3)
-    png(path, 16, 16, p)
+    save16(path, p)
 
 
 def cannonball_texture(path):
@@ -582,7 +652,7 @@ def cannonball_texture(path):
     px(p, 16, 12, 4, GOLD)
     px(p, 16, 13, 3, (240, 160, 60, 255))
     outline(p, 16, (12, 12, 14, 255))
-    png(path, 16, 16, p)
+    save16(path, p)
 
 
 def airship_kit_texture(path):
@@ -599,7 +669,7 @@ def airship_kit_texture(path):
     px(p, 16, 7, 2, (176, 136, 216, 255))
     px(p, 16, 9, 5, (92, 60, 128, 255))
     outline(p, 16, (40, 30, 20, 255))
-    png(path, 16, 16, p)
+    save16(path, p)
 
 
 def spawn_egg_texture(path, base, spot):
@@ -1160,40 +1230,81 @@ def paint_galleon(path):
     png(path, 256, 256, p)
 
 
+def save16(path, p, outline_color=(30, 26, 24, 255)):
+    """Final pass for 16x16 item art: crisp dark outline + a top-left
+    light kiss, so icons read cleanly on any hotbar background."""
+    outline(p, 16, outline_color)
+    for y in range(16):
+        for x in range(16):
+            c = get(p, 16, x, y)
+            if c and c[3] > 64 and (x == 1 or y == 1) and (x + y) % 3 == 0:
+                px(p, 16, x, y, brighten(c, 1.22))
+    png(path, 16, 16, p)
+
+
 def icon_texture(path):
+    """128x128 mod icon: blood-sunset over the sea, a black-sailed galleon
+    closing on a burning watchtower. Reads at every size."""
     p = canvas(128, 128, (0, 0, 0, 0))
-    # backdrop disc
-    disc(p, 128, 64, 66, 56, (34, 26, 44, 255))
-    disc(p, 128, 64, 66, 54, (58, 40, 84, 255))
-    # crossed longsword (diagonal steel with gold guard)
-    for i in range(64):
-        x = 22 + i
-        y = 104 - i
-        for dx in range(4):
-            px(p, 128, x + dx, y, (196, 206, 220, 255))
-        px(p, 128, x, y - 1, (238, 246, 252, 255))
-    for i in range(64):
-        x = 22 + i
-        y = 24 + i
-        for dx in range(4):
-            px(p, 128, x + dx, y, (168, 178, 194, 255))
-    # banner pole + flag
-    rect(p, 128, 86, 14, 92, 114, (86, 62, 40, 255))
-    rect(p, 128, 86, 14, 92, 16, (212, 172, 78, 255))
-    rect(p, 128, 30, 18, 88, 62, (86, 44, 130, 255))
-    rect(p, 128, 30, 18, 88, 24, (64, 32, 99, 255))
-    rect(p, 128, 30, 58, 88, 62, (64, 32, 99, 255))
-    # gold crown emblem on the flag
-    rect(p, 128, 44, 30, 74, 50, (222, 182, 88, 255))
-    for x in range(44, 75, 10):
-        rect(p, 128, x, 24, x + 3, 30, (222, 182, 88, 255))
-    rect(p, 128, 52, 36, 60, 44, (58, 40, 84, 255))
-    # coin at the base
-    disc(p, 128, 64, 100, 12, (222, 178, 84, 255))
-    disc(p, 128, 64, 100, 9, (240, 204, 116, 255))
-    rect(p, 128, 58, 96, 70, 102, (170, 128, 56, 255))
-    for x in range(58, 71, 4):
-        rect(p, 128, x, 92, x + 2, 96, (170, 128, 56, 255))
+
+    # --- sunset sky bands
+    sky = [(252, 132, 60, 255), (240, 104, 62, 255), (214, 74, 66, 255),
+           (172, 52, 74, 255), (120, 38, 74, 255), (78, 30, 66, 255)]
+    for i, color in enumerate(sky):
+        rect(p, 128, 0, i * 12, 128, (i + 1) * 12, color)
+    # sun disc half-set on the horizon
+    disc(p, 128, 88, 58, 16, (255, 214, 130, 255))
+    disc(p, 128, 88, 58, 12, (255, 236, 170, 255))
+    # streak clouds
+    for (cx, cy, w) in ((24, 22, 34), (48, 34, 26), (92, 18, 30)):
+        rect(p, 128, cx, cy, cx + w, cy + 3, (96, 34, 58, 255))
+        rect(p, 128, cx + 4, cy - 2, cx + w - 4, cy, (118, 42, 62, 255))
+
+    # --- sea: dark bands with sun glitter
+    for i, shade in enumerate(((52, 30, 58, 255), (44, 26, 52, 255), (36, 22, 46, 255), (28, 18, 40, 255))):
+        rect(p, 128, 0, 62 + i * 16, 128, 78 + i * 16, shade)
+    for i in range(10):  # glitter path under the sun
+        x = 84 + (i % 3) * 2
+        rect(p, 128, x - i % 4, 64 + i * 5, x + 6 + i % 4, 66 + i * 5, (255, 190, 110, 255))
+
+    # --- the black galleon: hull, two masts, blood-red sails
+    rect(p, 128, 14, 74, 66, 86, (16, 12, 16, 255))
+    rect(p, 128, 10, 76, 18, 84, (16, 12, 16, 255))   # bow
+    rect(p, 128, 60, 70, 70, 80, (24, 18, 22, 255))   # stern castle
+    for mx in (26, 46):
+        rect(p, 128, mx, 30, mx + 3, 76, (20, 14, 18, 255))
+    rect(p, 128, 18, 34, 58, 62, (140, 36, 44, 255))  # main course
+    rect(p, 128, 20, 38, 56, 58, (170, 46, 50, 255))
+    rect(p, 128, 40, 36, 56, 58, (120, 28, 36, 255))
+    # skull emblem on the sail
+    disc(p, 128, 34, 47, 5, (232, 228, 224, 255))
+    rect(p, 128, 29, 50, 39, 54, (232, 228, 224, 255))
+    px(p, 128, 32, 46, (16, 12, 16, 255)); px(p, 128, 36, 46, (16, 12, 16, 255))
+    rect(p, 128, 31, 51, 37, 52, (16, 12, 16, 255))
+    rect(p, 128, 48, 24, 52, 28, (16, 12, 16, 255))   # pennant
+    # gun flashes along the hull
+    for gx in (18, 30, 42, 54):
+        px(p, 128, gx, 80, (255, 196, 90, 255)); px(p, 128, gx + 1, 80, (255, 232, 150, 255))
+
+    # --- burning watchtower on the near cliff
+    rect(p, 128, 0, 70, 26, 128, (30, 24, 30, 255))   # cliff
+    rect(p, 128, 4, 34, 22, 88, (52, 48, 56, 255))    # tower
+    rect(p, 128, 2, 30, 24, 36, (64, 58, 66, 255))    # parapet
+    for y in range(40, 84, 12):
+        rect(p, 128, 8, y, 12, y + 5, (24, 20, 26, 255))  # arrow slits
+    # flames and smoke from the parapet
+    for (fx, fy, fh) in ((8, 22, 8), (13, 18, 12), (18, 24, 6)):
+        rect(p, 128, fx, fy, fx + 3, fy + fh, (255, 150, 60, 255))
+        rect(p, 128, fx + 1, fy - 3, fx + 2, fy + fh - 3, (255, 210, 110, 255))
+    for (sx, sy) in ((12, 10), (16, 6), (10, 2)):
+        disc(p, 128, sx, sy, 3, (60, 52, 60, 255))
+
+    # --- gold frame
+    for i in range(4):
+        hline(p, 128, i, 128 - i, i, (222, 182, 88, 255))
+        hline(p, 128, i, 128 - i, 127 - i, (222, 182, 88, 255))
+        vline(p, 128, i, i, 128 - i, (222, 182, 88, 255))
+        vline(p, 128, 127 - i, i, 128 - i, (222, 182, 88, 255))
     png(path, 128, 128, p)
 
 
@@ -1222,6 +1333,7 @@ def main():
     cannonball_texture(TEX / "item/cannonball.png")
     farmer_hoe_texture(TEX / "item/farmer_hoe.png")
     war_weapon_textures()
+    food_textures()
     cannon_block_textures(TEX / "block")
     airship_kit_texture(TEX / "item/airship_kit.png")
 

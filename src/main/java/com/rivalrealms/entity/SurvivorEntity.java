@@ -303,11 +303,12 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
         if (random.nextInt(5) != 0) {
             return;
         }
-        ItemStack gift = switch (random.nextInt(5)) {
+        ItemStack gift = switch (random.nextInt(6)) {
             case 0 -> new ItemStack(Items.EMERALD, 1 + random.nextInt(2));
             case 1 -> new ItemStack(Items.GOLDEN_CARROT, 2);
             case 2 -> new ItemStack(Items.ARROW, 6 + random.nextInt(6));
             case 3 -> new ItemStack(Items.IRON_INGOT, 1 + random.nextInt(2));
+            case 4 -> new ItemStack(ModItems.FRONTIER_STEW, 1);
             default -> new ItemStack(Items.BREAD, 3);
         };
         this.dropStack(gift);
@@ -818,6 +819,10 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
                         new ItemStack(Items.APPLE, 4), 12, 2, 0.05f));
                 offers.add(new TradeOffer(new TradedItem(Items.EMERALD, 1), Optional.empty(),
                         new ItemStack(Items.WHEAT_SEEDS, 9), 12, 2, 0.05f));
+                offers.add(new TradeOffer(new TradedItem(Items.EMERALD, 3), Optional.empty(),
+                        new ItemStack(com.rivalrealms.item.ModItems.FRONTIER_STEW, 1), 8, 3, 0.05f));
+                offers.add(new TradeOffer(new TradedItem(Items.EMERALD, 2), Optional.empty(),
+                        new ItemStack(com.rivalrealms.item.ModItems.MEAD, 1), 10, 2, 0.05f));
             }
             case MARAUDER -> offers.add(new TradeOffer(new TradedItem(Items.EMERALD, 6), Optional.empty(),
                     new ItemStack(Items.BONE, 4), 4, 2, 0.05f));

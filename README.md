@@ -155,6 +155,14 @@ Claimed settlements recruit guards and workers up to their level. Jobs (guard, b
 
 ---
 
+## Roads & riches
+
+- **Treasure shrines** dot the wilds regardless of biome: gold circle, four gilded pillars, braziers, one guarded chest — and yes, the keeper is a Custom-culture veteran
+- **Warcamps raid settlements**: a third of all settlement raids are Marauder warbands ("WARBAND sighted…")
+- **Hearthfolk caravans** walk the roads (1-in-5 wanderer groups): traders who buy your goodwill in emeralds
+- **Travel food**: Hardtack (3 wheat), Frontier Stew (full meal in a bowl, sold by caravans), Hearthfolk Mead (honey + wheat, +nutrition)
+- **Item art pass**: every 16×16 icon now gets a crisp dark outline + edge highlight for hotbar readability; blocks gained bevels and brushed-metal detail; the mod icon is a full sunset siege scene
+
 ## Realms at war
 
 ### Marauders — the fifth faction

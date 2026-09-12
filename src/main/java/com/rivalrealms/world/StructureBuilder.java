@@ -85,6 +85,7 @@ public final class StructureBuilder {
             case RUIN -> buildScatteredRuin(world, center);
             case GRAVEYARD -> buildScatteredGraveyard(world, center);
             case FARMSTEAD -> buildScatteredFarmstead(world, center);
+            case TEMPLE -> buildScatteredTemple(world, center);
         }
         world.playSound(null, center.getX() + 0.5, center.getY(), center.getZ() + 0.5, SoundEvents.BLOCK_ANVIL_LAND, SoundCategory.BLOCKS, 0.55f, 0.9f);
     }
@@ -1415,6 +1416,44 @@ public final class StructureBuilder {
         set(world, base.add(0, y + 1, 10), ModBlocks.REALM_BANNER);
         stockChest(world, base.add(-2, y + 1, 2), new ItemStack(Items.BREAD, 8),
                 new ItemStack(Items.WHEAT_SEEDS, 10), new ItemStack(ModItems.ROYAL_COIN, 2));
+    }
+
+    /** An old treasure shrine: gold circle, four pillars, braziers, one chest. */
+    private static void buildScatteredTemple(ServerWorld world, BlockPos base) {
+        int y = plateau(world, base, 15, 15, Blocks.STONE_BRICKS);
+        BlockPos origin = new BlockPos(base.getX(), y, base.getZ());
+
+        // Gilded ritual circle inside a stone brick ring.
+        for (int dx = -3; dx <= 3; dx++) {
+            for (int dz = -3; dz <= 3; dz++) {
+                double dist = Math.sqrt(dx * dx + dz * dz);
+                if (dist <= 3.2) {
+                    set(world, origin.add(dx, 1, dz),
+                            dist > 2.2 ? Blocks.STONE_BRICKS : ModBlocks.CASTLE_TILES);
+                    clearColumn(world, origin.getX() + dx, origin.getZ() + dz, y + 2, y + 4);
+                }
+            }
+        }
+        set(world, origin.add(0, 1, 0), Blocks.GOLD_BLOCK);
+        // four pillars with gold caps
+        for (int[] px : new int[][]{{-4, -4}, {4, -4}, {-4, 4}, {4, 4}}) {
+            BlockPos col = origin.add(px[0], 1, px[1]);
+            for (int h = 0; h < 4; h++) {
+                set(world, col.up(h), Blocks.STONE_BRICKS);
+            }
+            set(world, col.up(3), ModBlocks.CROWN_BRICK);
+            set(world, col.up(4), Blocks.GOLD_BLOCK);
+        }
+        // braziers at the cardinal points
+        for (int[] bx : new int[][]{{0, -4}, {0, 4}, {-4, 0}, {4, 0}}) {
+            BlockPos fire = origin.add(bx[0], 1, bx[1]);
+            set(world, fire, Blocks.GOLD_BLOCK);
+            set(world, fire.up(), Blocks.CAMPFIRE);
+        }
+        stockChest(world, origin.add(2, 2, 2), new ItemStack(ModItems.ROYAL_COIN, 4),
+                new ItemStack(ModItems.ROYAL_JEWELRY, 2), new ItemStack(Items.GOLD_NUGGET, 10),
+                new ItemStack(ModItems.RECRUITMENT_CONTRACT));
+        spawnGuard(world, base, y, BuildStyle.CUSTOM);
     }
 
     private static void spawnGuard(ServerWorld world, BlockPos base, int y, BuildStyle style) {

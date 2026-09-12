@@ -435,11 +435,18 @@ public final class RealmEvents {
             return;
         }
 
-        Archetype attacker = null;
-        for (Archetype candidate : Archetype.values()) {
-            if (state.isHostile(base.faction(), candidate.faction())) {
-                attacker = candidate;
-                break;
+        // One raid in three is a Marauder warband: they raid EVERYONE, and
+        // their warcamps sit close enough to be a constant threat.
+        Archetype attacker;
+        if (world.random.nextInt(3) == 0) {
+            attacker = Archetype.MARAUDER;
+        } else {
+            attacker = null;
+            for (Archetype candidate : Archetype.values()) {
+                if (state.isHostile(base.faction(), candidate.faction())) {
+                    attacker = candidate;
+                    break;
+                }
             }
         }
         if (attacker == null) {
@@ -472,7 +479,9 @@ public final class RealmEvents {
 
         ServerPlayerEntity owner = world.getServer().getPlayerManager().getPlayer(base.owner());
         if (owner != null) {
-            owner.sendMessage(Text.literal("Raid incoming at " + base.name() + ": " + attacker.title() + " forces are approaching."), false);
+            owner.sendMessage(Text.literal(("Marauders".equals(attacker.faction())
+                    ? "WARBAND sighted at " + base.name() + " - the Marauders are upon you!"
+                    : "Raid incoming at " + base.name() + ": " + attacker.title() + " forces are approaching.")), false);
         }
     }
 
@@ -631,11 +640,17 @@ public final class RealmEvents {
             return;
         }
         BlockPos center = surfacePosition(world, requested);
-        // One group in four is a Marauder warband prowling for trouble; the
-        // rest are the old mix of frontier wanderers.
-        Archetype culture = world.random.nextInt(4) == 0
-                ? Archetype.MARAUDER
-                : Archetype.values()[world.random.nextInt(Archetype.values().length)];
+        // Encounter mix: a Marauder warband hunting throats, a Hearthfolk
+        // caravan trading its way across the realm, or plain frontier wanderers.
+        Archetype culture;
+        int roll = world.random.nextInt(5);
+        if (roll == 0) {
+            culture = Archetype.MARAUDER;
+        } else if (roll == 1) {
+            culture = Archetype.HEARTHFOLK;
+        } else {
+            culture = Archetype.values()[world.random.nextInt(Archetype.values().length)];
+        }
         int band = culture == Archetype.MARAUDER ? 3 : 3;
         for (int i = 0; i < band; i++) {
             SurvivorEntity survivor = ModEntities.SURVIVOR.create(world);

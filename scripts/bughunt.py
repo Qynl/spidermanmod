@@ -240,6 +240,7 @@ def check_runtime_safety() -> None:
             "tickMaritimeEncounters",
             "makeChampion",
             "populateSettlement",
+            "onBlockBroken",
             "spawnShowcaseConvoy",
             "findWater",
             "spawnCrew",

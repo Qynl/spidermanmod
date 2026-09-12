@@ -55,6 +55,10 @@ public final class WorldSettlementGenerator {
             return;
         }
 
+        // Rare treasure shrines ignore biome borders: old gods had no borders.
+        if (hash % 11L == 0L) {
+            return new SettlementPlan(BuildStyle.CUSTOM, SettlementVariant.TEMPLE);
+        }
         String biome = biomePath(world, center);
         SettlementPlan plan = planFor(biome, hash);
         if (plan == null || !terrainAllows(world, center, plan.style())) {

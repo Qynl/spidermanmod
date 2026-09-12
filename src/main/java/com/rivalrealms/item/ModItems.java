@@ -32,6 +32,15 @@ public final class ModItems {
             new HalberdItem(new Item.Settings().maxCount(1).maxDamage(420)));
     public static final Item WARHORN = register("warhorn",
             new WarhornItem(new Item.Settings().maxCount(1)));
+    public static final Item HARDTACK = register("hardtack",
+            new Item(new Item.Settings().maxCount(16).food(new net.minecraft.component.type.FoodComponent.Builder()
+                    .nutrition(4).saturationModifier(0.3f).build())));
+    public static final Item FRONTIER_STEW = register("frontier_stew",
+            new Item(new Item.Settings().maxCount(1).food(new net.minecraft.component.type.FoodComponent.Builder()
+                    .nutrition(8).saturationModifier(0.8f).build())));
+    public static final Item MEAD = register("mead",
+            new Item(new Item.Settings().maxCount(6).food(new net.minecraft.component.type.FoodComponent.Builder()
+                    .nutrition(3).saturationModifier(0.4f).build())));
     public static final Item ROYAL_LONGSWORD = register("royal_longsword",
             new RoyalLongswordItem(ToolMaterials.DIAMOND, new Item.Settings().maxCount(1).maxDamage(860)));
     public static final Item ROYAL_COIN = register("royal_coin",
