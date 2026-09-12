@@ -31,8 +31,11 @@ jobs:
         run: |
           set -o pipefail
           if ! ./gradlew --no-daemon clean check build 2>&1 | tee gradle-build.log; then
-            echo "Gradle failed; surfacing the useful tail as CI annotations for the bug hunt."
-            tail -80 gradle-build.log | while IFS= read -r line; do
+            echo "Gradle failed; surfacing the useful diagnostics as CI annotations for the bug hunt."
+            {
+              grep -E -i 'error:|failure|what went wrong|execution failed|could not|exception|invalid|missing' gradle-build.log || true
+              tail -25 gradle-build.log
+            } | tail -45 | while IFS= read -r line; do
               echo "::error title=Gradle build::$line"
             done
             exit 1
