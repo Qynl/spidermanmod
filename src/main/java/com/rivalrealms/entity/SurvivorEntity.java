@@ -24,12 +24,17 @@ import net.minecraft.entity.EntityType;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtElement;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.world.World;
+
+import com.rivalrealms.world.RealmState;
 
 import java.util.List;
 import java.util.UUID;
@@ -54,6 +59,9 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
     private boolean recruited;
     private boolean guarding;
     private boolean loadoutApplied;
+    private UUID guardOwnerUuid;
+    private BlockPos guardCenter;
+    private String guardFaction;
 
     public SurvivorEntity(EntityType<? extends SurvivorEntity> entityType, World world) {
         super(entityType, world);
@@ -115,7 +123,11 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
                 betray(owner);
             }
         } else {
-            acquireRivalTarget();
+            if (guardCenter != null) {
+                guardHomeTick();
+            } else {
+                acquireRivalTarget();
+            }
         }
 
         // Outlaws occasionally reload a damaged weapon by swapping back to
@@ -147,20 +159,35 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
             return;
         }
 
-        PlayerEntity player = getWorld().getClosestPlayer(this, 18.0);
-        if (player != null && !player.isCreative() && !player.isSpectator()) {
-            setTarget(player);
-            return;
+        // Free survivors are dangerous to players; settlement guards are not.
+        // Guards only select rival NPCs when diplomacy says the factions are at war.
+        if (guardCenter == null) {
+            PlayerEntity player = getWorld().getClosestPlayer(this, 18.0);
+            if (player != null && !player.isCreative() && !player.isSpectator()) {
+                setTarget(player);
+                return;
+            }
         }
 
         List<net.minecraft.entity.Entity> nearby = getWorld().getOtherEntities(
-                this, getBoundingBox().expand(16.0), entity -> entity instanceof SurvivorEntity
-                        && entity.isAlive()
-                        && !((SurvivorEntity) entity).getArchetype().faction().equals(getArchetype().faction())
-                        && !((SurvivorEntity) entity).isRecruited());
+                this, getBoundingBox().expand(20.0), entity -> entity instanceof SurvivorEntity survivor
+                        && survivor.isAlive()
+                        && !survivor.isRecruited()
+                        && RealmState.get((ServerWorld) getWorld()).isHostile(effectiveFaction(), survivor.effectiveFaction()));
         if (!nearby.isEmpty()) {
             setTarget((LivingEntity) nearby.get(random.nextInt(nearby.size())));
         }
+    }
+
+    private void guardHomeTick() {
+        if (guardCenter == null) {
+            return;
+        }
+        double distance = squaredDistanceTo(guardCenter.getX() + 0.5, getY(), guardCenter.getZ() + 0.5);
+        if (distance > 32.0 * 32.0) {
+            getNavigation().startMovingTo(guardCenter.getX() + 0.5, guardCenter.getY(), guardCenter.getZ() + 0.5, 0.9);
+        }
+        acquireRivalTarget();
     }
 
     public void setArchetype(Archetype archetype) {
@@ -187,6 +214,28 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
 
     public boolean isRanged() {
         return getArchetype().isRanged();
+    }
+
+    public String effectiveFaction() {
+        return guardFaction == null || guardFaction.isBlank() ? getArchetype().faction() : guardFaction;
+    }
+
+    public boolean isBaseGuard() {
+        return guardCenter != null;
+    }
+
+    public void assignGuard(BlockPos center, UUID owner, String faction) {
+        guardCenter = center.toImmutable();
+        guardOwnerUuid = owner;
+        guardFaction = faction;
+        recruited = false;
+        ownerUuid = null;
+        guarding = false;
+        setCustomName(Text.literal("Guard · " + getArchetype().title()));
+    }
+
+    public UUID guardOwnerUuid() {
+        return guardOwnerUuid;
     }
 
     public boolean isRecruited() {
@@ -226,6 +275,9 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
                 ownerUuid = player.getUuid();
                 recruited = true;
                 guarding = false;
+                guardCenter = null;
+                guardOwnerUuid = null;
+                guardFaction = null;
                 trust = Math.max(trust, 80);
                 setTarget(null);
                 if (!player.isCreative()) {
@@ -293,6 +345,16 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
         if (ownerUuid != null) {
             nbt.putUuid("Owner", ownerUuid);
         }
+        nbt.putBoolean("BaseGuard", guardCenter != null);
+        if (guardCenter != null) {
+            nbt.putLong("GuardCenter", guardCenter.asLong());
+        }
+        if (guardOwnerUuid != null) {
+            nbt.putUuid("GuardOwner", guardOwnerUuid);
+        }
+        if (guardFaction != null) {
+            nbt.putString("GuardFaction", guardFaction);
+        }
     }
 
     @Override
@@ -303,6 +365,9 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
         guarding = nbt.getBoolean("Guarding");
         trust = Math.max(0, Math.min(100, nbt.getInt("Trust")));
         ownerUuid = nbt.containsUuid("Owner") ? nbt.getUuid("Owner") : null;
+        guardCenter = nbt.getBoolean("BaseGuard") ? BlockPos.fromLong(nbt.getLong("GuardCenter")) : null;
+        guardOwnerUuid = nbt.containsUuid("GuardOwner") ? nbt.getUuid("GuardOwner") : null;
+        guardFaction = nbt.contains("GuardFaction", NbtElement.STRING_TYPE) ? nbt.getString("GuardFaction") : null;
         loadoutApplied = false;
     }
 

@@ -6,6 +6,7 @@ import com.rivalrealms.entity.Archetype;
 import com.rivalrealms.entity.ModEntities;
 import com.rivalrealms.entity.SurvivorEntity;
 import com.rivalrealms.world.BuildStyle;
+import com.rivalrealms.world.RealmState;
 import com.rivalrealms.world.StructureBuilder;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.minecraft.command.CommandRegistryAccess;
@@ -50,12 +51,26 @@ public final class ModCommands {
                         .then(CommandManager.argument("style", StringArgumentType.word())
                                 .suggests((context, builder) -> {
                                     for (BuildStyle style : BuildStyle.values()) {
-                                        builder.suggest(style.id());
+                                        if (style != BuildStyle.CUSTOM) {
+                                            builder.suggest(style.id());
+                                        }
                                     }
                                     return builder.buildFuture();
                                 })
                                 .executes(context -> build(context.getSource(),
                                         StringArgumentType.getString(context, "style")))))
+                .then(CommandManager.literal("claim")
+                        .executes(context -> claim(context.getSource())))
+                .then(CommandManager.literal("bases")
+                        .executes(context -> listBases(context.getSource())))
+                .then(CommandManager.literal("diplomacy")
+                        .then(CommandManager.argument("first", StringArgumentType.word())
+                                .then(CommandManager.argument("second", StringArgumentType.word())
+                                        .then(CommandManager.argument("value", IntegerArgumentType.integer(-100, 100))
+                                                .executes(context -> setDiplomacy(context.getSource(),
+                                                        StringArgumentType.getString(context, "first"),
+                                                        StringArgumentType.getString(context, "second"),
+                                                        IntegerArgumentType.getInteger(context, "value")))))))
                 .then(CommandManager.literal("airship")
                         .executes(context -> spawnAirship(context.getSource())))
                 .then(CommandManager.literal("info")
@@ -86,8 +101,49 @@ public final class ModCommands {
     private static int build(ServerCommandSource source, String styleId) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
         ServerPlayerEntity player = source.getPlayer();
         BuildStyle style = BuildStyle.fromId(styleId);
-        StructureBuilder.build(player.getServerWorld(), player.getBlockPos(), style);
-        source.sendFeedback(() -> Text.literal("Built " + style.displayName() + ". Its doors, loot, and defenses are yours to shape."), true);
+        ServerWorld world = player.getServerWorld();
+        StructureBuilder.build(world, player.getBlockPos(), style);
+        BlockPos center = player.getBlockPos().add(4, 0, 4);
+        RealmState.BaseRecord base = RealmState.get(world).claimBase(center, player.getUuid(), style);
+        if (base == null) {
+            source.sendFeedback(() -> Text.literal("Built the structure, but it overlaps an existing settlement claim."), true);
+        } else {
+            source.sendFeedback(() -> Text.literal("Built and claimed " + base.name()
+                    + ". Hostile factions can now organize raids against it."), true);
+        }
+        return 1;
+    }
+
+    private static int claim(ServerCommandSource source) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
+        ServerPlayerEntity player = source.getPlayer();
+        RealmState.BaseRecord base = RealmState.get(player.getServerWorld()).claimCustomBase(
+                player.getBlockPos(), player.getUuid(), "Independent", player.getName().getString() + "'s Settlement");
+        if (base == null) {
+            source.sendError(Text.literal("This area is too close to another settlement."));
+            return 0;
+        }
+        source.sendFeedback(() -> Text.literal("Claimed " + base.name() + ". Place a Realm Banner here to make the claim visible."), true);
+        return 1;
+    }
+
+    private static int listBases(ServerCommandSource source) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
+        ServerPlayerEntity player = source.getPlayer();
+        var bases = RealmState.get(player.getServerWorld()).bases();
+        if (bases.isEmpty()) {
+            source.sendFeedback(() -> Text.literal("No settlements are claimed in this dimension."), false);
+            return 0;
+        }
+        for (RealmState.BaseRecord base : bases) {
+            source.sendFeedback(() -> Text.literal(base.name() + " · " + base.faction()
+                    + " · center " + base.center().toShortString() + " · level " + base.level()), false);
+        }
+        return bases.size();
+    }
+
+    private static int setDiplomacy(ServerCommandSource source, String first, String second, int value) {
+        RealmState realms = RealmState.get(source.getWorld());
+        realms.setRelation(first, second, value);
+        source.sendFeedback(() -> Text.literal("Diplomacy changed: " + first + " ↔ " + second + " = " + value), true);
         return 1;
     }
 

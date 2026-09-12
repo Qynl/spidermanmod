@@ -131,4 +131,15 @@ public enum Archetype {
         }
         return KNIGHT;
     }
+
+    public static Archetype byFaction(String faction) {
+        if (faction != null) {
+            for (Archetype archetype : values()) {
+                if (archetype.faction.equalsIgnoreCase(faction)) {
+                    return archetype;
+                }
+            }
+        }
+        return KNIGHT;
+    }
 }

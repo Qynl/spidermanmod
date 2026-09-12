@@ -3,17 +3,20 @@ package com.rivalrealms.world;
 import java.util.Locale;
 
 public enum BuildStyle {
-    KNIGHT("knight", "Crownlands Fortress"),
-    PIRATE("pirate", "Freebooter Harbor"),
-    WESTERN("western", "Dustwalker Town"),
-    SKY("sky", "Skybound Airship Dock");
+    KNIGHT("knight", "Crownlands Fortress", "Crownlands"),
+    PIRATE("pirate", "Freebooter Harbor", "Freebooters"),
+    WESTERN("western", "Dustwalker Town", "Dustwalkers"),
+    SKY("sky", "Skybound Airship Dock", "Skybound"),
+    CUSTOM("custom", "Claimed Settlement", "Independent");
 
     private final String id;
     private final String displayName;
+    private final String faction;
 
-    BuildStyle(String id, String displayName) {
+    BuildStyle(String id, String displayName, String faction) {
         this.id = id;
         this.displayName = displayName;
+        this.faction = faction;
     }
 
     public String id() {
@@ -22,6 +25,10 @@ public enum BuildStyle {
 
     public String displayName() {
         return displayName;
+    }
+
+    public String faction() {
+        return faction;
     }
 
     public static BuildStyle fromId(String id) {
