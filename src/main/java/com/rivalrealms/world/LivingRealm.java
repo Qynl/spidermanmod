@@ -5,7 +5,6 @@ import com.rivalrealms.entity.Archetype;
 import com.rivalrealms.entity.ModEntities;
 import com.rivalrealms.entity.SurvivorEntity;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.FallingBlockEntity;
 import net.minecraft.entity.LightningEntity;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
@@ -23,6 +22,7 @@ import net.minecraft.world.Heightmap;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -366,10 +366,12 @@ public final class LivingRealm {
     private static void earthquake(ServerWorld world, RealmState state, RealmState.BaseRecord base) {
         BlockPos at = surface(world, base.center().add(world.random.nextInt(21) - 10, 0, world.random.nextInt(21) - 10));
         for (int i = 0; i < 4; i++) {
-            BlockPos drop = at.add(world.random.nextInt(7) - 3, 3, world.random.nextInt(7) - 3);
-            FallingBlockEntity gravel = new FallingBlockEntity(world, drop.getX() + 0.5, drop.getY(), drop.getZ() + 0.5,
-                    net.minecraft.block.Blocks.GRAVEL.getDefaultState());
-            world.spawnEntity(gravel);
+            BlockPos spill = surface(world, at.add(world.random.nextInt(9) - 4, 0, world.random.nextInt(9) - 4));
+            world.setBlockState(spill, net.minecraft.block.Blocks.GRAVEL.getDefaultState());
+            if (world.random.nextBoolean()) {
+                world.setBlockState(spill.add(world.random.nextInt(3) - 1, 0, world.random.nextInt(3) - 1),
+                        net.minecraft.block.Blocks.COBBLESTONE.getDefaultState());
+            }
         }
         for (SurvivorEntity survivor : population(world, base)) {
             survivor.takeKnockback(0.8, world.random.nextDouble() - 0.5, world.random.nextDouble() - 0.5);

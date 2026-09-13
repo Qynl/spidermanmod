@@ -905,7 +905,7 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
         if (now < nextHobby) {
             return;
         }
-        nextHobby = now + 900L + random.nextInt(1200L);
+        nextHobby = now + 900L + random.nextInt(1200);
         int roll = random.nextInt(6);
         if (roll == 0 && getWorld() instanceof ServerWorld serverWorld) {
             // Music: a few notes while idle.
