@@ -27,7 +27,17 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
 
       - name: Build with Gradle
-        run: chmod +x gradlew && ./gradlew build --stacktrace
+        run: |
+          chmod +x gradlew
+          ./gradlew build --stacktrace 2>&1 | tee /tmp/gradle.log
+          exit ${PIPESTATUS[0]}
+
+      - name: Report build failure
+        if: failure()
+        run: |
+          tail -n 800 /tmp/gradle.log
+          echo "---FULL LOG---"
+          cat /tmp/gradle.log | tail -n 1000
 
       - name: Upload mod jar
         uses: actions/upload-artifact@v4
