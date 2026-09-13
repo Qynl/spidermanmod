@@ -948,7 +948,7 @@ public final class RealmEvents {
         CARAVANS.put(key, caravan);
         state.chronicle(world.getTime(), "A merchant caravan set out from the market at "
                 + a.getX() + ", " + a.getZ() + " for the far stalls at "
-                + b.getX() + ", " + b.getZ() + ".");
+                + b.getX() + ", " + b.getZ() + ".", true);
     }
 
     /** Steers the caravan leg by leg; dissolves it when it arrives or fails. */
@@ -983,11 +983,12 @@ public final class RealmEvents {
             return;
         }
         BlockPos target = caravan.waypoints.get(Math.min(caravan.leg, caravan.waypoints.size() - 1));
-        if (merchant.squaredDistanceTo(target.getX(), target.getY(), target.getZ()) < 100.0) {
+        if (merchant.squaredDistanceTo(target.getX() + 0.5, target.getY(),
+                target.getZ() + 0.5) < 100.0) {
             caravan.leg++;
             if (caravan.leg >= caravan.waypoints.size()) {
                 RealmState.get(world).chronicle(world.getTime(),
-                        "The merchant caravan reached the far market, guards and mule intact.");
+                        "The merchant caravan reached the far market, guards and mule intact.", true);
                 for (Entity entity : alive) {
                     if (!(entity instanceof SurvivorEntity)) {
                         entity.discard();
