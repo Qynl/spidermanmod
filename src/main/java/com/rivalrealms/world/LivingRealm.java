@@ -434,7 +434,9 @@ public final class LivingRealm {
             if (camp.abandoned() || !state.isHostile(from.faction(), camp.faction())) {
                 continue;
             }
-            if (camp.center().getSquaredDistance(from.center().add(to.center()).divide(2)) <= 70.0 * 70.0) {
+            BlockPos midRoad = new BlockPos((from.center().getX() + to.center().getX()) / 2,
+                    from.center().getY(), (from.center().getZ() + to.center().getZ()) / 2);
+            if (camp.center().getSquaredDistance(midRoad) <= 70.0 * 70.0) {
                 if (world.random.nextFloat() < 0.25f) {
                     state.chronicle(world.getTime(), "The road between " + from.name() + " and "
                             + to.name() + " is cut by the " + camp.faction() + ". Caravans stay home.", false);
