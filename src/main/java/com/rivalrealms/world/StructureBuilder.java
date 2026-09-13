@@ -3732,7 +3732,7 @@ public final class StructureBuilder {
             return;
         }
         world.setBlockState(pos, block.getDefaultState(), 3);
-        if (traceDepth > 0 && !block.isAir()) {
+        if (traceDepth > 0 && !block.getDefaultState().isAir()) {
             BUILD_TRACE.add(pos.toImmutable());
         }
     }

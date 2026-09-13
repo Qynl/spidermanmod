@@ -523,7 +523,7 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
 
     /** Ranged folk keep their distance: back off close threats, close on far ones. */
     private void combatSpacingTick() {
-        if (!isRanged() || tickCount % 20 != 7 || getVehicle() != null) {
+        if (!isRanged() || age % 20 != 7 || getVehicle() != null) {
             return;
         }
         LivingEntity mark = getTarget();
@@ -541,7 +541,7 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
 
     /** Guards answer their neighbours' fights: one settler in trouble brings the watch. */
     private void guardAssistTick() {
-        if (!guarding || tickCount % 40 != 13 || getTarget() != null) {
+        if (!guarding || age % 40 != 13 || getTarget() != null) {
             return;
         }
         for (SurvivorEntity ally : getWorld().getEntitiesByClass(SurvivorEntity.class,
@@ -556,7 +556,7 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
 
     /** Civilians drift home when the light goes: walls before wild beasts. */
     private void eveningRoutineTick() {
-        if (guarding || isRecruited() || guardCenter == null || tickCount % 60 != 29) {
+        if (guarding || isRecruited() || guardCenter == null || age % 60 != 29) {
             return;
         }
         if (!getWorld().isNight() || getVehicle() != null) {
