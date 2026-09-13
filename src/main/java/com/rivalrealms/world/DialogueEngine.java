@@ -286,15 +286,15 @@ public final class DialogueEngine {
             if (survivor.settlementRole() == SettlementRole.FARMER && farmer == null) {
                 farmer = survivor;
             }
-            if (survivor.settlementRole() == SettlementRole.SCOUT && scout == null) {
-                scout = survivor;
-            }
         }
         SurvivorEntity trader = null;
         SurvivorEntity scout = null;
         for (SurvivorEntity survivor : population) {
             if (survivor.settlementRole() == SettlementRole.TRADER && trader == null) {
                 trader = survivor;
+            }
+            if (survivor.settlementRole() == SettlementRole.SCOUT && scout == null) {
+                scout = survivor;
             }
         }
         int roll = world.random.nextInt(6);
