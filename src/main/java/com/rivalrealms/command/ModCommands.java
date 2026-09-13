@@ -201,25 +201,26 @@ public final class ModCommands {
                     net.minecraft.util.Formatting.RED), false);
             return 0;
         }
-        BuildStyle style = BuildStyle.fromId(target.styleId());
-        SettlementVariant variant = parseVariant(target.name());
-        BlockPos center = target.center();
+        final RealmState.BaseRecord rebuilt = target;
+        final BuildStyle style = BuildStyle.fromId(rebuilt.styleId());
+        final SettlementVariant variant = parseVariant(rebuilt.name());
+        BlockPos center = rebuilt.center();
         // The old residents step aside; recruited companions stay loyal.
         for (SurvivorEntity resident : com.rivalrealms.world.LivingRealm.population(world, target)) {
             resident.discard();
         }
         StructureBuilder.clearSite(world, center, 34, 24);
         StructureBuilder.buildScattered(world, center, style, variant);
-        int levels = Math.min(target.level(), 5);
+        final int levels = Math.min(rebuilt.level(), 5);
         for (int level = 2; level <= levels; level++) {
             StructureBuilder.expand(world, center, style, level);
         }
         RealmEvents.populateSettlement(world, center, style, variant);
-        state.chronicle(world.getTime(), target.name()
+        state.chronicle(world.getTime(), rebuilt.name()
                 + " was torn down and raised anew, truer to its founders' craft.", true);
-        source.sendFeedback(() -> Text.literal(target.name() + " rebuilt from the ground up ("
+        source.sendFeedback(() -> Text.literal(rebuilt.name() + " rebuilt from the ground up ("
                 + style.displayName() + " · " + variant.name().toLowerCase(java.util.Locale.ROOT)
-                + ", level " + target.level() + ").").formatted(net.minecraft.util.Formatting.GOLD), false);
+                + ", level " + levels + ").").formatted(net.minecraft.util.Formatting.GOLD), false);
         return 1;
     }
 
