@@ -157,6 +157,8 @@ Claimed settlements recruit guards and workers up to their level. Jobs (guard, b
 
 ## Sieges & the wide world
 
+- **Real wars between neighbours**: hostile settlements within reach muster a visible warband — captain, soldiers, and a scout holding a spyglass — swear the war oath, and march out in column. At the enemy walls the war cry rings, defenders taunt from the ramparts, and the assault comes over the top on **real placed ladders**; victory hands the town to the besieger
+
 - **SIEGES are events**: bells ring, defenders rally under Speed/Resistance buffs, a Royal Messenger sprints for the nearest friendly town, allied relief columns march, civilians flee outward from the fighting, and when the dust settles the town either holds (fanfare, feast) or bears **grave rows outside its walls**. Arrive halfway through and you'll have to piece together what started it — the chronicle knows
 - **Player camps**: craft a Camp Kit (wool + campfire + lead) and raise a real home — tent, bed, chest, map table, weapon rack, lanterns. It's claimed as a settlement in `/rivalrealms bases`; come back across days and it **grows trophies and a banner** into a landmark of the roads
 - **The peaceful road**: lost children (reunite them for Hearthfolk gratitude), stranded merchants (an iron ingot repairs the axle — half the load is yours), horse disputes, roadside festivals with live bard music, gossips who recite the chronicle and ask if it really happened that way, and travelers who greet you **by your reputation title**
@@ -201,6 +203,7 @@ Claimed settlements recruit guards and workers up to their level. Jobs (guard, b
 
 ## The living realm
 
+- **Structures stand on solid ground**: every building packs its footprint flush down to real terrain (no arches of air, no floating edges — ever), and cottages are properly built: stone footing, timber framing, shuttered windows, a porch over the recessed door, a brick chimney, a hearth and a woodpile
 - **`/rivalrealms rebuild`**: stand beside any settlement and raise it anew with the latest builder - the fix for places your world generated under older, clumsier drafts (residents step aside and return, recruited companions stay loyal, your chronicle remembers the reconstruction)
 - **Sky towns are grounded: skyfolk build one cohesive dirt terrace — workshops, houses, a farm strip and a single mooring mast with chained lines, the airship riding at the masthead; no floating slabs, and new sites are rejected unless the whole ground is solid and level
 - **Expeditions resolve for real**: fed fortified towns send named pioneers into the wild — if two or more survive the walk, they claim the land, raise walls in their faction's style, and a brand-new settlement joins the map (with a homecoming cry); if not, their town mourns and the chronicle remembers them as lost
