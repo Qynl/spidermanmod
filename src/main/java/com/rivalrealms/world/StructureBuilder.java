@@ -831,7 +831,7 @@ public final class StructureBuilder {
         // Pull the chunk to FULL before trusting its heightmap: a chunk still
         // mid-generation reports a garbage surface, and a building set on that
         // garbage floats. When the chunk is already whole this is a no-op.
-        world.getChunk(x >> 4, z >> 4, ChunkStatus.FULL, true);
+        world.getChunk(x >> 4, z >> 4, net.minecraft.world.chunk.ChunkStatus.FULL, true);
         BlockPos top = world.getTopPosition(Heightmap.Type.WORLD_SURFACE, new BlockPos(x, world.getBottomY(), z));
         int y = Math.min(top.getY() - 1, world.getTopY() - 2);
         int bottom = world.getBottomY() + 1;
