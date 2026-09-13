@@ -31,8 +31,9 @@ public final class SenseLogic {
             return;
         }
         SpiderConfig cfg = SpiderConfig.get();
-        double radius = cfg.senseRadiusBase + cfg.senseRadiusPerStage * powers.stage;
-        if (powers.stylePoints > 200) radius *= 1.2;
+        double calcRadius = cfg.senseRadiusBase + cfg.senseRadiusPerStage * powers.stage;
+        if (powers.stylePoints > 200) calcRadius *= 1.2;
+        final double radius = calcRadius;
         
         Vec3d pos = player.getPos();
         Box box = new Box(pos.x - radius, pos.y - radius, pos.z - radius,
