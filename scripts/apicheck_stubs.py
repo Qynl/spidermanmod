@@ -803,6 +803,7 @@ add('net.minecraft.server.world.ServerWorld', ['net.minecraft.world.World'], [
     'public long getSeed();',
     'public net.minecraft.server.MinecraftServer getServer();',
     'public net.minecraft.world.chunk.ChunkManager getChunkManager();',
+    'public net.minecraft.world.chunk.Chunk getChunk(int chunkX, int chunkZ, net.minecraft.world.chunk.ChunkStatus leastStatus, boolean load);',
 ])
 add('net.minecraft.world.chunk.ChunkManager', [], [
     'public boolean isChunkLoaded(int x, int z);',
@@ -1129,3 +1130,7 @@ def emit():
 
 if __name__ == '__main__':
     emit()
+
+add('net.minecraft.world.chunk.ChunkStatus', [], [
+    'public static final net.minecraft.world.chunk.ChunkStatus FULL;',
+]);

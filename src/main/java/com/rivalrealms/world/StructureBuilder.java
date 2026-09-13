@@ -39,7 +39,26 @@ public final class StructureBuilder {
 
     // ------------------------------------------------------------------ API
 
+    /**
+     * Holds every chunk a site spans before a single block is written.
+     * Structure blocks placed into unloaded chunks vanish silently - the
+     * reason half-built fortresses used to hang in the air. Far probes
+     * sync-generate their chunk, exactly like vanilla structure placement.
+     */
+    public static void forceLoad(ServerWorld world, BlockPos center, int half) {
+        int minX = (center.getX() - half) >> 4;
+        int maxX = (center.getX() + half) >> 4;
+        int minZ = (center.getZ() - half) >> 4;
+        int maxZ = (center.getZ() + half) >> 4;
+        for (int cx = minX; cx <= maxX; cx++) {
+            for (int cz = minZ; cz <= maxZ; cz++) {
+                world.getChunk(cx, cz, net.minecraft.world.chunk.ChunkStatus.FULL, true);
+            }
+        }
+    }
+
     public static void build(ServerWorld world, BlockPos origin, BuildStyle style) {
+        forceLoad(world, origin, 40);
         BlockPos base = origin.add(4, 0, 4);
         switch (style) {
             case KNIGHT -> buildKnightFortress(world, base);
@@ -71,6 +90,7 @@ public final class StructureBuilder {
     }
 
     public static void buildScattered(ServerWorld world, BlockPos center, BuildStyle style, SettlementVariant variant) {
+        forceLoad(world, center, 40);
         switch (variant) {
             case FORTRESS -> buildScatteredFortress(world, center);
             case CITADEL -> buildCitadel(world, center);
@@ -759,6 +779,9 @@ public final class StructureBuilder {
             if (h == 3) {
                 set(world, origin.add(0, h, radius), trim);
             }
+            if (roofed && h == height) {
+                set(world, origin.add(0, h, radius - 1), trim);
+            }
             // Arrow slits on the cardinal faces at mid height.
             if (h == height / 2 || h == height / 2 + 1) {
                 set(world, origin.add(0, h, radius), Blocks.AIR);
@@ -832,6 +855,17 @@ public final class StructureBuilder {
                 set(world, corner.add(x, y + height - 2, 0), Blocks.AIR);
                 set(world, corner.add(x, y + height - 2, sizeZ - 1), Blocks.AIR);
             }
+            if (x % 5 == 0 && x > 0 && x < sizeX - 1) {
+                // Pilaster ribs give the wall its vertical rhythm.
+                for (int h = 1; h <= height; h++) {
+                    set(world, corner.add(x, y + h, -1), wall);
+                    set(world, corner.add(x, y + h, sizeZ), wall);
+                }
+            }
+            if (x % 8 == 4) {
+                // Working light on the yard face.
+                set(world, corner.add(x, y + height - 1, 1), Blocks.LANTERN);
+            }
         }
         for (int z = 0; z < sizeZ; z++) {
             wallColumn(world, corner.add(0, 0, z), y, height, wall, trim);
@@ -840,6 +874,12 @@ public final class StructureBuilder {
                 // Loopholes: true arrow slits punched clean through the walk.
                 set(world, corner.add(0, y + height - 2, z), Blocks.AIR);
                 set(world, corner.add(sizeX - 1, y + height - 2, z), Blocks.AIR);
+            }
+            if (z % 5 == 0 && z > 0 && z < sizeZ - 1) {
+                for (int h = 1; h <= height; h++) {
+                    set(world, corner.add(-1, y + h, z), wall);
+                    set(world, corner.add(sizeX, y + h, z), wall);
+                }
             }
             if (z == 0 || z == sizeZ - 1) {
                 // Bartizans lean out at the corners.
@@ -1013,11 +1053,15 @@ public final class StructureBuilder {
                     }
                 }
             }
-            // Windows on the south face.
+            // Tall windows with trim surrounds on the south face.
             if (h >= 3 && h <= 4) {
                 for (int x = 2; x < sizeX - 2; x += 3) {
                     set(world, origin.add(x, h, sizeZ - 1), Blocks.GLASS_PANE);
                     set(world, origin.add(x, h, 0), h == 3 ? ModBlocks.ARROW_SLIT : Blocks.GLASS_PANE);
+                    if (h == 3) {
+                        set(world, origin.add(x, h - 1, sizeZ - 1), trim);
+                        set(world, origin.add(x, h + 2, sizeZ - 1), trim);
+                    }
                 }
             }
             // Door gap on the south face.
@@ -1478,10 +1522,14 @@ public final class StructureBuilder {
     // ---------------------------------------------------------------- props
 
     private static void crenellate(ServerWorld world, BlockPos start, int lengthX, int lengthZ, Block trim) {
+        // Deep crenellations: tall merlons in pairs with slab merlons
+        // between, the rhythm real fortifications are read by.
         for (int x = 0; x < lengthX; x++) {
             for (int z = 0; z < lengthZ; z++) {
-                if ((x + z) % 2 == 0) {
+                if ((x + z) % 4 < 2) {
                     set(world, start.add(x, 0, z), trim);
+                } else if ((x + z) % 4 == 2) {
+                    set(world, start.add(x, 0, z), net.minecraft.block.Blocks.STONE_BRICK_SLAB);
                 }
             }
         }
