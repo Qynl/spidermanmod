@@ -293,7 +293,7 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
                     && getArchetype() == Archetype.MARAUDER ? "marauder_growl" : "combat_bark";
             com.rivalrealms.sound.ModSounds.playProfiled(battleWorld, getBlockPos(),
                     bark, getUuid(), 1.2f, 1.15f);
-            nextBattleCry = time + 500L + random.nextInt(900);
+            nextBattleCry = time + 700L + random.nextInt(1400);
         }
         // Interruptible: trouble cuts chatter off with a startled look.
         if (getTarget() != null && random.nextInt(3) == 0
@@ -314,7 +314,7 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
             return;
         }
         // Rival banners share a street: a quiet warning keeps the peace. For now.
-        if (getWorld() instanceof ServerWorld streetWorld && random.nextInt(4) == 0) {
+        if (getWorld() instanceof ServerWorld streetWorld && random.nextInt(6) == 0) {
             com.rivalrealms.world.RealmState street =
                     com.rivalrealms.world.RealmState.get(streetWorld);
             for (net.minecraft.entity.Entity stranger : streetWorld.getOtherEntities(this,
@@ -338,8 +338,8 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
         String quipText = quip();
         listener.sendMessage(Text.literal("<" + getName().getString() + "> " + quipText)
                 .formatted(Formatting.GRAY), true);
-        // Roughly one quip in three gets a real voice behind it.
-        if (random.nextInt(3) == 0 && getWorld() instanceof ServerWorld serverWorld) {
+        // Roughly one quip in four gets a real voice behind it.
+        if (random.nextInt(4) == 0 && getWorld() instanceof ServerWorld serverWorld) {
             com.rivalrealms.sound.ModSounds.playVoiceFor(serverWorld, getBlockPos(),
                     random.nextBoolean() ? "quip_idle" : "quip_idle2", (ServerPlayerEntity) listener);
         }

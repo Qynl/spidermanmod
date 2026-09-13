@@ -169,9 +169,33 @@ public final class WorldSettlementGenerator {
         if (center.getY() <= world.getBottomY() + 2 || center.getY() >= world.getTopY() - 24) {
             return false;
         }
-        // Harbors are allowed on shallow water; every land culture needs a
-        // solid surface so its foundations do not float in caves or oceans.
-        return style == BuildStyle.PIRATE || world.getFluidState(center.down()).isEmpty();
+        // Harbors are allowed on shallow water; every land culture needs
+        // solid, reasonably level ground across its whole site - not just at
+        // the center post - so houses never straddle cliffs or sprout from
+        // the shallows. Probes stay inside the generating chunk so nothing
+        // is force-loaded mid-generation.
+        if (style == BuildStyle.PIRATE) {
+            return true;
+        }
+        int highest = Integer.MIN_VALUE;
+        int lowest = Integer.MAX_VALUE;
+        int[][] probes = {{0, 0}, {10, 0}, {-10, 0}, {0, 10}, {0, -10},
+                {10, 10}, {-10, -10}, {10, -10}, {-10, 10}};
+        for (int[] probe : probes) {
+            int px = center.getX() + probe[0];
+            int pz = center.getZ() + probe[1];
+            if ((px >> 4) != (center.getX() >> 4) || (pz >> 4) != (center.getZ() >> 4)) {
+                continue;
+            }
+            BlockPos top = world.getTopPosition(Heightmap.Type.WORLD_SURFACE,
+                    new BlockPos(px, center.getY(), pz)).down();
+            if (!world.getFluidState(top).isEmpty()) {
+                return false;
+            }
+            highest = Math.max(highest, top.getY());
+            lowest = Math.min(lowest, top.getY());
+        }
+        return highest - lowest <= 12;
     }
 
     private static BlockPos chooseSurface(ServerWorld world, BlockPos requested) {

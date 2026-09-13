@@ -188,19 +188,25 @@ public final class StructureBuilder {
     }
 
     private static void buildScatteredSkyport(ServerWorld world, BlockPos base) {
-        buildSkyDock(world, base);
-        int y = groundAt(world, base.getX(), base.getZ()) + 10;
-        // Elevated landing platforms on scaffolding legs.
-        platform(world, base.add(-19, 0, -5), 9, 9, y, ModBlocks.AIRSHIP_METAL);
-        platform(world, base.add(11, 0, 3), 9, 9, y, ModBlocks.AIRSHIP_METAL);
+        // A proper ground-hugging port: one dirt terrace with a workshop row,
+        // a farm strip, and a single mooring apron. Only the ships own the sky.
+        int y = plateau(world, base, 33, 29, Blocks.COARSE_DIRT);
+        fill(world, base.add(-6, y, -7), 13, 1, 9, ModBlocks.AIRSHIP_METAL);
         house(world, base.add(-18, 0, -4), 6, 6, Blocks.SPRUCE_PLANKS, Blocks.SPRUCE_LOG,
                 Blocks.SPRUCE_STAIRS, ModBlocks.AIRSHIP_METAL);
+        house(world, base.add(11, 0, -6), 6, 6, Blocks.SPRUCE_PLANKS, Blocks.SPRUCE_LOG,
+                Blocks.SPRUCE_STAIRS, Blocks.SPRUCE_PLANKS);
         workshop(world, base.add(10, 0, 4), 6, 7, ModBlocks.AIRSHIP_METAL, Blocks.SPRUCE_LOG);
-        farmhouse(world, base.add(-14, 0, 8));
+        farmhouse(world, base.add(-16, 0, 8));
         vegPlot(world, base.add(-6, 0, 10), 7, 5);
-        scarecrow(world, base.add(-2, 0, 12));
-        set(world, base.add(0, y + 1, 0), ModBlocks.REALM_BANNER);
-        mooredAirship(world, base.add(2, 0, -8));
+        scarecrow(world, base.add(2, 0, 12));
+        set(world, base.add(0, y + 1, 3), ModBlocks.REALM_BANNER);
+        stockChest(world, base.add(-3, y + 1, -5), new ItemStack(ModItems.AIRSHIP_KIT),
+                new ItemStack(Items.IRON_INGOT, 4), new ItemStack(Items.COPPER_INGOT, 3));
+        lampPost(world, base.add(-4, 0, 3));
+        lampPost(world, base.add(4, 0, 3));
+        mooredAirship(world, base.add(0, 0, -2));
+        spawnGuard(world, base, y, BuildStyle.SKY);
     }
 
     private static void buildScatteredOutpost(ServerWorld world, BlockPos base, BuildStyle style) {
@@ -381,13 +387,19 @@ public final class StructureBuilder {
     }
 
     private static void buildAirshipYard(ServerWorld world, BlockPos base) {
-        buildScatteredSkyport(world, base);
-        int y = groundAt(world, base.getX(), base.getZ()) + 10;
-        hangar(world, base.add(-14, 0, -12), 8, 10, y);
-        hangar(world, base.add(8, 0, -12), 8, 10, y);
-        fill(world, base.add(-22, y, 9), 45, 1, 3, ModBlocks.AIRSHIP_METAL);
-        set(world, base.add(0, y + 1, 9), ModBlocks.REALM_BANNER);
-        mooredAirship(world, base.add(4, 0, -9));
+        // The shipwright's yard: two grounded hangars flanking a service
+        // apron and one mast. No floating slabs - the ships do the flying.
+        int y = plateau(world, base, 37, 33, Blocks.COARSE_DIRT);
+        hangar(world, base.add(-15, 0, -12), 8, 10);
+        hangar(world, base.add(7, 0, -12), 8, 10);
+        fill(world, base.add(-15, y, 1), 31, 1, 5, ModBlocks.AIRSHIP_METAL);
+        set(world, base.add(0, y + 1, 3), ModBlocks.REALM_BANNER);
+        workshop(world, base.add(-15, 0, 9), 7, 6, ModBlocks.AIRSHIP_METAL, Blocks.SPRUCE_LOG);
+        farmhouse(world, base.add(9, 0, 9));
+        lampPost(world, base.add(-5, 0, 3));
+        lampPost(world, base.add(5, 0, 3));
+        mooredAirship(world, base.add(0, 0, 3));
+        spawnGuard(world, base, y, BuildStyle.SKY);
     }
 
     // ------------------------------------------------------- culture builds
@@ -424,21 +436,20 @@ public final class StructureBuilder {
     }
 
     private static void buildSkyDock(ServerWorld world, BlockPos base) {
-        int y = groundAt(world, base.getX(), base.getZ());
-        plateau(world, base, 25, 21, ModBlocks.AIRSHIP_METAL);
-        // Dock tower with a crow's platform.
-        roundTower(world, base.add(-8, 0, -6), 3, 12, ModBlocks.AIRSHIP_METAL, Blocks.SPRUCE_LOG, false);
-        platform(world, base.add(-9, 0, -7), 8, 8, y + 12, ModBlocks.AIRSHIP_METAL);
-        workshop(world, base.add(4, 0, -6), 7, 7, ModBlocks.AIRSHIP_METAL, Blocks.SPRUCE_LOG);
-        house(world, base.add(4, 0, 3), 6, 6, Blocks.SPRUCE_PLANKS, Blocks.SPRUCE_LOG,
+        // One grounded dock: a dirt terrace, a metal landing apron and the
+        // mast. Nothing floats; the sky belongs to the ships, not the town.
+        int y = plateau(world, base, 25, 21, Blocks.COARSE_DIRT);
+        fill(world, base.add(-6, y, -6), 12, 1, 8, ModBlocks.AIRSHIP_METAL);
+        roundTower(world, base.add(-9, 0, 3), 3, 10, ModBlocks.AIRSHIP_METAL, Blocks.SPRUCE_LOG, false);
+        workshop(world, base.add(8, 0, -6), 7, 7, ModBlocks.AIRSHIP_METAL, Blocks.SPRUCE_LOG);
+        house(world, base.add(8, 0, 3), 6, 6, Blocks.SPRUCE_PLANKS, Blocks.SPRUCE_LOG,
                 Blocks.SPRUCE_STAIRS, ModBlocks.AIRSHIP_METAL);
-        fill(world, base.add(-2, y, 8), 5, 1, 6, ModBlocks.AIRSHIP_METAL);
-        set(world, base.add(0, y + 1, -2), ModBlocks.REALM_BANNER);
-        stockChest(world, base.add(2, y + 1, 1), new ItemStack(ModItems.AIRSHIP_KIT),
+        set(world, base.add(0, y + 1, 4), ModBlocks.REALM_BANNER);
+        stockChest(world, base.add(3, y + 1, 1), new ItemStack(ModItems.AIRSHIP_KIT),
                 new ItemStack(Items.IRON_INGOT, 6), new ItemStack(Items.COPPER_INGOT, 4));
-        lampPost(world, base.add(-4, 0, 2));
-        lampPost(world, base.add(4, 0, 2));
-        mooredAirship(world, base.add(0, 0, -9));
+        lampPost(world, base.add(-4, 0, 3));
+        lampPost(world, base.add(4, 0, 3));
+        mooredAirship(world, base.add(0, 0, -2));
         spawnGuard(world, base, y, BuildStyle.SKY);
     }
 
@@ -513,14 +524,15 @@ public final class StructureBuilder {
     }
 
     private static void expandSky(ServerWorld world, BlockPos base, int level) {
+        // Growth stays grounded: sheds, hangars and workshops on the dirt,
+        // never platforms on stilts.
         switch (level) {
             case 2 -> {
-                int y = groundAt(world, base.getX(), base.getZ()) + 10;
-                platform(world, base.add(14, 0, -10), 8, 8, y, ModBlocks.AIRSHIP_METAL);
-                platform(world, base.add(-22, 0, -10), 8, 8, y, ModBlocks.AIRSHIP_METAL);
+                storageYard(world, base.add(12, 0, -8), Blocks.SPRUCE_PLANKS);
+                lampPost(world, base.add(11, 0, -5));
             }
-            case 3 -> hangar(world, base.add(-14, 0, 6), 8, 9, groundAt(world, base.getX(), base.getZ()) + 10);
-            case 4 -> workshop(world, base.add(14, 0, 6), 7, 6, ModBlocks.AIRSHIP_METAL, Blocks.SPRUCE_LOG);
+            case 3 -> hangar(world, base.add(-15, 0, 5), 8, 9);
+            case 4 -> workshop(world, base.add(12, 0, 6), 7, 6, ModBlocks.AIRSHIP_METAL, Blocks.SPRUCE_LOG);
             case 5 -> mooredAirship(world, base.add(-4, 0, -10));
             default -> {
             }
@@ -877,7 +889,12 @@ public final class StructureBuilder {
     /** Small cottage with a pitched roof, glass windows and a furnished interior. */
     private static void house(ServerWorld world, BlockPos corner, int sizeX, int sizeZ,
                               Block wall, Block log, Block stair, Block roofAccent) {
-        int y = groundAt(world, corner.getX() + sizeX / 2, corner.getZ() + sizeZ / 2);
+        // Pad on the LOWEST corner so a slope never leaves the floor agape;
+        // foundations close every gap beneath.
+        int y = Math.min(Math.min(groundAt(world, corner.getX(), corner.getZ()),
+                groundAt(world, corner.getX() + sizeX - 1, corner.getZ())),
+                Math.min(groundAt(world, corner.getX(), corner.getZ() + sizeZ - 1),
+                        groundAt(world, corner.getX() + sizeX - 1, corner.getZ() + sizeZ - 1)));
         BlockPos origin = new BlockPos(corner.getX(), y, corner.getZ());
         int wallHeight = 4;
         for (int h = 0; h <= wallHeight; h++) {
@@ -886,7 +903,12 @@ public final class StructureBuilder {
                     boolean shell = x == 0 || z == 0 || x == sizeX - 1 || z == sizeZ - 1 || h == 0;
                     BlockPos pos = origin.add(x, h, z);
                     if (!shell) {
-                        set(world, pos, h == 0 ? roofAccent : Blocks.AIR);
+                        if (h == 0) {
+                            set(world, pos, roofAccent);
+                            foundation(world, pos.getX(), pos.getZ(), y - 1, log);
+                        } else {
+                            set(world, pos, Blocks.AIR);
+                        }
                         continue;
                     }
                     if (h == 0) {
@@ -908,23 +930,18 @@ public final class StructureBuilder {
         set(world, origin.add(sizeX / 2, 1, sizeZ - 1), Blocks.AIR);
         set(world, origin.add(sizeX / 2, 2, sizeZ - 1), Blocks.AIR);
 
-        // Pitched roof: shrinking stair rings along the long axis.
-        int ridge = Math.min(sizeX, sizeZ) / 2;
+        // Pitched roof: one clean gable along the long axis - stair rows
+        // climbing both long walls to a flat ridge cap.
+        int ridge = (sizeZ - 1) / 2;
         for (int r = 0; r < ridge; r++) {
             int h = wallHeight + 1 + r;
-            for (int x = -1 + r; x <= sizeX - r; x++) {
-                if (x < -1 || x > sizeX) {
-                    continue;
-                }
+            for (int x = -1; x <= sizeX; x++) {
                 set(world, origin.add(x, h, r), stair);
                 set(world, origin.add(x, h, sizeZ - 1 - r), stair);
             }
-            for (int z = r; z <= sizeZ - 1 - r; z++) {
-                set(world, origin.add(r - 1, h, z), stair);
-                set(world, origin.add(sizeX - r, h, z), stair);
-            }
         }
-        if (ridge * 2 < sizeZ) {
+        int cap = sizeZ - 2 * ridge;
+        if (cap > 0) {
             int h = wallHeight + ridge;
             for (int x = -1; x <= sizeX; x++) {
                 for (int z = ridge; z <= sizeZ - 1 - ridge; z++) {
@@ -1251,8 +1268,10 @@ public final class StructureBuilder {
         set(world, base.add(0, y + 8, 0), flag);
     }
 
-    private static void hangar(ServerWorld world, BlockPos corner, int sizeX, int sizeZ, int y) {
-        // Open-front metal hangar frame on the sky platform level.
+    private static void hangar(ServerWorld world, BlockPos corner, int sizeX, int sizeZ) {
+        // Open-front ship shelter at ground level: iron sill, arched timber
+        // frame, metal roof.
+        int y = groundAt(world, corner.getX() + sizeX / 2, corner.getZ() + sizeZ / 2);
         BlockPos origin = new BlockPos(corner.getX(), y, corner.getZ());
         for (int x = 0; x < sizeX; x++) {
             for (int z = 0; z < sizeZ; z++) {
@@ -1261,10 +1280,13 @@ public final class StructureBuilder {
                 if (frame && (x + z) % 2 == 0) {
                     set(world, origin.add(x, 1, z), Blocks.SPRUCE_LOG);
                     set(world, origin.add(x, 2, z), Blocks.SPRUCE_LOG);
+                    if ((x + z) % 4 == 0) {
+                        set(world, origin.add(x, 3, z), Blocks.SPRUCE_LOG);
+                    }
                 }
             }
         }
-        roofFlat(world, corner, sizeX, sizeZ, y + 3, ModBlocks.AIRSHIP_METAL);
+        roofFlat(world, corner, sizeX, sizeZ, y + 4, ModBlocks.AIRSHIP_METAL);
         set(world, origin.add(0, 1, 0), Blocks.LANTERN);
     }
 
@@ -1277,7 +1299,8 @@ public final class StructureBuilder {
                     // Scaffolding legs down to the ground.
                     for (int leg = 1; leg <= Math.max(1, y - groundAt(world, origin.getX() + x, origin.getZ() + z)); leg++) {
                         BlockPos legPos = origin.add(x, -leg, z);
-                        if (world.getBlockState(legPos).isAir()) {
+                        if (world.getBlockState(legPos).isAir()
+                                || !world.getFluidState(legPos).isEmpty()) {
                             set(world, legPos, Blocks.SCAFFOLDING);
                         } else {
                             break;
@@ -1301,20 +1324,31 @@ public final class StructureBuilder {
 
     private static void mooredAirship(ServerWorld world, BlockPos base) {
         int y = groundAt(world, base.getX(), base.getZ());
+        // The mast first: iron footing, timber pole, chains aloft.
+        set(world, base.add(0, y + 1, 0), ModBlocks.AIRSHIP_METAL);
+        for (int h = 2; h <= 9; h++) {
+            set(world, base.add(0, y + h, 0), Blocks.SPRUCE_LOG);
+        }
+        set(world, base.add(0, y + 10, 0), ModBlocks.AIRSHIP_METAL);
+        set(world, base.add(0, y + 11, 0), Blocks.CHAIN);
+        set(world, base.add(0, y + 12, 0), Blocks.CHAIN);
+        // Three mooring points around the foot, each chained to its post.
+        int[][] guys = {{3, 0}, {-2, 3}, {-2, -3}};
+        for (int[] guy : guys) {
+            BlockPos foot = base.add(guy[0], 0, guy[1]);
+            int fy = groundAt(world, foot.getX(), foot.getZ());
+            set(world, new BlockPos(foot.getX(), fy + 1, foot.getZ()), ModBlocks.AIRSHIP_METAL);
+            set(world, new BlockPos(foot.getX(), fy + 2, foot.getZ()), Blocks.CHAIN);
+        }
+        // The ship rides at the masthead, tugging gently at its lines.
         com.rivalrealms.entity.AirshipEntity ship = ModEntities.AIRSHIP.create(world);
         if (ship == null) {
             return;
         }
-        ship.refreshPositionAndAngles(base.getX() + 0.5, y + 7.0, base.getZ() + 0.5,
+        ship.refreshPositionAndAngles(base.getX() + 0.5, y + 13.0, base.getZ() + 0.5,
                 world.random.nextFloat() * 360.0f, 0.0f);
         ship.setEnvelopeColor(world.random.nextInt(4));
         world.spawnEntity(ship);
-        // Mooring mast with chains up toward the hover height.
-        for (int h = 1; h <= 4; h++) {
-            set(world, base.add(0, y + h, 0), Blocks.OAK_FENCE);
-        }
-        set(world, base.add(0, y + 5, 0), Blocks.CHAIN);
-        set(world, base.add(0, y + 6, 0), Blocks.CHAIN);
     }
 
     private static int waterSurfaceAt(ServerWorld world, BlockPos pos) {

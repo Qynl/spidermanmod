@@ -8,6 +8,7 @@ import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.math.BlockPos;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -167,21 +168,63 @@ public final class ModSounds {
         return Registry.register(Registries.SOUND_EVENT, RivalRealms.id(name), SoundEvent.of(RivalRealms.id(name)));
     }
 
+    /** Last world tick each voice key played - the anti-spam memory. */
+    private static final Map<String, Long> LAST_PLAYED = new HashMap<>();
+
+    /**
+     * Minimum world-tick gap between ANY two plays of a chatty key, no
+     * matter which NPC or settlement fires it. Voices should feel like
+     * people, not a switchboard: one battle bark, one gossip, one hunger
+     * cry at a time. Keys not listed get a safe 2-second default.
+     */
+    private static final Map<String, Long> GLOBAL_GAP = Map.ofEntries(
+            Map.entry("combat_bark", 160L), Map.entry("marauder_growl", 400L),
+            Map.entry("standoff", 1200L), Map.entry("escort_hail", 600L),
+            Map.entry("child_ask", 1800L), Map.entry("greet_knight", 300L),
+            Map.entry("greet_pirate", 300L), Map.entry("greet_outlaw", 300L),
+            Map.entry("greet_sky_captain", 300L), Map.entry("greet_hearthfolk", 300L),
+            Map.entry("wary_greeting", 400L), Map.entry("warm_greeting", 400L),
+            Map.entry("quip_idle", 500L), Map.entry("quip_idle2", 500L),
+            Map.entry("npc_chat_a", 300L), Map.entry("npc_chat_b", 100L),
+            Map.entry("work_shout", 1200L), Map.entry("child_play", 1200L),
+            Map.entry("trade_patter", 1200L), Map.entry("town_pride", 3600L),
+            Map.entry("hunger_cry", 3600L), Map.entry("rumor_player", 600L),
+            Map.entry("wanted_you", 1200L), Map.entry("haggle", 60L),
+            Map.entry("death_last_words", 100L), Map.entry("interrupt_wait", 300L),
+            Map.entry("night_warning", 600L), Map.entry("morning_greeting", 600L),
+            Map.entry("known_return", 600L), Map.entry("event_aftermath", 600L),
+            Map.entry("grief_recount", 900L), Map.entry("triumph_recount", 900L),
+            Map.entry("story_chronicle", 1200L), Map.entry("quarrel_a", 600L),
+            Map.entry("quarrel_b", 60L));
+
+    private static boolean audible(ServerWorld world, String key) {
+        long gap = GLOBAL_GAP.getOrDefault(key, 40L);
+        long now = world.getTime();
+        Long last = LAST_PLAYED.get(key);
+        if (last != null && now - last < gap) {
+            return false;
+        }
+        LAST_PLAYED.put(key, now);
+        return true;
+    }
+
     /** Plays a catalogued voice line at a position to everyone nearby. */
     public static void playVoice(ServerWorld world, BlockPos pos, String key) {
         SoundEvent voice = VOICES.get(key);
-        if (voice != null) {
-            world.playSound(null, pos, voice, SoundCategory.NEUTRAL, 1.2f, 1.0f);
+        if (voice == null || !audible(world, key)) {
+            return;
         }
+        world.playSound(null, pos, voice, SoundCategory.NEUTRAL, 1.2f, 1.0f);
     }
 
     /** A voice line aimed at one player only (quiet, personal). */
     public static void playVoiceFor(ServerWorld world, BlockPos pos, String key,
                                     net.minecraft.server.network.ServerPlayerEntity player) {
         SoundEvent voice = VOICES.get(key);
-        if (voice != null) {
-            world.playSound(player, pos, voice, SoundCategory.NEUTRAL, 1.0f, 1.0f);
+        if (voice == null || !audible(world, key)) {
+            return;
         }
+        world.playSound(player, pos, voice, SoundCategory.NEUTRAL, 1.0f, 1.0f);
     }
 
     /**
@@ -192,7 +235,7 @@ public final class ModSounds {
     public static void playProfiled(ServerWorld world, BlockPos pos, String key, UUID who,
                                     float pitchMul, float volume) {
         SoundEvent voice = VOICES.get(key);
-        if (voice == null) {
+        if (voice == null || !audible(world, key)) {
             return;
         }
         float profile = 0.85f + Math.floorMod(who.getLeastSignificantBits(), 5L) * 0.1f;
