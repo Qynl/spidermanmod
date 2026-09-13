@@ -182,7 +182,7 @@ Claimed settlements recruit guards and workers up to their level. Jobs (guard, b
 ## Bard & voice
 
 - **Six composed melodies** play in the world: Hearthfire (taverns), March of Banners (sieges), Harvest Reel (festivals), Dirge (funerals), Wanderer's Rest (camps), Victory Fanfare (held walls)
-- **A performed voice catalog** for the realm's great moments — sieges, greetings, farewells, trade, celebration — wired into the world's biggest events
+- **A performed voice catalog (20 lines and growing)** for almost every moment: sieges, the town crier announcing big news aloud to every player, warm and folksy hellos ("Well hello there, Mister!"), voiced idle musings by the fire, feeding praise, the recruitment handshake, bitter betrayals, the THIEF! shout over stolen crops, "lower that crossbow" warnings, trade patter, farewells, celebration, and the lost child's plea
 
 ## The living realm
 

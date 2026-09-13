@@ -63,5 +63,15 @@
   "subtitles.rivalrealms.voice.merchant_trade": "Merchant calls out his wares",
   "subtitles.rivalrealms.voice.death_last_words": "Last words",
   "subtitles.rivalrealms.voice.celebration": "The feast grows loud",
-  "subtitles.rivalrealms.voice.lost_child": "A child sniffs"
+  "subtitles.rivalrealms.voice.lost_child": "A child sniffs",
+  "subtitles.rivalrealms.voice.greeting_neutral": "A traveler's greeting",
+  "subtitles.rivalrealms.voice.greeting_folksy": "A folksy hello",
+  "subtitles.rivalrealms.voice.quip_idle": "Idle musing",
+  "subtitles.rivalrealms.voice.quip_idle2": "Idle musing",
+  "subtitles.rivalrealms.voice.trust_up": "Warm praise",
+  "subtitles.rivalrealms.voice.recruit_join": "A contract is signed",
+  "subtitles.rivalrealms.voice.betray": "A bitter farewell",
+  "subtitles.rivalrealms.voice.theft_caught": "A shout: Thief!",
+  "subtitles.rivalrealms.voice.guard_warning": "A guarded warning",
+  "subtitles.rivalrealms.voice.herald_news": "The town crier calls"
 }

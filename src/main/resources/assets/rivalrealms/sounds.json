@@ -58,5 +58,65 @@
     "sounds": [
       "rivalrealms:voice/lost_child"
     ]
+  },
+  "voice.greeting_neutral": {
+    "subtitle": "subtitles.rivalrealms.voice.greeting_neutral",
+    "sounds": [
+      "rivalrealms:voice/greeting_neutral"
+    ]
+  },
+  "voice.greeting_folksy": {
+    "subtitle": "subtitles.rivalrealms.voice.greeting_folksy",
+    "sounds": [
+      "rivalrealms:voice/greeting_folksy"
+    ]
+  },
+  "voice.quip_idle": {
+    "subtitle": "subtitles.rivalrealms.voice.quip_idle",
+    "sounds": [
+      "rivalrealms:voice/quip_idle"
+    ]
+  },
+  "voice.quip_idle2": {
+    "subtitle": "subtitles.rivalrealms.voice.quip_idle2",
+    "sounds": [
+      "rivalrealms:voice/quip_idle2"
+    ]
+  },
+  "voice.trust_up": {
+    "subtitle": "subtitles.rivalrealms.voice.trust_up",
+    "sounds": [
+      "rivalrealms:voice/trust_up"
+    ]
+  },
+  "voice.recruit_join": {
+    "subtitle": "subtitles.rivalrealms.voice.recruit_join",
+    "sounds": [
+      "rivalrealms:voice/recruit_join"
+    ]
+  },
+  "voice.betray": {
+    "subtitle": "subtitles.rivalrealms.voice.betray",
+    "sounds": [
+      "rivalrealms:voice/betray"
+    ]
+  },
+  "voice.theft_caught": {
+    "subtitle": "subtitles.rivalrealms.voice.theft_caught",
+    "sounds": [
+      "rivalrealms:voice/theft_caught"
+    ]
+  },
+  "voice.guard_warning": {
+    "subtitle": "subtitles.rivalrealms.voice.guard_warning",
+    "sounds": [
+      "rivalrealms:voice/guard_warning"
+    ]
+  },
+  "voice.herald_news": {
+    "subtitle": "subtitles.rivalrealms.voice.herald_news",
+    "sounds": [
+      "rivalrealms:voice/herald_news"
+    ]
   }
 }

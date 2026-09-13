@@ -1069,8 +1069,17 @@ public final class LivingRealm {
         return world.getChunkManager().isChunkLoaded(center.getX() >> 4, center.getZ() >> 4);
     }
 
+    private static long lastHerald;
+
     private static void chronicleBroadcast(ServerWorld world, RealmState state, String story, boolean major) {
         Text text = Text.literal(story).formatted(major ? Formatting.GOLD : Formatting.GRAY);
         world.getServer().getPlayerManager().broadcast(text, false);
+        // Big news earns the town crier's voice - but he needs to breathe.
+        if (major && world.getTime() - lastHerald >= 2400L) {
+            lastHerald = world.getTime();
+            for (var player : world.getServer().getPlayerManager().getPlayerList()) {
+                com.rivalrealms.sound.ModSounds.playVoiceFor(world, player.getBlockPos(), "herald_news", player);
+            }
+        }
     }
 }

@@ -31,6 +31,16 @@ public final class ModSounds {
     public static final SoundEvent DEATH_LAST_WORDS = register("voice.death_last_words");
     public static final SoundEvent CELEBRATION = register("voice.celebration");
     public static final SoundEvent LOST_CHILD = register("voice.lost_child");
+    public static final SoundEvent GREETING_NEUTRAL = register("voice.greeting_neutral");
+    public static final SoundEvent GREETING_FOLKSY = register("voice.greeting_folksy");
+    public static final SoundEvent QUIP_IDLE = register("voice.quip_idle");
+    public static final SoundEvent QUIP_IDLE2 = register("voice.quip_idle2");
+    public static final SoundEvent TRUST_UP = register("voice.trust_up");
+    public static final SoundEvent RECRUIT_JOIN = register("voice.recruit_join");
+    public static final SoundEvent BETRAY = register("voice.betray");
+    public static final SoundEvent THEFT_CAUGHT = register("voice.theft_caught");
+    public static final SoundEvent GUARD_WARNING = register("voice.guard_warning");
+    public static final SoundEvent HERALD_NEWS = register("voice.herald_news");
 
     private static final Map<String, SoundEvent> VOICES = Map.of(
             "siege_defense", SIEGE_DEFENSE,
@@ -42,7 +52,17 @@ public final class ModSounds {
             "merchant_trade", MERCHANT_TRADE,
             "death_last_words", DEATH_LAST_WORDS,
             "celebration", CELEBRATION,
-            "lost_child", LOST_CHILD);
+            "lost_child", LOST_CHILD,
+            "greeting_neutral", GREETING_NEUTRAL,
+            "greeting_folksy", GREETING_FOLKSY,
+            "quip_idle", QUIP_IDLE,
+            "quip_idle2", QUIP_IDLE2,
+            "trust_up", TRUST_UP,
+            "recruit_join", RECRUIT_JOIN,
+            "betray", BETRAY,
+            "theft_caught", THEFT_CAUGHT,
+            "guard_warning", GUARD_WARNING,
+            "herald_news", HERALD_NEWS);
 
     private static SoundEvent register(String name) {
         return Registry.register(Registries.SOUND_EVENT, RivalRealms.id(name), SoundEvent.of(RivalRealms.id(name)));

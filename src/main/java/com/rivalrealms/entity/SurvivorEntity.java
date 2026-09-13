@@ -290,8 +290,14 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
         if (listener == null) {
             return;
         }
-        listener.sendMessage(Text.literal("<" + getName().getString() + "> " + quip())
+        String quipText = quip();
+        listener.sendMessage(Text.literal("<" + getName().getString() + "> " + quipText)
                 .formatted(Formatting.GRAY), true);
+        // Roughly one quip in three gets a real voice behind it.
+        if (random.nextInt(3) == 0 && getWorld() instanceof ServerWorld serverWorld) {
+            com.rivalrealms.sound.ModSounds.playVoiceFor(serverWorld, getBlockPos(),
+                    random.nextBoolean() ? "quip_idle" : "quip_idle2", (ServerPlayerEntity) listener);
+        }
         nextQuip = time + 3600L + random.nextInt(5400);
     }
 
@@ -1001,6 +1007,9 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
     }
 
     public void betray(PlayerEntity owner) {
+        if (!getWorld().isClient && getWorld() instanceof ServerWorld betrayWorld) {
+            com.rivalrealms.sound.ModSounds.playVoice(betrayWorld, getBlockPos(), "betray");
+        }
         recruited = false;
         guarding = false;
         ownerUuid = null;
@@ -1080,6 +1089,10 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
                         SoundCategory.NEUTRAL, 1.0f, 1.0f);
                 player.sendMessage(Text.literal(getName().getString() + " joined your crew. Trust: "
                         + trust + "/100"), false);
+                if (getWorld() instanceof ServerWorld serverWorld) {
+                    com.rivalrealms.sound.ModSounds.playVoiceFor(serverWorld, getBlockPos(), "recruit_join",
+                            (ServerPlayerEntity) player);
+                }
                 return ActionResult.SUCCESS;
             }
             player.sendMessage(Text.literal("This survivor already belongs to another crew."), true);
@@ -1095,6 +1108,10 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
                 getWorld().playSound(null, getX(), getY(), getZ(), SoundEvents.ENTITY_GENERIC_EAT,
                         SoundCategory.NEUTRAL, 0.8f, 1.0f);
                 player.sendMessage(Text.literal("Trust increased to " + trust + "/100."), true);
+                if (random.nextBoolean() && getWorld() instanceof ServerWorld praiseWorld) {
+                    com.rivalrealms.sound.ModSounds.playVoiceFor(praiseWorld, getBlockPos(), "trust_up",
+                            (ServerPlayerEntity) player);
+                }
                 return ActionResult.SUCCESS;
             }
             if (held.isEmpty()) {
@@ -1145,8 +1162,12 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
             line = getName().getString() + " bows: \"" + title + " of the " + effectiveFaction()
                     + "! An honor. What brings you to " + (guardCenter != null ? "our home" : "the road") + "?\"";
             com.rivalrealms.sound.ModSounds.playVoice(serverWorld, getBlockPos(), "greeting_friendly");
+        } else if (temperament == Temperament.CHILL && random.nextInt(3) == 0) {
+            line = getName().getString() + " beams: \"Well hello there, Mister! Passing through, or staying for supper?\"";
+            com.rivalrealms.sound.ModSounds.playVoice(serverWorld, getBlockPos(), "greeting_folksy");
         } else {
             line = getName().getString() + " nods at the " + armorWord + " stranger: \"Safe roads, " + title + ".\"";
+            com.rivalrealms.sound.ModSounds.playVoice(serverWorld, getBlockPos(), "greeting_neutral");
         }
         player.sendMessage(Text.literal(line).formatted(Formatting.GRAY), true);
     }
@@ -1688,6 +1709,7 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
                         && !folk.isRecruited()
                         && folk.effectiveFaction().equals(faction))) {
             SurvivorEntity folk = (SurvivorEntity) witness;
+            com.rivalrealms.sound.ModSounds.playVoice(world, folk.getBlockPos(), "theft_caught");
             folk.holdGrudge(thief, 108000L);
             if (folk.temperament != Temperament.CHILL && folk.isSettlementWorker()) {
                 folk.setTarget(thief);
@@ -1728,6 +1750,7 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
             holdGrudge(player, 48000L);
             player.sendMessage(Text.literal(getName().getString()
                     + " does not like the way you are aiming that.").formatted(Formatting.GOLD), true);
+            com.rivalrealms.sound.ModSounds.playVoiceFor(serverWorld, getBlockPos(), "guard_warning", player);
             if (temperament != Temperament.CHILL) {
                 setTarget(player);
             }
