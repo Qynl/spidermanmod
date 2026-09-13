@@ -49,6 +49,8 @@ public final class ModBlocks {
     public static final Block ARROW_SLIT = register("arrow_slit", new Block(AbstractBlock.Settings.create()
             .mapColor(MapColor.STONE_GRAY).instrument(NoteBlockInstrument.BASEDRUM)
             .strength(4.5f).requiresTool().nonOpaque()));
+    public static final Block NOTICE_BOARD = register("notice_board", new NoticeBoardBlock(AbstractBlock.Settings.copy(Blocks.DARK_OAK_PLANKS)
+            .mapColor(MapColor.BROWN).strength(2.2f).sounds(BlockSoundGroup.WOOD)));
     public static final Block CANNON = register("cannon", new CannonBlock(AbstractBlock.Settings.create()
             .mapColor(MapColor.IRON_GRAY).instrument(NoteBlockInstrument.BASEDRUM)
             .strength(5.5f).requiresTool().sounds(BlockSoundGroup.COPPER)));

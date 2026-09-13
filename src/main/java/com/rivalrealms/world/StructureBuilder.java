@@ -157,6 +157,8 @@ public final class StructureBuilder {
         scarecrow(world, base.add(-13, 0, -14));
         lampPost(world, base.add(-8, 0, -1));
         lampPost(world, base.add(8, 0, -1));
+        set(world, base.add(7, y + 1, -1), ModBlocks.NOTICE_BOARD);
+        set(world, base.add(-7, y + 1, 4), ModBlocks.NOTICE_BOARD);
         lampPost(world, base.add(-8, 0, 7));
         lampPost(world, base.add(8, 0, 7));
         set(world, base.add(9, y + 1, 6), ModBlocks.SUPPLY_CRATE);
@@ -1527,6 +1529,7 @@ public final class StructureBuilder {
         farmPlot(world, base.add(-12, 0, 2), 8, 6);
         vegPlot(world, base.add(5, 0, 1), 7, 6);
         well(world, base.add(0, 0, -2));
+        set(world, base.add(3, y + 1, -2), ModBlocks.NOTICE_BOARD);
         scarecrow(world, base.add(-8, 0, 5));
         haystack(world, base.add(3, 0, -5));
         lampPost(world, base.add(-6, 0, -1));

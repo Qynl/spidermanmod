@@ -179,6 +179,12 @@ Claimed settlements recruit guards and workers up to their level. Jobs (guard, b
 - **Treasure maps**: craft from paper + compass. Never "go to X" — a bearing from the nearest town, a pace count, a riddle, and green motes where the X sleeps under dark earth
 - **Traveling merchants**: caravans walk settlement to settlement (and pirates still cut the roads)
 
+## Contracts & crime
+
+- **Notice Boards** (craftable, built into towns and hamlets) post real work born from the simulation: **BOUNTY** a champion raider's head, **HUNT** marauders, **DELIVER** word to a sister town, **GATHER** grain/iron for a hungry pantry, **SCOUT** a strange place. Rewards: royal coin + reputation, paid on the spot. `/rivalrealms contracts` lists and accepts anywhere
+- **Work expires**: ignore it too long and someone else takes it ("Too slow, friend. There's always more trouble.")
+- **CRIME pays back**: be hated enough and the settlement **posts you WANTED** — voiced, chronicled, and their guards hunt you. Sneak up on a guard with royal coins to **pay the fine** and buy your name back
+
 ## The dialogue engine
 
 - **Context, not dice**: what an NPC says is chosen from what is true right now — your reputation, the hour (night warnings, bright morning calls), whether they've met you before (**recognition**: "Back again? You've the look of someone with unfinished business."), whether their settlement **recently bled** (survivors recount the attack, in their own words), and the chronicle's old stories, told where they happened

@@ -52,6 +52,16 @@ public final class ModSounds {
     public static final SoundEvent CHILD_PLAY = register("voice.child_play");
     public static final SoundEvent INTERRUPT_WAIT = register("voice.interrupt_wait");
     public static final SoundEvent KNOWN_RETURN = register("voice.known_return");
+    public static final SoundEvent CONTRACT_OFFER = register("voice.contract_offer");
+    public static final SoundEvent CONTRACT_DONE = register("voice.contract_done");
+    public static final SoundEvent CONTRACT_EXPIRED = register("voice.contract_expired");
+    public static final SoundEvent HUNT_PROGRESS = register("voice.hunt_progress");
+    public static final SoundEvent WANTED_YOU = register("voice.wanted_you");
+    public static final SoundEvent FINE_PAID = register("voice.fine_paid");
+    public static final SoundEvent GATHER_REQUEST = register("voice.gather_request");
+    public static final SoundEvent EXPLORE_HINT = register("voice.explore_hint");
+    public static final SoundEvent DELIVER_GIVEN = register("voice.deliver_given");
+    public static final SoundEvent BOARD_PITCH = register("voice.board_pitch");
 
     private static final Map<String, SoundEvent> VOICES = Map.ofEntries(
             Map.entry("siege_defense", SIEGE_DEFENSE),
@@ -83,7 +93,17 @@ public final class ModSounds {
             Map.entry("work_shout", WORK_SHOUT),
             Map.entry("child_play", CHILD_PLAY),
             Map.entry("interrupt_wait", INTERRUPT_WAIT),
-            Map.entry("known_return", KNOWN_RETURN));
+            Map.entry("known_return", KNOWN_RETURN),
+            Map.entry("contract_offer", CONTRACT_OFFER),
+            Map.entry("contract_done", CONTRACT_DONE),
+            Map.entry("contract_expired", CONTRACT_EXPIRED),
+            Map.entry("hunt_progress", HUNT_PROGRESS),
+            Map.entry("wanted_you", WANTED_YOU),
+            Map.entry("fine_paid", FINE_PAID),
+            Map.entry("gather_request", GATHER_REQUEST),
+            Map.entry("explore_hint", EXPLORE_HINT),
+            Map.entry("deliver_given", DELIVER_GIVEN),
+            Map.entry("board_pitch", BOARD_PITCH));
 
     private static SoundEvent register(String name) {
         return Registry.register(Registries.SOUND_EVENT, RivalRealms.id(name), SoundEvent.of(RivalRealms.id(name)));

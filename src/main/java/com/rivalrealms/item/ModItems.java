@@ -113,6 +113,7 @@ public final class ModItems {
         registerBlockItem("supply_crate", ModBlocks.SUPPLY_CRATE);
         registerBlockItem("road_stone", ModBlocks.ROAD_STONE);
         registerBlockItem("arrow_slit", ModBlocks.ARROW_SLIT);
+        registerBlockItem("notice_board", ModBlocks.NOTICE_BOARD);
         ModItemGroups.register();
         RivalRealms.LOGGER.info("Registered contracts, guns, ship kits, cannonballs, spawn eggs and settlement blocks.");
     }

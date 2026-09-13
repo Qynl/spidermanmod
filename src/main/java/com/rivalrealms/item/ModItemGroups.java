@@ -42,6 +42,7 @@ public final class ModItemGroups {
                         entries.add(ModBlocks.SUPPLY_CRATE);
                         entries.add(ModBlocks.ROAD_STONE);
                         entries.add(ModBlocks.ARROW_SLIT);
+                        entries.add(ModBlocks.NOTICE_BOARD);
                         // Armory
                         entries.add(ModItems.ROYAL_LONGSWORD);
                         entries.add(ModItems.REVOLVER);

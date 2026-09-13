@@ -83,5 +83,16 @@
   "subtitles.rivalrealms.voice.work_shout": "Workers shout at the walls",
   "subtitles.rivalrealms.voice.child_play": "Children playing",
   "subtitles.rivalrealms.voice.interrupt_wait": "Wait... what's that?",
-  "subtitles.rivalrealms.voice.known_return": "A familiar face returns"
+  "subtitles.rivalrealms.voice.known_return": "A familiar face returns",
+  "block.rivalrealms.notice_board": "Notice Board",
+  "subtitles.rivalrealms.voice.contract_offer": "Work is offered",
+  "subtitles.rivalrealms.voice.contract_done": "A bargain kept!",
+  "subtitles.rivalrealms.voice.contract_expired": "The work went to someone else",
+  "subtitles.rivalrealms.voice.hunt_progress": "Good hunting",
+  "subtitles.rivalrealms.voice.wanted_you": "WANTED!",
+  "subtitles.rivalrealms.voice.fine_paid": "The debt is paid",
+  "subtitles.rivalrealms.voice.gather_request": "A plea for honest goods",
+  "subtitles.rivalrealms.voice.explore_hint": "Tales of a strange place",
+  "subtitles.rivalrealms.voice.deliver_given": "A message entrusted",
+  "subtitles.rivalrealms.voice.board_pitch": "Fresh notices on the board"
 }

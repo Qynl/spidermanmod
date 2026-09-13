@@ -167,6 +167,7 @@ add('net.minecraft.util.math.random.Random', [], [
 add('net.minecraft.util.Formatting', [], [
     'public static final net.minecraft.util.Formatting RED;', 'public static final net.minecraft.util.Formatting GOLD;', 'public static final net.minecraft.util.Formatting GREEN;', 'public static final net.minecraft.util.Formatting GRAY;', 'public static final net.minecraft.util.Formatting WHITE;', 'public static final net.minecraft.util.Formatting AQUA;', 'public static final net.minecraft.util.Formatting DARK_RED;', 'public static final net.minecraft.util.Formatting YELLOW;',
     'public static final net.minecraft.util.Formatting LIGHT_PURPLE;',
+    'public static final net.minecraft.util.Formatting DARK_GRAY;',
 ])
 add('net.minecraft.util.Hand', [], [
     'public static final net.minecraft.util.Hand MAIN_HAND;',

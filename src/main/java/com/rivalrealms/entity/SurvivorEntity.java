@@ -107,6 +107,7 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
     private int suspicion;
     private int forgeTimer;
     private long nextPatrol;
+    private boolean champion;
     private String familyName = "";
     private Trait trait = Trait.NONE;
     private long nextHobby;
@@ -706,6 +707,14 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
         return guardCenter;
     }
 
+    public boolean isChampion() {
+        return champion;
+    }
+
+    public void setChampion(boolean champion) {
+        this.champion = champion;
+    }
+
     /** When this survivor last interacted with a player, for recognition. */
     public Long lastMet(UUID player) {
         return knownPlayers.get(player);
@@ -1050,6 +1059,34 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
         ItemStack held = player.getStackInHand(hand);
 
         if (!getWorld().isClient) {
+            // Paying your debts: settle a bounty at the guard who holds it.
+            if (player.shouldCancelInteraction() && held.isOf(com.rivalrealms.item.ModItems.ROYAL_COIN)
+                    && isBaseGuard() && guardCenter != null
+                    && getWorld() instanceof ServerWorld fineWorld) {
+                RealmState realms = RealmState.get(fineWorld);
+                var home = realms.findByCenter(guardCenter);
+                int local = home != null ? home.localReputation(player.getUuid()) : 0;
+                if (home != null && local < -12) {
+                    int cost = Math.max(4, -local / 2);
+                    if (held.getCount() < cost) {
+                        player.sendMessage(Text.literal(getName().getString()
+                                + " eyes your coins: \"That's not enough. " + cost
+                                + " coin clears your name.\"").formatted(Formatting.RED), true);
+                        return ActionResult.SUCCESS;
+                    }
+                    if (!player.isCreative()) {
+                        held.decrement(cost);
+                    }
+                    home.adjustLocalReputation(player.getUuid(), cost);
+                    com.rivalrealms.sound.ModSounds.playVoiceFor(fineWorld, getBlockPos(),
+                            "fine_paid", (ServerPlayerEntity) player);
+                    player.sendMessage(Text.literal("You pay " + cost
+                            + " coin. The guard nods once and looks away. (Local standing "
+                            + local + " → " + home.localReputation(player.getUuid()) + ")")
+                            .formatted(Formatting.GREEN), false);
+                    return ActionResult.SUCCESS;
+                }
+            }
             // Faces are remembered: every real meeting feeds recognition later.
             if (knownPlayers.size() > 12) {
                 knownPlayers.clear();
@@ -1316,6 +1353,11 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
     @Override
     public void onDeath(DamageSource source) {
         if (!getWorld().isClient && getWorld() instanceof ServerWorld deathWorld) {
+            // Contracts: bounties and hunts only care about the killer's hand.
+            if (source.getAttacker() instanceof ServerPlayerEntity contractKiller) {
+                com.rivalrealms.world.ContractEngine.onPlayerKill(deathWorld, contractKiller,
+                        champion, effectiveFaction());
+            }
             String killerName = source.getAttacker() == null
                     ? "misfortune" : source.getAttacker().getName().getString();
             // Named settlers are written into the world chronicle when they fall.
@@ -1533,6 +1575,7 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
             nbt.putString("GuardFaction", guardFaction);
         }
         nbt.putString("Family", familyName);
+        nbt.putBoolean("Champion", champion);
         nbt.putString("Trait", trait.id());
         nbt.putInt("HobbyTimer", hobbyTimer);
         if (!knownPlayers.isEmpty()) {
@@ -1586,6 +1629,7 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
         // only re-roll the loadout for survivors that never had one.
         loadoutApplied = nbt.getBoolean("LoadoutApplied");
         familyName = nbt.getString("Family");
+        champion = nbt.getBoolean("Champion");
         trait = Trait.byId(nbt.getString("Trait"));
         hobbyTimer = Math.max(0, nbt.getInt("HobbyTimer"));
         child = nbt.getBoolean("Child");

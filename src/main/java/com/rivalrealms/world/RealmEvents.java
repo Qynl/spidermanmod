@@ -63,6 +63,22 @@ public final class RealmEvents {
                             world.getRegistryKey().getValue(), exception);
                 }
             }
+            if (world.getTime() % 600L == 300L) {
+                try {
+                    ContractEngine.tick(world);
+                } catch (RuntimeException exception) {
+                    RivalRealms.LOGGER.error("Contract tick failed in {}",
+                            world.getRegistryKey().getValue(), exception);
+                }
+            }
+            if (world.getTime() % 100L == 40L) {
+                try {
+                    ContractEngine.tickExplore(world);
+                } catch (RuntimeException exception) {
+                    RivalRealms.LOGGER.error("Contract explore check failed in {}",
+                            world.getRegistryKey().getValue(), exception);
+                }
+            }
             if (world.getTime() % 100L == 0) {
                 try {
                     RoadsideEncounters.tick(world);
@@ -182,6 +198,7 @@ public final class RealmEvents {
                 : Text.literal("Champion · " + survivor.getArchetype().title())
                         .formatted(net.minecraft.util.Formatting.GOLD);
         survivor.setCustomName(name);
+        survivor.setChampion(true);
         survivor.setCustomNameVisible(true);
         var health = survivor.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH);
         if (health != null) {

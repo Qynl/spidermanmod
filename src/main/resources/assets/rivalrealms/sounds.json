@@ -178,5 +178,65 @@
     "sounds": [
       "rivalrealms:voice/known_return"
     ]
+  },
+  "voice.contract_offer": {
+    "subtitle": "subtitles.rivalrealms.voice.contract_offer",
+    "sounds": [
+      "rivalrealms:voice/contract_offer"
+    ]
+  },
+  "voice.contract_done": {
+    "subtitle": "subtitles.rivalrealms.voice.contract_done",
+    "sounds": [
+      "rivalrealms:voice/contract_done"
+    ]
+  },
+  "voice.contract_expired": {
+    "subtitle": "subtitles.rivalrealms.voice.contract_expired",
+    "sounds": [
+      "rivalrealms:voice/contract_expired"
+    ]
+  },
+  "voice.hunt_progress": {
+    "subtitle": "subtitles.rivalrealms.voice.hunt_progress",
+    "sounds": [
+      "rivalrealms:voice/hunt_progress"
+    ]
+  },
+  "voice.wanted_you": {
+    "subtitle": "subtitles.rivalrealms.voice.wanted_you",
+    "sounds": [
+      "rivalrealms:voice/wanted_you"
+    ]
+  },
+  "voice.fine_paid": {
+    "subtitle": "subtitles.rivalrealms.voice.fine_paid",
+    "sounds": [
+      "rivalrealms:voice/fine_paid"
+    ]
+  },
+  "voice.gather_request": {
+    "subtitle": "subtitles.rivalrealms.voice.gather_request",
+    "sounds": [
+      "rivalrealms:voice/gather_request"
+    ]
+  },
+  "voice.explore_hint": {
+    "subtitle": "subtitles.rivalrealms.voice.explore_hint",
+    "sounds": [
+      "rivalrealms:voice/explore_hint"
+    ]
+  },
+  "voice.deliver_given": {
+    "subtitle": "subtitles.rivalrealms.voice.deliver_given",
+    "sounds": [
+      "rivalrealms:voice/deliver_given"
+    ]
+  },
+  "voice.board_pitch": {
+    "subtitle": "subtitles.rivalrealms.voice.board_pitch",
+    "sounds": [
+      "rivalrealms:voice/board_pitch"
+    ]
   }
 }

@@ -9,7 +9,9 @@ import com.rivalrealms.entity.SloopEntity;
 import com.rivalrealms.entity.SurvivorEntity;
 import com.rivalrealms.world.BuildStyle;
 import com.rivalrealms.world.RealmEvents;
+import com.rivalrealms.world.ContractEngine;
 import com.rivalrealms.world.RealmState;
+import com.rivalrealms.world.RealmState.ContractRecord;
 import com.rivalrealms.world.SettlementRole;
 import com.rivalrealms.world.SettlementVariant;
 import com.rivalrealms.world.StructureBuilder;
@@ -124,10 +126,51 @@ public final class ModCommands {
                         .executes(context -> spawnConvoy(context.getSource())))
                 .then(CommandManager.literal("info")
                         .executes(context -> info(context.getSource())))
+                .then(CommandManager.literal("contracts")
+                        .executes(context -> contracts(context.getSource()))
+                        .then(CommandManager.literal("accept")
+                                .then(CommandManager.argument("id", StringArgumentType.word())
+                                        .executes(context -> acceptContract(context.getSource(),
+                                                StringArgumentType.getString(context, "id"))))))
                 .then(CommandManager.literal("chronicle")
                         .executes(context -> chronicle(context.getSource())))
                 .then(CommandManager.literal("standing")
                         .executes(context -> standing(context.getSource()))));
+    }
+
+    /** Lists open work near you and what you already carry. */
+    private static int contracts(ServerCommandSource source) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
+        ServerPlayerEntity player = source.getPlayer();
+        ServerWorld world = player.getServerWorld();
+        RealmState state = RealmState.get(world);
+        boolean any = false;
+        for (RealmState.BaseRecord base : state.bases()) {
+            if (base.abandoned() || !base.contains(player.getBlockPos())) {
+                continue;
+            }
+            ContractEngine.printBoard(world, player, base);
+            any = true;
+            break;
+        }
+        for (RealmState.ContractRecord contract : state.contracts()) {
+            if ("active".equals(contract.state()) && player.getUuid().equals(contract.taker())) {
+                String line = "ACTIVE: " + ContractEngine.describe(state, contract);
+                source.sendFeedback(() -> Text.literal(line).formatted(net.minecraft.util.Formatting.AQUA), false);
+                any = true;
+            }
+        }
+        if (!any) {
+            source.sendFeedback(() -> Text.literal(
+                    "No work posted here. Find a Notice Board, or come back when the roads stir."),
+                    false);
+        }
+        return 1;
+    }
+
+    private static int acceptContract(ServerCommandSource source, String id) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
+        ServerPlayerEntity player = source.getPlayer();
+        ContractEngine.accept(player.getServerWorld(), player, id);
+        return 1;
     }
 
     /** The world's memory: the last events of the persistent chronicle. */

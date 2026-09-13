@@ -594,6 +594,28 @@ def food_textures():
     save16(TEX / "item/mead.png", p)
 
 
+def notice_board_texture(folder):
+    """16x16: dark oak board with three pinned notices and a red seal."""
+    b = canvas(16, 16, (58, 42, 30, 255))
+    for y in range(0, 16, 4):
+        hline(b, 16, 0, 16, y + 3, (44, 31, 22, 255))
+        hline(b, 16, 0, 16, y, (66, 48, 34, 255))
+    rect(b, 16, 0, 0, 15, 0, (40, 28, 20, 255))
+    # three pinned sheets
+    for (x0, y0) in ((1, 2), (6, 3), (11, 2)):
+        rect(b, 16, x0, y0, x0 + 3, y0 + 6, (214, 200, 164, 255))
+        hline(b, 16, x0, x0 + 3, y0, (232, 220, 186, 255))
+        hline(b, 16, x0, x0 + 3, y0 + 6, (176, 160, 126, 255))
+        for ly in (y0 + 2, y0 + 4):            # scribbled lines
+            hline(b, 16, x0 + 1, x0 + 2, ly, (96, 82, 62, 255))
+        px(b, 16, x0 + 1, y0, (178, 48, 42, 255))  # pin
+    # the wax seal
+    disc(b, 16, 8, 13, 1, (178, 48, 42, 255))
+    px(b, 16, 8, 13, (220, 96, 84, 255))
+    jitter(b, 16, 11, 4)
+    png(folder / "notice_board.png", 16, 16, b)
+
+
 def settlement_block_textures(folder):
     """Ten hand-painted settlement blocks: gold-inlay masonry, a carved
     pillar, the war council table, a weapon rack, trophy skulls, the warm
@@ -1637,6 +1659,7 @@ def main():
     food_textures()
     cannon_block_textures(TEX / "block")
     settlement_block_textures(TEX / "block")
+    notice_board_texture(TEX / "block")
     airship_kit_texture(TEX / "item/airship_kit.png")
 
     # spawn eggs

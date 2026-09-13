@@ -41,6 +41,7 @@ public final class RealmState extends PersistentState {
     private final Set<Long> generatedSites = new HashSet<>();
     private final Map<String, Integer> wealth = new HashMap<>();
     private final List<ChronicleEntry> chronicle = new ArrayList<>();
+    private final List<ContractRecord> contracts = new ArrayList<>();
 
     public static RealmState get(ServerWorld world) {
         return world.getPersistentStateManager().getOrCreate(TYPE, ID);
@@ -104,6 +105,17 @@ public final class RealmState extends PersistentState {
             NbtCompound entry = savedChronicle.getCompound(i);
             state.chronicle.add(new ChronicleEntry(entry.getLong("Day"), entry.getString("Text"),
                     entry.getBoolean("Major")));
+        }
+
+        NbtList savedContracts = nbt.getList("Contracts", NbtElement.COMPOUND_TYPE);
+        for (int i = 0; i < Math.min(savedContracts.size(), 24); i++) {
+            NbtCompound entry = savedContracts.getCompound(i);
+            state.contracts.add(new ContractRecord(entry.getString("Id"), entry.getString("Type"),
+                    entry.getLong("Giver"), entry.getString("Target"), entry.getInt("Count"),
+                    entry.getInt("Progress"), entry.getInt("Coins"), entry.getInt("Rep"),
+                    entry.getLong("Deadline"),
+                    entry.containsUuid("Taker") ? entry.getUuid("Taker") : null,
+                    entry.getString("State")));
         }
 
         NbtList savedBonds = nbt.getList("LocalRep", NbtElement.COMPOUND_TYPE);
@@ -359,6 +371,26 @@ public final class RealmState extends PersistentState {
             }
         }
         nbt.put("LocalRep", savedLocal);
+
+        NbtList savedContracts = new NbtList();
+        for (ContractRecord contract : contracts) {
+            NbtCompound entryNbt = new NbtCompound();
+            entryNbt.putString("Id", contract.id());
+            entryNbt.putString("Type", contract.type());
+            entryNbt.putLong("Giver", contract.giver());
+            entryNbt.putString("Target", contract.target());
+            entryNbt.putInt("Count", contract.count());
+            entryNbt.putInt("Progress", contract.progress());
+            entryNbt.putInt("Coins", contract.rewardCoins());
+            entryNbt.putInt("Rep", contract.rewardRep());
+            entryNbt.putLong("Deadline", contract.deadline());
+            if (contract.taker() != null) {
+                entryNbt.putUuid("Taker", contract.taker());
+            }
+            entryNbt.putString("State", contract.state());
+            savedContracts.add(entryNbt);
+        }
+        nbt.put("Contracts", savedContracts);
         return nbt;
     }
 
@@ -446,6 +478,142 @@ public final class RealmState extends PersistentState {
     }
 
     public record ChronicleEntry(long day, String text, boolean major) {
+    }
+
+    /** One piece of posted work. State: offer -> active -> done | expired. */
+    public static final class ContractRecord {
+        private final String id;
+        private final String type;
+        private final long giver;
+        private final String target;
+        private final int count;
+        private final int rewardCoins;
+        private final int rewardRep;
+        private final long deadline;
+        private final UUID taker;
+        private final int progress;
+        private final String state;
+
+        public ContractRecord(String id, String type, long giver, String target, int count,
+                              int progress, int rewardCoins, int rewardRep, long deadline,
+                              UUID taker, String state) {
+            this.id = id;
+            this.type = type;
+            this.giver = giver;
+            this.target = target;
+            this.count = count;
+            this.progress = progress;
+            this.rewardCoins = rewardCoins;
+            this.rewardRep = rewardRep;
+            this.deadline = deadline;
+            this.taker = taker;
+            this.state = state;
+        }
+
+        public String id() { return id; }
+        public String type() { return type; }
+        public long giver() { return giver; }
+        public String target() { return target; }
+        public int count() { return count; }
+        public int progress() { return progress; }
+        public int rewardCoins() { return rewardCoins; }
+        public int rewardRep() { return rewardRep; }
+        public long deadline() { return deadline; }
+        public UUID taker() { return taker; }
+        public String state() { return state; }
+    }
+
+    public List<ContractRecord> contracts() {
+        return Collections.unmodifiableList(contracts);
+    }
+
+    public void addContract(String type, long giver, String target, int count, int progress,
+                            int rewardCoins, int rewardRep, long deadline) {
+        if (contracts.size() >= 24) {
+            contracts.remove(0);
+        }
+        contracts.add(new ContractRecord(Long.toHexString(System.nanoTime() & 0xffff) + "-"
+                + contracts.size(), type, giver, target, count, progress,
+                rewardCoins, rewardRep, deadline, null, "offer"));
+        markDirty();
+    }
+
+    public ContractRecord findContract(String id) {
+        for (ContractRecord contract : contracts) {
+            if (contract.id().equals(id)) {
+                return contract;
+            }
+        }
+        return null;
+    }
+
+    public int openContractsFor(long giver) {
+        int open = 0;
+        for (ContractRecord contract : contracts) {
+            if (contract.giver() == giver && "offer".equals(contract.state())) {
+                open++;
+            }
+        }
+        return open;
+    }
+
+    public boolean activateContract(String id, UUID taker) {
+        ContractRecord contract = findContract(id);
+        if (contract == null || !"offer".equals(contract.state())) {
+            return false;
+        }
+        contracts.set(contracts.indexOf(contract), new ContractRecord(contract.id(),
+                contract.type(), contract.giver(), contract.target(), contract.count(),
+                contract.progress(), contract.rewardCoins(), contract.rewardRep(),
+                contract.deadline(), taker, "active"));
+        markDirty();
+        return true;
+    }
+
+    public void progressContract(String id, int amount) {
+        ContractRecord contract = findContract(id);
+        if (contract != null) {
+            contracts.set(contracts.indexOf(contract), new ContractRecord(contract.id(),
+                    contract.type(), contract.giver(), contract.target(), contract.count(),
+                    contract.progress() + amount, contract.rewardCoins(), contract.rewardRep(),
+                    contract.deadline(), contract.taker(), contract.state()));
+            markDirty();
+        }
+    }
+
+    public void finishContract(String id) {
+        ContractRecord contract = findContract(id);
+        if (contract != null) {
+            contracts.set(contracts.indexOf(contract), new ContractRecord(contract.id(),
+                    contract.type(), contract.giver(), contract.target(), contract.count(),
+                    contract.progress(), contract.rewardCoins(), contract.rewardRep(),
+                    contract.deadline(), contract.taker(), "done"));
+            markDirty();
+        }
+    }
+
+    /** Returns the takers whose work just expired, so the world can tell them. */
+    public List<UUID> expireContracts(long now) {
+        List<UUID> expiredTakers = new ArrayList<>();
+        for (int i = 0; i < contracts.size(); i++) {
+            ContractRecord contract = contracts.get(i);
+            if ("active".equals(contract.state()) && contract.deadline() <= now) {
+                contracts.set(i, new ContractRecord(contract.id(), contract.type(),
+                        contract.giver(), contract.target(), contract.count(), contract.progress(),
+                        contract.rewardCoins(), contract.rewardRep(), contract.deadline(),
+                        contract.taker(), "expired"));
+                if (contract.taker() != null) {
+                    expiredTakers.add(contract.taker());
+                }
+            }
+        }
+        while (contracts.size() > 18) {
+            contracts.remove(0);
+        }
+        if (!expiredTakers.isEmpty()) {
+            markDirty();
+        }
+        return expiredTakers;
     }
 
     public static final class BaseRecord {
