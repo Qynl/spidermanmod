@@ -79,10 +79,10 @@ public final class AbilityExecutor {
 
         float damage = (float) ((heavy ? cfg.impactDamage : cfg.shotDamage) * ComboTracker.damageMult(powers));
         if (heavy) {
-            damage += powers.stage * 2.5f;
-            damage += powers.stylePoints * 0.01f;
+            damage += Math.min(powers.stage, 3) * 1.5f;
+            damage += Math.min(powers.stylePoints, 500) * 0.005f;
         } else {
-            damage += powers.combo * 0.5f;
+            damage += Math.min(powers.combo, 6) * 0.3f;
         }
 
         World world = player.getWorld();
@@ -182,12 +182,11 @@ public final class AbilityExecutor {
         double dist = anchor.distanceTo(player.getPos());
         powers.ropeLen = Math.min(dist + 10.0, cfg.swingRange * 1.8);
 
-        // Epic launch
         Vec3d look = player.getRotationVector();
-        double launch = 0.7 + (powers.stylePoints * 0.001);
-        if (launch > 1.2) launch = 1.2;
-        Vec3d vel = player.getVelocity().multiply(1.9).add(look.x * launch, 0.4, look.z * launch);
-        if (vel.length() > 4.0) vel = vel.normalize().multiply(4.0);
+        double launch = 0.5 + (Math.min(powers.stylePoints, 500) * 0.0005);
+        if (launch > 0.9) launch = 0.9;
+        Vec3d vel = player.getVelocity().multiply(1.4).add(look.x * launch, 0.3, look.z * launch);
+        if (vel.length() > 3.0) vel = vel.normalize().multiply(3.0);
         SwingPhysics.push(player, vel);
 
         // Create EPIC web line bridge
@@ -204,8 +203,8 @@ public final class AbilityExecutor {
         double dist = start.distanceTo(end);
         if (dist > 90 || dist < 2) return;
         int steps = (int) (dist / 1.8);
-        if (steps < 4) steps = 4;
-        if (steps > 30) steps = 30;
+        if (steps < 3) steps = 3;
+        if (steps > 20) steps = 20;
 
         ServerWorld world = player.getServerWorld();
         for (int i = 1; i < steps; i++) {
@@ -460,9 +459,10 @@ public final class AbilityExecutor {
     private static void burst(ServerPlayerEntity player, PlayerPowers powers) {
         SpiderConfig cfg = SpiderConfig.get();
         boolean venom = cfg.experimentalVenomBlast;
-        double radius = cfg.burstRadius * (venom ? 1.8 : 1.0) + powers.stage * 1.0 + powers.stylePoints * 0.002;
-        if (radius > 12) radius = 12;
-        float damage = (float) (cfg.burstDamage * ComboTracker.damageMult(powers) * (venom ? 2.5 : 1.0) + powers.stage * 2.0f + powers.combo * 1.0f);
+        // FIXED: Reduced radius at high stage to prevent lag - was 12 max, now 8 max
+        double radius = cfg.burstRadius * (venom ? 1.5 : 1.0) + Math.min(powers.stage, 3) * 0.6 + Math.min(powers.stylePoints, 500) * 0.001;
+        if (radius > 8) radius = 8;
+        float damage = (float) (cfg.burstDamage * ComboTracker.damageMult(powers) * (venom ? 2.0 : 1.0) + Math.min(powers.stage, 3) * 1.2f + Math.min(powers.combo, 6) * 0.6f);
         Vec3d center = player.getPos().add(0.0, 1.0, 0.0);
         World world = player.getWorld();
         if (world == null) return;
@@ -487,8 +487,8 @@ public final class AbilityExecutor {
                 if (away.lengthSquared() < 0.01) away = new Vec3d(0.0, 1.0, 0.0);
                 away = away.normalize();
                 if (Double.isFinite(away.x)) {
-                    double power = venom ? 2.5 : 2.0;
-                    power += powers.stylePoints * 0.002;
+                    double power = venom ? 1.8 : 1.4;
+                    power += Math.min(powers.stylePoints, 500) * 0.0008;
                     e.setVelocity(away.x * power, Math.max(0.9, away.y * power + 0.7), away.z * power);
                     e.velocityModified = true;
                 }
@@ -497,10 +497,10 @@ public final class AbilityExecutor {
 
         if (world instanceof ServerWorld sw) {
             try {
-                sw.spawnParticles(ParticleTypes.ITEM_COBWEB, center.x, center.y, center.z, venom ? 100 : 70, radius * 0.7, radius * 0.6, radius * 0.7, 0.25);
+                sw.spawnParticles(ParticleTypes.ITEM_COBWEB, center.x, center.y, center.z, venom ? 50 : 35, radius * 0.6, radius * 0.5, radius * 0.6, 0.15);
                 sw.spawnParticles(ParticleTypes.SONIC_BOOM, center.x, center.y, center.z, 5, 0.0, 0.0, 0.0, 0.0);
                 sw.spawnParticles(ParticleTypes.EXPLOSION_EMITTER, center.x, center.y, center.z, 1, 0.1, 0.1, 0.1, 0.0);
-                sw.spawnParticles(ParticleTypes.CRIT, center.x, center.y, center.z, 30, radius * 0.4, radius * 0.4, radius * 0.4, 0.35);
+                sw.spawnParticles(ParticleTypes.CRIT, center.x, center.y, center.z, 15, radius * 0.3, radius * 0.3, radius * 0.3, 0.2);
                 if (venom) {
                     sw.spawnParticles(ParticleTypes.SCULK_SOUL, center.x, center.y, center.z, 20, radius * 0.5, radius * 0.5, radius * 0.5, 0.1);
                 }

@@ -95,13 +95,14 @@ public class PlayerPowers {
         try {
             int cd = SpiderConfig.get().cooldownFor(ability);
             if (cd < 0) cd = 0;
-            // Style reduces cooldowns slightly
-            if (stylePoints > 100) {
-                cd = (int)(cd * 0.9);
+            // FIXED: Reduced cooldown reduction to prevent spam at high stage
+            if (stylePoints > 200) {
+                cd = (int)(cd * 0.92);
             }
-            if (stylePoints > 500) {
-                cd = (int)(cd * 0.85);
+            if (stylePoints > 600) {
+                cd = (int)(cd * 0.88);
             }
+            if (cd < 3) cd = 3; // Minimum 3 ticks cooldown
             cooldowns.put(ability, time + cd);
         } catch (Exception e) {
             cooldowns.put(ability, time + 20);

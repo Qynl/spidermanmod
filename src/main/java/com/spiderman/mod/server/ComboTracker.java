@@ -47,16 +47,14 @@ public final class ComboTracker {
             powers.maxCombo = powers.combo;
         }
         
-        // Style and mastery based on combo
-        int styleGain = 2 + (powers.combo / 2);
+        int styleGain = 1 + (Math.min(powers.combo, 6) / 3);
         powers.stylePoints += styleGain;
-        MasteryLogic.addMastery(player, 3 + powers.combo);
+        MasteryLogic.addMastery(player, 2 + Math.min(powers.combo, 6) / 2);
         
-        // Effects for high combo
-        if (powers.combo >= 3 && player.getWorld() instanceof ServerWorld sw) {
+        if (powers.combo >= 3 && powers.combo <= 8 && player.getWorld() instanceof ServerWorld sw) {
             try {
                 sw.spawnParticles(ParticleTypes.CRIT, target.getX(), target.getY() + 1, target.getZ(), 
-                    powers.combo, 0.3, 0.3, 0.3, 0.2);
+                    Math.min(powers.combo, 6), 0.25, 0.25, 0.25, 0.15);
             } catch (Exception ignored) {}
         }
         
@@ -93,9 +91,9 @@ public final class ComboTracker {
         SpiderConfig cfg = SpiderConfig.get();
         int capped = Math.min(powers.combo, cfg.comboCap);
         float mult = (float) (1.0 + cfg.comboBonus * capped);
-        // Style bonus
-        if (powers.stylePoints > 500) mult *= 1.1f;
-        if (powers.stylePoints > 1000) mult *= 1.15f;
+        if (powers.stylePoints > 500) mult *= 1.05f;
+        if (powers.stylePoints > 1000) mult *= 1.08f;
+        if (mult > 2.5f) mult = 2.5f;
         return mult;
     }
 

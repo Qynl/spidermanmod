@@ -46,7 +46,7 @@ public final class SpiderConfig {
     public double shotDamage = 5.0;
     public double impactDamage = 14.0;
     public double burstDamage = 10.0;
-    public double burstRadius = 6.5;
+    public double burstRadius = 5.0; // Was 6.5, now 5.0 to prevent lag
     public double trapDamage = 3.0;
     public double pullDamage = 4.0;
 
@@ -56,25 +56,25 @@ public final class SpiderConfig {
     public int comboCap = 6;
 
     // Physical boosts - more superhuman
-    public double jumpMult = 1.5;
-    public double speedMult = 1.25;
-    public double strengthMult = 1.8;
-    public double fallMult = 0.05;
+    public double jumpMult = 1.3; // Was 1.5
+    public double speedMult = 1.15; // Was 1.25
+    public double strengthMult = 1.5; // Was 1.8
+    public double fallMult = 0.08; // Was 0.05
     public boolean stepHeight = true;
-    public double wallRunSpeed = 1.15;
-    public double swingBoost = 1.3;
-    public double zipBoost = 1.4;
+    public double wallRunSpeed = 1.08; // Was 1.15
+    public double swingBoost = 1.15; // Was 1.3
+    public double zipBoost = 1.2; // Was 1.4
 
     // Spider-sense - more immersive
-    public double senseRadiusBase = 12.0;
-    public double senseRadiusPerStage = 5.0;
+    public double senseRadiusBase = 10.0;
+    public double senseRadiusPerStage = 2.5; // Was 5.0, now 2.5 to prevent lag at stage 4
     public boolean senseSlowMo = true;
     public double senseSlowMoChance = 0.25;
     public int senseDuration = 60;
 
     // Web cleanup
-    public int webLiveTicks = 150;
-    public int maxTrapWebs = 32;
+    public int webLiveTicks = 120; // Was 150
+    public int maxTrapWebs = 24; // Was 32
     public boolean websAreSolid = true;
     public boolean spidersIgnoreWebs = true;
 

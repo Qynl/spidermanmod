@@ -16,11 +16,7 @@ import java.util.UUID;
 import com.spiderman.mod.config.SpiderConfig;
 
 /**
- * ULTIMATE WEB CLEANUP - More webs, longer live, epic effects.
- * - 32 max webs, 150 ticks live
- * - Style bonus for webs
- * - Particles on expire
- * - No grief, but more fun
+ * WEB CLEANUP - Fixed for no lag at high stage.
  */
 public final class WebCleanup {
     private static final class Web {
@@ -55,7 +51,6 @@ public final class WebCleanup {
         if (world == null) return false;
         try {
             if (!world.getBlockState(pos).isAir()) {
-                // Allow replacing some weak blocks
                 if (!world.getBlockState(pos).isOf(Blocks.COBWEB) && 
                     !world.getBlockState(pos).isOf(Blocks.SHORT_GRASS) &&
                     !world.getBlockState(pos).isOf(Blocks.TALL_GRASS)) {
@@ -69,22 +64,22 @@ public final class WebCleanup {
         SpiderConfig cfg = SpiderConfig.get();
         int maxWebs = cfg.maxTrapWebs;
         if (maxWebs < 1) maxWebs = 1;
-        // Stage bonus - higher stage = more webs
+        // FIXED: Reduced bonus at high stage to prevent lag
         try {
             var powers = com.spiderman.mod.state.SpiderState.get(player.getUuid());
             if (powers != null) {
-                maxWebs += powers.stage * 4;
-                if (powers.stylePoints > 200) maxWebs += 8;
+                maxWebs += Math.min(powers.stage, 3) * 2; // Was *4, now *2
+                if (powers.stylePoints > 300) maxWebs += 4; // Was 8, now 4
+                if (maxWebs > 40) maxWebs = 40; // HARD CAP 40, was 56+
             }
         } catch (Exception ignored) {}
         
         int liveTicks = cfg.webLiveTicks;
         if (liveTicks < 1) liveTicks = 20;
-        // Longer live for higher stage
         try {
             var powers = com.spiderman.mod.state.SpiderState.get(player.getUuid());
             if (powers != null && powers.stage >= 3) {
-                liveTicks = (int)(liveTicks * 1.5);
+                liveTicks = (int)(liveTicks * 1.2); // Was 1.5, now 1.2
             }
         } catch (Exception ignored) {}
 
@@ -95,10 +90,9 @@ public final class WebCleanup {
         }
         try {
             world.setBlockState(pos, Blocks.COBWEB.getDefaultState(), 3);
-            // Particle on place
-            if (cfg.enableParticles) {
+            if (cfg.enableParticles && owned.size() % 3 == 0) { // Only every 3rd web has particles
                 world.spawnParticles(ParticleTypes.ITEM_COBWEB, pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, 
-                    5, 0.2, 0.2, 0.2, 0.05);
+                    2, 0.15, 0.15, 0.15, 0.03);
             }
         } catch (Exception e) {
             return false;
@@ -122,13 +116,15 @@ public final class WebCleanup {
                     if (web.ttl <= 0) {
                         removeIfOurs(web, false);
                         it.remove();
-                    } else if (web.ttl == 20) {
-                        // Warning particle before expire
+                    } else if (web.ttl == 20 && web.ttl % 5 == 0) {
                         try {
                             if (web.world != null && SpiderConfig.get().enableParticles) {
-                                web.world.spawnParticles(ParticleTypes.CLOUD, 
-                                    web.pos.getX() + 0.5, web.pos.getY() + 0.5, web.pos.getZ() + 0.5,
-                                    2, 0.1, 0.1, 0.1, 0.02);
+                                // Less particles
+                                if (Math.random() < 0.3) {
+                                    web.world.spawnParticles(ParticleTypes.CLOUD, 
+                                        web.pos.getX() + 0.5, web.pos.getY() + 0.5, web.pos.getZ() + 0.5,
+                                        1, 0.08, 0.08, 0.08, 0.01);
+                                }
                             }
                         } catch (Exception ignored) {}
                     }
@@ -164,12 +160,11 @@ public final class WebCleanup {
         try {
             if (web.world.getBlockState(web.pos).isOf(Blocks.COBWEB)) {
                 web.world.removeBlock(web.pos, false);
-                // Particle on remove
-                if (!immediate && SpiderConfig.get().enableParticles) {
+                if (!immediate && SpiderConfig.get().enableParticles && Math.random() < 0.2) {
                     try {
                         web.world.spawnParticles(ParticleTypes.ITEM_COBWEB,
                             web.pos.getX() + 0.5, web.pos.getY() + 0.5, web.pos.getZ() + 0.5,
-                            4, 0.2, 0.2, 0.2, 0.05);
+                            2, 0.15, 0.15, 0.15, 0.03);
                     } catch (Exception ignored) {}
                 }
             }

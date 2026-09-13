@@ -16,10 +16,7 @@ import com.spiderman.mod.state.PlayerPowers;
 import com.spiderman.mod.state.SpiderState;
 
 /**
- * ULTIMATE SERVER TICK - Handles all Spider-Man systems with style.
- * - Time + movement + style progression
- * - Advanced pull, web standing, spider protection
- * - Air time, tricks, combos
+ * ULTIMATE SERVER TICK - Fixed for no lag at high stage.
  */
 public final class ServerTickHandler {
     private static int tickCount;
@@ -72,60 +69,58 @@ public final class ServerTickHandler {
         powers.timeWithPowers++;
         powers.lastPassiveTick = player.age;
 
-        // ULTIMATE PROGRESSION - Time + movement + style + air
+        // FIXED: Reduced mastery spam at high stage to prevent lag
         if (player.age % 20 == 0) {
             MasteryLogic.addMastery(player, 1);
             double horiz = player.getVelocity().horizontalLength();
-            if (horiz > 0.1) MasteryLogic.addMastery(player, 1);
-            if (player.isSprinting() && horiz > 0.2) {
-                MasteryLogic.addMastery(player, 2);
-                powers.stylePoints += 1;
-            }
-            if (!player.isOnGround() && player.getVelocity().y < -0.1) {
+            if (horiz > 0.15) MasteryLogic.addMastery(player, 1);
+            if (player.isSprinting() && horiz > 0.25) {
                 MasteryLogic.addMastery(player, 1);
+                if (player.age % 60 == 0) powers.stylePoints += 1;
+            }
+            if (!player.isOnGround() && player.getVelocity().y < -0.15) {
+                if (player.age % 40 == 0) MasteryLogic.addMastery(player, 1);
             }
             if (player.getY() > 100) {
-                MasteryLogic.addMastery(player, 2);
-                powers.stylePoints += 1;
-            }
-            if (powers.swinging) {
-                MasteryLogic.addMastery(player, 2);
-                if (powers.consecutiveSwings >= 3) {
-                    MasteryLogic.addMastery(player, 2);
+                if (player.age % 60 == 0) {
+                    MasteryLogic.addMastery(player, 1);
+                    powers.stylePoints += 1;
                 }
             }
-            if (powers.climbing) {
+            if (powers.swinging) {
                 MasteryLogic.addMastery(player, 1);
+            }
+            if (powers.climbing) {
+                if (player.age % 40 == 0) MasteryLogic.addMastery(player, 1);
             }
         }
         
-        if (powers.climbing && player.age % 10 == 0) {
-            MasteryLogic.addMastery(player, 1);
-            if (powers.wallRunTicks > 20) {
+        if (powers.climbing && player.age % 20 == 0) {
+            if (player.age % 40 == 0) MasteryLogic.addMastery(player, 1);
+            if (powers.wallRunTicks > 30 && player.age % 60 == 0) {
                 powers.stylePoints += 1;
             }
         }
         
         if (player.isSneaking() && player.getVelocity().horizontalLength() < 0.05 && player.isOnGround()) {
             powers.focusTicks++;
-            if (powers.focusTicks % 40 == 0) {
-                MasteryLogic.addMastery(player, 2);
-                powers.stylePoints += 1;
+            if (powers.focusTicks % 60 == 0) {
+                MasteryLogic.addMastery(player, 1);
+                if (player.age % 120 == 0) powers.stylePoints += 1;
             }
         } else {
             powers.focusTicks = 0;
         }
         
-        // Style decay if not moving stylishly
-        if (player.age % 200 == 0 && !powers.swinging && !powers.climbing && player.getVelocity().length() < 0.1) {
+        // FIXED: Style decay less aggressive, less frequent
+        if (player.age % 400 == 0 && !powers.swinging && !powers.climbing && player.getVelocity().length() < 0.08) {
             if (powers.stylePoints > 0) powers.stylePoints -= 1;
         }
         
-        // Max combo tracking
         if (powers.combo > powers.maxCombo) {
             powers.maxCombo = powers.combo;
-            if (powers.maxCombo >= 5) {
-                powers.stylePoints += powers.maxCombo * 2;
+            if (powers.maxCombo >= 5 && player.age % 100 == 0) {
+                powers.stylePoints += powers.maxCombo;
             }
         }
 
@@ -135,19 +130,21 @@ public final class ServerTickHandler {
         if (powers.pullTicks > 0) tickPull(player, powers);
         ClimbLogic.tick(player, powers);
         tickWebStanding(player, powers);
-        tickSpiderProtection(player, powers);
+        // FIXED: Spider protection less frequent at high stage to reduce lag
+        if (player.age % (powers.stage >= 4 ? 40 : 20) == 0) {
+            tickSpiderProtection(player, powers);
+        }
         tickSlingshot(player, powers);
 
         if (player.isOnGround()) {
             powers.doubleJumpUsed = false;
             if (!player.isSneaking()) powers.focusTicks = 0;
             
-            // Landing style
             if (powers.wasInAir && powers.airTime > 40) {
-                int airBonus = powers.airTime / 20;
+                int airBonus = powers.airTime / 30;
                 powers.stylePoints += airBonus;
-                if (powers.airTime > 80) {
-                    MasteryLogic.addMastery(player, airBonus);
+                if (powers.airTime > 100 && player.age % 60 == 0) {
+                    MasteryLogic.addMastery(player, airBonus / 2);
                 }
             }
             powers.airTime = 0;
@@ -158,17 +155,17 @@ public final class ServerTickHandler {
             powers.airTime++;
         }
         
-        if (player.age % 10 == 0) SenseLogic.tick(player, powers);
-        if (powers.swinging && player.age % 20 == 0) MasteryLogic.addMastery(player, 2);
-        if (player.age % 40 == 0) TransformLogic.tryStageUp(player);
+        // FIXED: Sense less frequent at high stage - was every 10 ticks, now 20 at stage 4
+        if (player.age % (powers.stage >= 4 ? 20 : 10) == 0) SenseLogic.tick(player, powers);
+        if (powers.swinging && player.age % 30 == 0) MasteryLogic.addMastery(player, 1);
+        if (player.age % 60 == 0) TransformLogic.tryStageUp(player);
 
-        // Safety clamps
         if (powers.stage < 0) powers.stage = 0;
         if (powers.stage > 4) powers.stage = 4;
         if (powers.mastery < 0) powers.mastery = 0;
         if (powers.mastery > 100000) powers.mastery = 100000;
         if (powers.stylePoints < 0) powers.stylePoints = 0;
-        if (powers.stylePoints > 10000) powers.stylePoints = 10000;
+        if (powers.stylePoints > 5000) powers.stylePoints = 5000; // Was 10000, now 5000
 
         if (!powers.swinging && powers.zipTicks == 0 && powers.pullTicks == 0 && !powers.climbing && !powers.diving) {
             try {
@@ -183,9 +180,9 @@ public final class ServerTickHandler {
     private static void tickSlingshot(ServerPlayerEntity player, PlayerPowers powers) {
         if (powers.slingshotCharging) {
             powers.slingshotCharge++;
-            if (powers.slingshotCharge > 60) powers.slingshotCharge = 60;
+            if (powers.slingshotCharge > 50) powers.slingshotCharge = 50;
             
-            if (powers.slingshotCharge % 10 == 0) {
+            if (powers.slingshotCharge % 20 == 0) {
                 MasteryLogic.addMastery(player, 1);
             }
         }
@@ -211,23 +208,23 @@ public final class ServerTickHandler {
 
         if (powers.pullingPlayer) {
             Vec3d dir = toTarget.normalize();
-            double speed = Math.min(2.2, 0.6 + dist * 0.1);
-            if (powers.stylePoints > 200) speed *= 1.15;
+            double speed = Math.min(1.8, 0.5 + dist * 0.08);
+            if (powers.stylePoints > 200) speed *= 1.08;
             if (!Double.isFinite(dir.x)) dir = new Vec3d(0, 0, 1);
             Vec3d vel = dir.multiply(speed);
             player.fallDistance = 0;
             SwingPhysics.push(player, vel);
             if (dist < 2.0) {
                 powers.stopPull();
-                powers.stylePoints += 5;
+                powers.stylePoints += 3;
             }
         } else {
             LivingEntity target = null;
             try {
                 if (powers.pullTargetId != null) {
                     ServerWorld world = player.getServerWorld();
-                    Box box = new Box(playerPos.x - 30, playerPos.y - 30, playerPos.z - 30,
-                            playerPos.x + 30, playerPos.y + 30, playerPos.z + 30);
+                    Box box = new Box(playerPos.x - 20, playerPos.y - 20, playerPos.z - 20,
+                            playerPos.x + 20, playerPos.y + 20, playerPos.z + 20);
                     List<LivingEntity> nearby = world.getEntitiesByClass(LivingEntity.class, box,
                             e -> e != null && e.isAlive() && e.getUuid().equals(powers.pullTargetId));
                     if (!nearby.isEmpty()) target = nearby.get(0);
@@ -243,18 +240,17 @@ public final class ServerTickHandler {
             double d = fromTargetToPlayer.length();
             if (d < 2.0) {
                 powers.stopPull();
-                // Hit!
                 try {
-                    target.damage(player.getWorld().getDamageSources().playerAttack(player), 4.0f);
+                    target.damage(player.getWorld().getDamageSources().playerAttack(player), 3.0f);
                 } catch (Exception ignored) {}
-                powers.stylePoints += 8;
+                powers.stylePoints += 5;
                 return;
             }
             Vec3d dir = fromTargetToPlayer.normalize();
             if (!Double.isFinite(dir.x)) dir = new Vec3d(0, 0, 1);
-            double speed = Math.min(1.8, 0.5 + d * 0.09);
+            double speed = Math.min(1.4, 0.4 + d * 0.07);
             Vec3d yank = dir.multiply(speed);
-            yank = new Vec3d(yank.x, Math.max(0.3, yank.y + 0.3), yank.z);
+            yank = new Vec3d(yank.x, Math.max(0.2, yank.y + 0.2), yank.z);
             target.setVelocity(yank.x, yank.y, yank.z);
             target.velocityModified = true;
         }
@@ -265,15 +261,12 @@ public final class ServerTickHandler {
             BlockPos feet = player.getBlockPos();
             BlockPos below = feet.down();
             BlockPos at = BlockPos.ofFloored(player.getX(), player.getY(), player.getZ());
-            BlockPos atEye = BlockPos.ofFloored(player.getEyePos().x, player.getEyePos().y, player.getEyePos().z);
 
             boolean onWeb = false;
             try {
                 if (player.getWorld().getBlockState(below).isOf(Blocks.COBWEB)) onWeb = true;
                 if (player.getWorld().getBlockState(feet).isOf(Blocks.COBWEB)) onWeb = true;
                 if (player.getWorld().getBlockState(at).isOf(Blocks.COBWEB)) onWeb = true;
-                if (player.getWorld().getBlockState(atEye).isOf(Blocks.COBWEB)) onWeb = true;
-                // Also check 2 blocks below for platform
                 if (player.getWorld().getBlockState(below.down()).isOf(Blocks.COBWEB)) onWeb = true;
             } catch (Exception ignored) {}
 
@@ -282,32 +275,28 @@ public final class ServerTickHandler {
                 Vec3d vel = player.getVelocity();
                 if (vel != null) {
                     if (player.isSneaking()) {
-                        if (vel.y < -0.1) {
-                            SwingPhysics.push(player, new Vec3d(vel.x * 0.75, -0.12, vel.z * 0.75));
+                        if (vel.y < -0.08) {
+                            SwingPhysics.push(player, new Vec3d(vel.x * 0.7, -0.08, vel.z * 0.7));
                         }
                     } else {
                         if (vel.y < 0) {
-                            // Bouncy webs!
                             double bounce = 0.0;
-                            if (vel.y < -0.5) bounce = 0.15;
-                            SwingPhysics.push(player, new Vec3d(vel.x * 0.92, bounce, vel.z * 0.92));
+                            if (vel.y < -0.4) bounce = 0.1;
+                            SwingPhysics.push(player, new Vec3d(vel.x * 0.88, bounce, vel.z * 0.88));
                         }
-                        // Allow jumping from webs
                         if (player.isOnGround() || onWeb) {
                             powers.doubleJumpUsed = false;
                         }
                     }
                 }
-                if (player.age % 20 == 0) {
+                if (player.age % 40 == 0) {
                     MasteryLogic.addMastery(player, 1);
-                    powers.stylePoints += 1;
                 }
             }
         } catch (Exception ignored) {}
     }
 
     private static void tickSpiderProtection(ServerPlayerEntity player, PlayerPowers powers) {
-        if (player.age % 20 != 0) return;
         try {
             boolean onWeb = false;
             BlockPos below = player.getBlockPos().down();
@@ -320,22 +309,24 @@ public final class ServerTickHandler {
             if (!shouldProtect) return;
 
             ServerWorld world = player.getServerWorld();
-            Box box = new Box(player.getX() - 20, player.getY() - 10, player.getZ() - 20,
-                    player.getX() + 20, player.getY() + 10, player.getZ() + 20);
+            // FIXED: Smaller box at high stage to reduce lag
+            double range = powers.stage >= 4 ? 12 : 16;
+            Box box = new Box(player.getX() - range, player.getY() - 8, player.getZ() - range,
+                    player.getX() + range, player.getY() + 8, player.getZ() + range);
             List<HostileEntity> hostiles = world.getEntitiesByClass(HostileEntity.class, box,
                     e -> e != null && e.isAlive() && e.getTarget() == player);
+            // FIXED: Limit to 3 hostiles max
+            int count = 0;
             for (HostileEntity hostile : hostiles) {
+                if (count >= 3) break;
                 String type = hostile.getType().toString().toLowerCase();
                 boolean isSpider = type.contains("spider") || type.contains("cave");
                 if (isSpider || onWeb || powers.stage >= 3) {
                     try {
                         hostile.setTarget(null);
                         hostile.setAttacking(false);
-                        // Make spider friendly to Spider-Man at high stage
-                        if (powers.stage >= 4 && isSpider) {
-                            // Could add taming logic here
-                        }
                     } catch (Exception ignored) {}
+                    count++;
                 }
             }
         } catch (Exception ignored) {}

@@ -73,12 +73,17 @@ public final class SpmCommands {
             ServerPlayerEntity target = EntityArgumentType.getPlayer(ctx, "target");
             int value = IntegerArgumentType.getInteger(ctx, "stage");
             PlayerPowers powers = SpiderState.get(target.getUuid());
+            // FIXED: Reset transient and cap style to prevent lag at high stage
             powers.hasPowers = true;
             powers.stage = value;
+            powers.stylePoints = Math.min(powers.stylePoints, 500); // Cap style when setting stage
+            powers.resetTransient();
+            try { target.setNoGravity(false); } catch (Exception ignored) {}
             TransformLogic.applyStageAttributes(target, powers);
             ServerNetworking.sendPowers(target);
+            ServerNetworking.sendSwingOff(target);
             TransformLogic.grantAdvancement(target, "stage_" + value);
-            feedback(ctx.getSource(), "Stage set to " + value + ".");
+            feedback(ctx.getSource(), "Stage set to " + value + " (lag-fixed, style capped).");
             return Command.SINGLE_SUCCESS;
         });
         stageTarget.then(stageValue);

@@ -23,10 +23,7 @@ import com.spiderman.mod.state.PlayerPowers;
 import com.spiderman.mod.state.SpiderState;
 
 /**
- * ULTIMATE TRANSFORMATION - Cinematic Spider-Man origin.
- * - Epic effects, sounds, particles
- * - Comic book messages
- * - Style points and mastery
+ * ULTIMATE TRANSFORMATION - Fixed for no lag at high stage.
  */
 public final class TransformLogic {
     private TransformLogic() {
@@ -49,21 +46,18 @@ public final class TransformLogic {
         
         if (SpiderConfig.get().transformEffects) {
             try {
-                // Epic transformation effects
                 player.addStatusEffect(new StatusEffectInstance(StatusEffects.NAUSEA, 260, 1));
                 player.addStatusEffect(new StatusEffectInstance(StatusEffects.BLINDNESS, 120, 0));
                 player.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, 240, 3));
                 player.addStatusEffect(new StatusEffectInstance(StatusEffects.WEAKNESS, 200, 1));
                 player.addStatusEffect(new StatusEffectInstance(StatusEffects.GLOWING, 100, 0));
                 
-                // Particles
                 if (player.getWorld() instanceof ServerWorld sw) {
                     sw.spawnParticles(ParticleTypes.SONIC_BOOM, player.getX(), player.getY() + 1, player.getZ(), 2, 0.1, 0.1, 0.1, 0.0);
                     sw.spawnParticles(ParticleTypes.ITEM_COBWEB, player.getX(), player.getY() + 1, player.getZ(), 40, 0.5, 0.5, 0.5, 0.2);
                     sw.spawnParticles(ParticleTypes.CRIT, player.getX(), player.getY() + 1, player.getZ(), 20, 0.3, 0.5, 0.3, 0.3);
                 }
                 
-                // Sounds
                 player.playSound(SoundUtil.unwrap(SoundEvents.ENTITY_SPIDER_HURT), 1.0f, 0.5f);
                 player.getServerWorld().playSound(null, player.getX(), player.getY(), player.getZ(), 
                     SoundUtil.unwrap(SoundEvents.ENTITY_SPIDER_DEATH), player.getSoundCategory(), 0.8f, 0.6f);
@@ -78,7 +72,6 @@ public final class TransformLogic {
             player.playSound(SoundUtil.unwrap(SoundEvents.BLOCK_BEACON_POWER_SELECT), 0.8f, 1.5f);
         } catch (Exception ignored) {}
         
-        // Epic comic book messages
         player.sendMessage(Text.literal(""), false);
         player.sendMessage(Text.literal("§c§l§nRADIOACTIVE BITE!"), false);
         player.sendMessage(Text.literal("§fA §c§lradioactive spider §fsinks its fangs into you!"), false);
@@ -117,7 +110,6 @@ public final class TransformLogic {
                 stagedUpTo = powers.stage;
                 applyStageAttributes(player, powers);
                 
-                // EPIC STAGE UP
                 try {
                     player.playSound(ModSounds.STAGE_UP, 1.2f, 1.0f);
                     player.playSound(SoundUtil.unwrap(SoundEvents.ENTITY_PLAYER_LEVELUP), 1.0f, 1.2f);
@@ -136,7 +128,6 @@ public final class TransformLogic {
                     
                 } catch (Exception ignored) {}
                 
-                // Epic messages
                 String newName = stageName(powers.stage);
                 String oldName = stageName(oldStage);
                 
@@ -160,7 +151,6 @@ public final class TransformLogic {
                 
                 grantAdvancement(player, "stage_" + powers.stage);
                 
-                // Style bonus for stage up
                 powers.stylePoints += powers.stage * 25;
                 
             } else {
@@ -204,23 +194,28 @@ public final class TransformLogic {
             return;
         }
         SpiderConfig cfg = SpiderConfig.get();
-        double tier = Math.max(0, Math.min(5, powers.stage + 1));
+        // FIXED: Diminishing returns at high stage to prevent lag and extreme jumps
+        double tier = Math.max(0, Math.min(4, powers.stage + 1));
+        double effectiveTier = tier;
+        if (tier >= 4) effectiveTier = 3.5 + (tier - 3.5) * 0.3;
+        if (tier >= 5) effectiveTier = 3.8 + (tier - 4) * 0.2;
+        
         try {
-            double speed = 0.1 * (1.0 + (cfg.speedMult - 1.0) * tier * 1.1);
-            double jump = 0.42 * (1.0 + (cfg.jumpMult - 1.0) * tier * 1.1);
-            double strength = 1.0 + (cfg.strengthMult - 1.0) * tier * 1.1;
-            double safeFall = 3.0 + 5.0 * tier;
+            double speed = 0.1 * (1.0 + (cfg.speedMult - 1.0) * effectiveTier * 0.85);
+            double jump = 0.42 * (1.0 + (cfg.jumpMult - 1.0) * effectiveTier * 0.65);
+            double strength = 1.0 + (cfg.strengthMult - 1.0) * effectiveTier * 0.9;
+            double safeFall = 3.0 + 4.0 * effectiveTier;
             
-            // Style bonus
-            double styleMult = 1.0 + (powers.stylePoints * 0.0002);
-            if (styleMult > 1.2) styleMult = 1.2;
+            // FIXED: Style bonus heavily reduced and capped - was causing speed explosion
+            double styleMult = 1.0 + (Math.min(powers.stylePoints, 1000) * 0.00008);
+            if (styleMult > 1.08) styleMult = 1.08;
             speed *= styleMult;
-            jump *= styleMult;
+            // Jump should NOT get style bonus - causes random super jumps
             
-            speed = Math.max(0.05, Math.min(0.6, speed));
-            jump = Math.max(0.2, Math.min(2.2, jump));
-            strength = Math.max(1.0, Math.min(25.0, strength));
-            safeFall = Math.max(3.0, Math.min(150.0, safeFall));
+            speed = Math.max(0.05, Math.min(0.22, speed));
+            jump = Math.max(0.2, Math.min(0.95, jump));
+            strength = Math.max(1.0, Math.min(8.0, strength));
+            safeFall = Math.max(3.0, Math.min(24.0, safeFall));
 
             setBase(player, EntityAttributes.GENERIC_MOVEMENT_SPEED, speed);
             setBase(player, EntityAttributes.GENERIC_JUMP_STRENGTH, jump);
@@ -228,10 +223,9 @@ public final class TransformLogic {
             setBase(player, EntityAttributes.GENERIC_SAFE_FALL_DISTANCE, safeFall);
             setBase(player, EntityAttributes.GENERIC_STEP_HEIGHT, cfg.stepHeight ? 1.0 : 0.6);
             
-            // Extra: attack speed and luck for Spider-Man
             try {
-                setBase(player, EntityAttributes.GENERIC_ATTACK_SPEED, 4.0 + tier * 0.3);
-                setBase(player, EntityAttributes.GENERIC_LUCK, tier * 0.5);
+                setBase(player, EntityAttributes.GENERIC_ATTACK_SPEED, 4.0 + effectiveTier * 0.15);
+                setBase(player, EntityAttributes.GENERIC_LUCK, effectiveTier * 0.25);
             } catch (Exception ignored) {}
             
         } catch (Exception e) {
