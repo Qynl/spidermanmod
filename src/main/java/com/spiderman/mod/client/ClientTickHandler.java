@@ -25,21 +25,38 @@ public final class ClientTickHandler {
     private ClientTickHandler() {
     }
 
-    /** Raw physical check if wheel key is still down, even when a Screen is open. */
+    /** Raw physical check if wheel key is still down, even when a Screen is open.
+     * Uses InputUtil.isKeyPressed + matchesKey loop so rebinds work and it works while a Screen is open.
+     * Avoids getBoundKey() which doesn't exist in 1.21.1 yarn. */
     public static boolean isWheelDown() {
         try {
             MinecraftClient mc = MinecraftClient.getInstance();
             if (mc == null || mc.getWindow() == null) return false;
-            // Use bound key code, so rebinding works
-            var bound = Keybinds.wheel.getBoundKey();
-            if (bound != null && bound.getCategory() == net.minecraft.client.util.InputUtil.Type.KEYSYM) {
-                int code = bound.getCode();
-                // -1 means unbound
-                if (code < 0) return false;
-                return net.minecraft.client.util.InputUtil.isKeyPressed(mc.getWindow().getHandle(), code);
+            long handle = mc.getWindow().getHandle();
+            // Fast path: if KeyBinding reports pressed, trust it
+            try {
+                if (Keybinds.wheel.isPressed()) return true;
+            } catch (Exception ignored) {}
+            // Raw check: iterate key codes and see if any pressed key matches the binding
+            // This works even when a Screen is open and isPressed() returns false,
+            // and supports rebinding.
+            try {
+                for (int code = 0; code < 512; code++) {
+                    if (net.minecraft.client.util.InputUtil.isKeyPressed(handle, code)) {
+                        if (Keybinds.wheel.matchesKey(code, 0)) {
+                            return true;
+                        }
+                    }
+                }
+            } catch (Exception ignored) {
+                // Fallback to G key if matchesKey fails
+                try {
+                    if (net.minecraft.client.util.InputUtil.isKeyPressed(handle, org.lwjgl.glfw.GLFW.GLFW_KEY_G)) {
+                        return true;
+                    }
+                } catch (Exception ignored2) {}
             }
-            // Fallback to KeyBinding's own isPressed
-            return Keybinds.wheel.isPressed();
+            return false;
         } catch (Exception e) {
             try {
                 return Keybinds.wheel.isPressed();
