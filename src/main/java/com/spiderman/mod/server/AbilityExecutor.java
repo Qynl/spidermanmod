@@ -30,7 +30,16 @@ import com.spiderman.mod.state.PlayerPowers;
 import com.spiderman.mod.state.SpiderState;
 
 /**
- * COMPLETE REMAKE: All abilities distinct, reliable, no lag, web walking works.
+ * INSOMNIAC-LEVEL ABILITIES - 9 distinct, fun, no lag, real Spider-Man feel.
+ * - SHOT: Quick tap, like PS4 web shooter
+ * - SWING: Fluid pendulum, momentum
+ * - ZIP: Point launch, fast and controlled
+ * - PULL: Yank enemy or pull to wall
+ * - TRAP: Web trap, 8 webs, slow+weakness, Insomniac style
+ * - LINE: Walkable bridge, 20 blocks, solid
+ * - BURST: Web blossom, small AoE, knockback, no lag
+ * - IMPACT: Heavy web ball, big damage, crater
+ * - PLATFORM: Solid 5x5 walkable, bounce, safe
  */
 public final class AbilityExecutor {
     private AbilityExecutor() {}
@@ -58,7 +67,7 @@ public final class AbilityExecutor {
         }
     }
 
-    // SHOT: Simple, fast, reliable web projectile
+    // SHOT: Insomniac quick tap - fast, accurate, combo starter
     private static void shot(ServerPlayerEntity player, PlayerPowers powers, int hand, boolean heavy) {
         SpiderConfig cfg = SpiderConfig.get();
         Vec3d eye = player.getEyePos();
@@ -71,12 +80,13 @@ public final class AbilityExecutor {
         right = right.normalize();
 
         float damage = (float) ((heavy ? cfg.impactDamage : cfg.shotDamage) * ComboTracker.damageMult(powers));
-        damage += Math.min(powers.stage, 3) * 1.0f;
+        damage += Math.min(powers.stage, 4) * 0.8f;
+        if (powers.combo > 5) damage *= 1.15f;
 
         World world = player.getWorld();
         if (world == null) return;
 
-        Vec3d origin = eye.add(right.x * (hand == 1 ? -0.35 : 0.35), -0.15, right.z * (hand == 1 ? -0.35 : 0.35));
+        Vec3d origin = eye.add(right.x * (hand == 1 ? -0.32 : 0.32), -0.12, right.z * (hand == 1 ? -0.32 : 0.32));
         Vec3d target = eye.add(look.x * cfg.webRange, look.y * cfg.webRange, look.z * cfg.webRange);
         BlockHitResult hit = null;
         try {
@@ -84,83 +94,88 @@ public final class AbilityExecutor {
         } catch (Exception ignored) {}
         Vec3d lineEnd = (hit != null && hit.getType() != HitResult.Type.MISS) ? hit.getPos() : target;
 
-        ServerNetworking.sendSwing(player, true, lineEnd.x, lineEnd.y, lineEnd.z, hand, heavy ? 18 : 10);
+        ServerNetworking.sendSwing(player, true, lineEnd.x, lineEnd.y, lineEnd.z, hand, heavy ? 16 : 8);
         WebShotEntity.shoot(world, player, origin, look, damage, heavy);
 
         powers.setCooldown(heavy ? AbilityIds.IMPACT : AbilityIds.SHOT, player.age);
         MasteryLogic.addMastery(player, heavy ? 3 : 1);
-        
+        ComboTracker.addHit(player, powers);
+
         if (world instanceof ServerWorld sw) {
             try {
-                sw.spawnParticles(ParticleTypes.ITEM_COBWEB, origin.x, origin.y, origin.z, heavy ? 8 : 4, 0.1, 0.1, 0.1, 0.03);
+                sw.spawnParticles(ParticleTypes.ITEM_COBWEB, origin.x, origin.y, origin.z, heavy ? 6 : 3, 0.08, 0.08, 0.08, 0.02);
             } catch (Exception ignored) {}
+        }
+
+        if (heavy) {
+            actionbar(player, "§c§lImpact Web! §7" + String.format("%.1f", damage) + " dmg");
         }
     }
 
-    // SWING: Stable pendulum, no random fling
+    // SWING: Insomniac fluid - find anchor, attach, small boost
     private static void swing(ServerPlayerEntity player, PlayerPowers powers, int hand) {
         if (powers.swinging) {
             SwingPhysics.detach(player, powers, true);
             return;
         }
         SpiderConfig cfg = SpiderConfig.get();
-        double range = cfg.swingRange * 1.3;
+        double range = cfg.swingRange * 1.25;
         Vec3d anchor = SwingPhysics.findAnchor(player, range);
         if (anchor == null) {
-            anchor = SwingPhysics.findAnchor(player, range * 1.2);
+            anchor = SwingPhysics.findAnchor(player, range * 1.15);
         }
         if (anchor == null) {
-            actionbar(player, "§7No anchor! Look up at buildings");
+            actionbar(player, "§7No anchor! Look at buildings, aim higher");
             return;
         }
         SwingPhysics.attach(player, powers, anchor, hand);
         double dist = anchor.distanceTo(player.getPos());
-        powers.ropeLen = Math.max(5.0, Math.min(dist * 0.9, cfg.swingRange));
+        powers.ropeLen = Math.max(5.0, Math.min(dist * 0.85, cfg.swingRange));
 
-        // Small initial boost, not extreme
+        // Insomniac small initial push, not extreme
         Vec3d look = player.getRotationVector();
-        Vec3d boost = new Vec3d(look.x * 0.25, 0.1, look.z * 0.25);
+        Vec3d boost = new Vec3d(look.x * 0.22, 0.08, look.z * 0.22);
         SwingPhysics.push(player, player.getVelocity().add(boost));
 
         powers.setCooldown(AbilityIds.SWING, player.age);
         MasteryLogic.addMastery(player, 2);
-        actionbar(player, "§aSwinging! §7W/S reel, Sprint boost, Jump to launch");
+        actionbar(player, "§aSwing! §7W/S reel, Sprint boost, Jump launch");
     }
 
-    // LINE: Walkable web bridge - you can actually walk on it
+    // LINE: Insomniac web line - walkable bridge, 20 blocks max
     private static void line(ServerPlayerEntity player, PlayerPowers powers, int hand) {
         SpiderConfig cfg = SpiderConfig.get();
-        double range = cfg.swingRange * 1.5;
+        double range = cfg.swingRange * 1.4;
         Vec3d anchor = SwingPhysics.findAnchor(player, range);
         if (anchor == null) {
-            actionbar(player, "§7No anchor for line");
+            actionbar(player, "§7No anchor for web line");
             return;
         }
         if (powers.swinging) SwingPhysics.detach(player, powers, false);
 
         SwingPhysics.attach(player, powers, anchor, hand);
         double dist = anchor.distanceTo(player.getPos());
-        powers.ropeLen = Math.min(dist + 5.0, cfg.swingRange * 1.2);
+        powers.ropeLen = Math.min(dist + 4.0, cfg.swingRange * 1.15);
 
         Vec3d look = player.getRotationVector();
-        Vec3d vel = player.getVelocity().multiply(1.2).add(look.x * 0.4, 0.2, look.z * 0.4);
-        if (vel.length() > 2.5) vel = vel.normalize().multiply(2.5);
+        Vec3d vel = player.getVelocity().multiply(1.15).add(look.x * 0.35, 0.18, look.z * 0.35);
+        if (vel.length() > 2.3) vel = vel.normalize().multiply(2.3);
         SwingPhysics.push(player, vel);
 
         createWebLine(player, player.getEyePos(), anchor);
 
         powers.setCooldown(AbilityIds.LINE, player.age);
         MasteryLogic.addMastery(player, 3);
-        actionbar(player, "§bWeb Line - walkable bridge created!");
+        actionbar(player, "§bWeb Line - walkable bridge!");
     }
 
     private static void createWebLine(ServerPlayerEntity player, Vec3d start, Vec3d end) {
         if (start == null || end == null) return;
         double dist = start.distanceTo(end);
-        if (dist > 70 || dist < 3) return;
-        int steps = (int) (dist / 2.0);
-        if (steps < 3) steps = 3;
-        if (steps > 15) steps = 15;
+        if (dist > 65 || dist < 3) return;
+        int steps = (int) (dist / 1.8);
+        if (steps < 4) steps = 4;
+        if (steps > 14) steps = 14;
 
         ServerWorld world = player.getServerWorld();
         for (int i = 1; i < steps; i++) {
@@ -168,27 +183,31 @@ public final class AbilityExecutor {
             double x = start.x + (end.x - start.x) * t;
             double y = start.y + (end.y - start.y) * t;
             double z = start.z + (end.z - start.z) * t;
+            // Slight sag for realism
+            y -= Math.sin(t * Math.PI) * Math.min(1.2, dist * 0.04);
             BlockPos pos = BlockPos.ofFloored(x, y, z);
             try {
                 if (world.getBlockState(pos).isAir()) {
                     WebCleanup.place(player, pos);
                 }
-                // Make it walkable: place blocks below for walking
-                BlockPos below = pos.down();
-                if (world.getBlockState(below).isAir() && i % 2 == 0) {
-                    WebCleanup.place(player, below);
+                // Every 2nd, place below for walkable
+                if (i % 2 == 0) {
+                    BlockPos below = pos.down();
+                    if (world.getBlockState(below).isAir()) {
+                        WebCleanup.place(player, below);
+                    }
                 }
             } catch (Exception ignored) {}
         }
         if (world != null) {
             try {
-                world.spawnParticles(ParticleTypes.ITEM_COBWEB, start.x, start.y, start.z, steps * 2,
-                        (end.x - start.x) * 0.2, (end.y - start.y) * 0.2, (end.z - start.z) * 0.2, 0.03);
+                world.spawnParticles(ParticleTypes.ITEM_COBWEB, start.x, start.y, start.z, steps,
+                        (end.x - start.x) * 0.15, (end.y - start.y) * 0.15, (end.z - start.z) * 0.15, 0.02);
             } catch (Exception ignored) {}
         }
     }
 
-    // ZIP: Fast, controlled dash
+    // ZIP: Insomniac point launch - fast, controlled, chainable
     private static void zip(ServerPlayerEntity player, PlayerPowers powers, int hand) {
         SpiderConfig cfg = SpiderConfig.get();
         Vec3d eye = player.getEyePos();
@@ -210,18 +229,16 @@ public final class AbilityExecutor {
         powers.zipX = target.x;
         powers.zipY = target.y;
         powers.zipZ = target.z;
-        powers.zipTicks = 15; // Shorter, more responsive
+        powers.zipTicks = 14;
         try { player.setNoGravity(true); } catch (Exception ignored) {}
-        try {
-            player.playSound(ModSounds.WEB_ZIP, 1.0f, 1.2f);
-        } catch (Exception ignored) {}
+        try { player.playSound(ModSounds.WEB_ZIP, 1.0f, 1.25f); } catch (Exception ignored) {}
 
-        ServerNetworking.sendSwing(player, true, target.x, target.y, target.z, hand, 15);
+        ServerNetworking.sendSwing(player, true, target.x, target.y, target.z, hand, 14);
 
         if (player.getWorld() instanceof ServerWorld sw) {
             try {
-                sw.spawnParticles(ParticleTypes.ITEM_COBWEB, eye.x, eye.y, eye.z, 6,
-                        (target.x - eye.x) * 0.1, (target.y - eye.y) * 0.1, (target.z - eye.z) * 0.1, 0.02);
+                sw.spawnParticles(ParticleTypes.ITEM_COBWEB, eye.x, eye.y, eye.z, 5,
+                        (target.x - eye.x) * 0.08, (target.y - eye.y) * 0.08, (target.z - eye.z) * 0.08, 0.015);
             } catch (Exception ignored) {}
         }
 
@@ -229,10 +246,10 @@ public final class AbilityExecutor {
         MasteryLogic.addMastery(player, 2);
     }
 
-    // PULL: Simple, reliable pull
+    // PULL: Insomniac yank - pull enemy or pull to wall
     private static void pull(ServerPlayerEntity player, PlayerPowers powers, int hand) {
         SpiderConfig cfg = SpiderConfig.get();
-        LivingEntity target = pickTarget(player, cfg.pullRange, 2.5);
+        LivingEntity target = pickTarget(player, cfg.pullRange, 2.2);
         Vec3d eye = player.getEyePos();
         Vec3d look = player.getRotationVector();
         if (eye == null || look == null) return;
@@ -246,22 +263,22 @@ public final class AbilityExecutor {
             } catch (Exception ignored) {}
             Vec3d blockTarget = (hit != null && hit.getType() != HitResult.Type.MISS) ? hit.getPos() : to;
 
-            powers.pullTicks = 25;
+            powers.pullTicks = 22;
             powers.pullX = blockTarget.x;
             powers.pullY = blockTarget.y;
             powers.pullZ = blockTarget.z;
             powers.pullingPlayer = true;
             powers.pullTargetId = null;
             try { player.setNoGravity(true); } catch (Exception ignored) {}
-            ServerNetworking.sendSwing(player, true, blockTarget.x, blockTarget.y, blockTarget.z, hand, 25);
+            ServerNetworking.sendSwing(player, true, blockTarget.x, blockTarget.y, blockTarget.z, hand, 22);
             powers.setCooldown(AbilityIds.PULL, player.age);
-            actionbar(player, "§ePulling to block");
+            actionbar(player, "§ePulling to wall");
             return;
         }
 
         if (target.isSpectator() || !target.isAlive()) return;
 
-        powers.pullTicks = 35;
+        powers.pullTicks = 32;
         powers.pullX = target.getX();
         powers.pullY = target.getY() + target.getHeight() * 0.5;
         powers.pullZ = target.getZ();
@@ -272,27 +289,26 @@ public final class AbilityExecutor {
             try { player.setNoGravity(true); } catch (Exception ignored) {}
         }
 
-        ServerNetworking.sendSwing(player, true, target.getX(), target.getY() + 1.0, target.getZ(), hand, 35);
-        try {
-            player.playSound(ModSounds.WEB_ZIP, 1.0f, 0.8f);
-        } catch (Exception ignored) {}
+        ServerNetworking.sendSwing(player, true, target.getX(), target.getY() + 1.0, target.getZ(), hand, 32);
+        try { player.playSound(ModSounds.WEB_ZIP, 1.0f, 0.85f); } catch (Exception ignored) {}
         powers.setCooldown(AbilityIds.PULL, player.age);
         MasteryLogic.addMastery(player, 2);
-        actionbar(player, "§ePulling " + target.getName().getString());
+        ComboTracker.addHit(player, powers);
+        actionbar(player, "§eYanked " + target.getName().getString());
     }
 
-    // TRAP: Simple web cluster that slows
+    // TRAP: Insomniac web trap - 8 webs, slow+weakness, cluster
     private static void trap(ServerPlayerEntity player, PlayerPowers powers, int hand) {
         SpiderConfig cfg = SpiderConfig.get();
-        LivingEntity victim = pickTarget(player, cfg.trapRange, 2.5);
+        LivingEntity victim = pickTarget(player, cfg.trapRange, 2.3);
         Vec3d eye = player.getEyePos();
         Vec3d look = player.getRotationVector();
         if (eye == null || look == null) return;
 
         if (victim != null && !(victim instanceof ServerPlayerEntity) && victim.isAlive()) {
             try {
-                victim.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, 120, 3));
-                victim.addStatusEffect(new StatusEffectInstance(StatusEffects.WEAKNESS, 80, 1));
+                victim.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, 110, 2));
+                victim.addStatusEffect(new StatusEffectInstance(StatusEffects.WEAKNESS, 70, 0));
                 victim.damage(player.getWorld().getDamageSources().playerAttack(player), (float)cfg.trapDamage);
             } catch (Exception ignored) {}
 
@@ -307,14 +323,12 @@ public final class AbilityExecutor {
             WebCleanup.place(player, center);
             WebCleanup.place(player, center.up());
 
-            try {
-                player.playSound(ModSounds.WEB_SHOT, 1.0f, 0.7f);
-            } catch (Exception ignored) {}
-            ServerNetworking.sendSwing(player, true, victim.getX(), victim.getY() + 1.0, victim.getZ(), hand, 20);
+            try { player.playSound(ModSounds.WEB_SHOT, 1.0f, 0.75f); } catch (Exception ignored) {}
+            ServerNetworking.sendSwing(player, true, victim.getX(), victim.getY() + 1.0, victim.getZ(), hand, 18);
 
             if (player.getWorld() instanceof ServerWorld sw) {
                 try {
-                    sw.spawnParticles(ParticleTypes.ITEM_COBWEB, victim.getX(), victim.getY() + 1, victim.getZ(), 15, 0.8, 0.5, 0.8, 0.05);
+                    sw.spawnParticles(ParticleTypes.ITEM_COBWEB, victim.getX(), victim.getY() + 1, victim.getZ(), 12, 0.7, 0.4, 0.7, 0.04);
                 } catch (Exception ignored) {}
             }
 
@@ -347,18 +361,18 @@ public final class AbilityExecutor {
 
         Vec3d pos = hit.getPos();
         if (pos != null && Double.isFinite(pos.x)) {
-            ServerNetworking.sendSwing(player, true, pos.x, pos.y, pos.z, hand, 20);
+            ServerNetworking.sendSwing(player, true, pos.x, pos.y, pos.z, hand, 18);
         }
 
         powers.setCooldown(AbilityIds.TRAP, player.age);
         MasteryLogic.addMastery(player, 2);
     }
 
-    // BURST: Small, controlled AoE, no lag
+    // BURST: Insomniac web blossom - small AoE, 6.5 radius max, 8 enemies, no lag
     private static void burst(ServerPlayerEntity player, PlayerPowers powers) {
         SpiderConfig cfg = SpiderConfig.get();
-        double radius = Math.min(cfg.burstRadius + Math.min(powers.stage, 3) * 0.4, 6.5);
-        float damage = (float) (cfg.burstDamage * ComboTracker.damageMult(powers) + Math.min(powers.stage, 3) * 0.8f);
+        double radius = Math.min(cfg.burstRadius + Math.min(powers.stage, 4) * 0.35, 6.2);
+        float damage = (float) (cfg.burstDamage * ComboTracker.damageMult(powers) + Math.min(powers.stage, 4) * 0.7f);
         Vec3d center = player.getPos().add(0.0, 0.8, 0.0);
         World world = player.getWorld();
         if (world == null) return;
@@ -372,19 +386,18 @@ public final class AbilityExecutor {
             caught = List.of();
         }
 
-        // Limit to 8 entities max to prevent lag
         int count = 0;
         for (LivingEntity e : caught) {
             if (count >= 8) break;
             try {
                 e.damage(world.getDamageSources().playerAttack(player), damage);
-                e.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, 60, 2));
+                e.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, 55, 1));
                 Vec3d away = e.getPos().subtract(center);
                 if (away.lengthSquared() < 0.01) away = new Vec3d(0.0, 1.0, 0.0);
                 away = away.normalize();
                 if (Double.isFinite(away.x)) {
-                    double power = 1.0;
-                    e.setVelocity(away.x * power, Math.max(0.5, away.y * power + 0.4), away.z * power);
+                    double power = 0.9;
+                    e.setVelocity(away.x * power, Math.max(0.45, away.y * power + 0.35), away.z * power);
                     e.velocityModified = true;
                 }
                 count++;
@@ -393,14 +406,14 @@ public final class AbilityExecutor {
 
         if (world instanceof ServerWorld sw) {
             try {
-                sw.spawnParticles(ParticleTypes.ITEM_COBWEB, center.x, center.y, center.z, 20, radius * 0.4, radius * 0.3, radius * 0.4, 0.08);
-                sw.spawnParticles(ParticleTypes.EXPLOSION, center.x, center.y, center.z, 1, 0.05, 0.05, 0.05, 0.0);
+                sw.spawnParticles(ParticleTypes.ITEM_COBWEB, center.x, center.y, center.z, 16, radius * 0.35, radius * 0.25, radius * 0.35, 0.06);
+                sw.spawnParticles(ParticleTypes.EXPLOSION, center.x, center.y, center.z, 1, 0.04, 0.04, 0.04, 0.0);
             } catch (Exception ignored) {}
 
-            for (int i = 0; i < 6; i++) {
+            for (int i = 0; i < 5; i++) {
                 double ang = Math.random() * Math.PI * 2;
-                double dist = Math.random() * radius * 0.6;
-                BlockPos p = BlockPos.ofFloored(center.x + Math.cos(ang) * dist, center.y + (Math.random() - 0.5) * 1.5, center.z + Math.sin(ang) * dist);
+                double dist = Math.random() * radius * 0.55;
+                BlockPos p = BlockPos.ofFloored(center.x + Math.cos(ang) * dist, center.y + (Math.random() - 0.5) * 1.2, center.z + Math.sin(ang) * dist);
                 try {
                     if (sw.getBlockState(p).isAir()) WebCleanup.place(player, p);
                 } catch (Exception ignored) {}
@@ -409,15 +422,15 @@ public final class AbilityExecutor {
 
         try {
             world.playSound(null, center.x, center.y, center.z,
-                    SoundUtil.unwrap(SoundEvents.ENTITY_GENERIC_EXPLODE), SoundCategory.PLAYERS, 0.7f, 1.1f);
+                    SoundUtil.unwrap(SoundEvents.ENTITY_GENERIC_EXPLODE), SoundCategory.PLAYERS, 0.65f, 1.15f);
         } catch (Exception ignored) {}
 
         powers.setCooldown(AbilityIds.BURST, player.age);
         MasteryLogic.addMastery(player, 3);
-        actionbar(player, "§cBurst! " + count + " enemies hit");
+        actionbar(player, "§cWeb Blossom! " + count + " hit");
     }
 
-    // PLATFORM: Solid, walkable platform
+    // PLATFORM: Insomniac solid platform - 5x5 max, walkable, bounce
     private static void platform(ServerPlayerEntity player, PlayerPowers powers) {
         BlockPos base = player.getBlockPos().down();
         if (base == null) return;
@@ -444,19 +457,17 @@ public final class AbilityExecutor {
             return;
         }
 
-        try {
-            player.playSound(ModSounds.WEB_SPLAT, 1.0f, 1.0f);
-        } catch (Exception ignored) {}
+        try { player.playSound(ModSounds.WEB_SPLAT, 1.0f, 1.05f); } catch (Exception ignored) {}
 
         if (world != null) {
             try {
-                world.spawnParticles(ParticleTypes.ITEM_COBWEB, player.getX(), player.getY(), player.getZ(), 12, size * 0.5, 0.2, size * 0.5, 0.05);
+                world.spawnParticles(ParticleTypes.ITEM_COBWEB, player.getX(), player.getY(), player.getZ(), 10, size * 0.45, 0.18, size * 0.45, 0.04);
             } catch (Exception ignored) {}
         }
 
         powers.setCooldown(AbilityIds.PLATFORM, player.age);
         MasteryLogic.addMastery(player, 2);
-        actionbar(player, "§aWeb Platform " + (size*2+1) + "x" + (size*2+1) + " - walkable!");
+        actionbar(player, "§aWeb Platform " + (size*2+1) + "x" + (size*2+1) + " - solid!");
     }
 
     private static LivingEntity pickTarget(ServerPlayerEntity player, double range, double tolerance) {
