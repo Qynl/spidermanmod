@@ -288,7 +288,7 @@ add('net.minecraft.block.Block', ['net.minecraft.block.AbstractBlock'], [
 add('net.minecraft.block.Blocks', [], [
     'public static final net.minecraft.block.Block AIR;', 'public static final net.minecraft.block.Block WATER;',
     'public static final net.minecraft.block.Block STONE;', 'public static final net.minecraft.block.Block COBBLESTONE;',
-    'public static final net.minecraft.block.Block STONE_BRICKS;', 'public static final net.minecraft.block.Block STONE_BRICK_STAIRS;',
+    'public static final net.minecraft.block.Block STONE_BRICKS;', 'public static final net.minecraft.block.Block BRICKS;', 'public static final net.minecraft.block.Block STONE_BRICK_STAIRS;',
     'public static final net.minecraft.block.Block POLISHED_ANDESITE;', 'public static final net.minecraft.block.Block DEEPSLATE_TILES;',
     'public static final net.minecraft.block.Block DARK_OAK_PLANKS;', 'public static final net.minecraft.block.Block SPRUCE_PLANKS;',
     'public static final net.minecraft.block.Block OAK_PLANKS;', 'public static final net.minecraft.block.Block ACACIA_PLANKS;',

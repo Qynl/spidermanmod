@@ -95,7 +95,7 @@ public final class StructureBuilder {
     // ------------------------------------------------------- variant builds
 
     private static void buildScatteredFortress(ServerWorld world, BlockPos base) {
-        int y = plateau(world, base, 33, 25, ModBlocks.CASTLE_TILES);
+        int y = plateau(world, base, 39, 33, ModBlocks.CASTLE_TILES);
         Block stone = ModBlocks.CASTLE_STONE;
         Block trim = ModBlocks.CROWN_BRICK;
 
@@ -111,9 +111,9 @@ public final class StructureBuilder {
         keep(world, base.add(-5, 0, -4), 11, 8, 10, stone, trim);
         house(world, base.add(8, 0, -3), 6, 7, ModBlocks.ROYAL_WOOD, Blocks.SPRUCE_LOG,
                 Blocks.SPRUCE_STAIRS, ModBlocks.CASTLE_TILES);
-        farmPlot(world, base.add(-13, 0, 14), 9, 6);
+        farmPlot(world, base.add(-8, 0, 8), 6, 5);
         farmhouse(world, base.add(-14, 0, 8));
-        scarecrow(world, base.add(-8, 0, 16));
+        scarecrow(world, base.add(-8, 0, 15));
         fill(world, base.add(-2, y, -11), 5, 1, 8, ModBlocks.ROAD_STONE);
         set(world, base.add(-4, y + 1, -11), ModBlocks.HEARTH_LANTERN);
         set(world, base.add(4, y + 1, -11), ModBlocks.HEARTH_LANTERN);
@@ -192,7 +192,7 @@ public final class StructureBuilder {
         // a farm strip, and a single mooring apron. Only the ships own the sky.
         int y = plateau(world, base, 33, 29, Blocks.COARSE_DIRT);
         fill(world, base.add(-6, y, -7), 13, 1, 9, ModBlocks.AIRSHIP_METAL);
-        house(world, base.add(-18, 0, -4), 6, 6, Blocks.SPRUCE_PLANKS, Blocks.SPRUCE_LOG,
+        house(world, base.add(-16, 0, -4), 6, 6, Blocks.SPRUCE_PLANKS, Blocks.SPRUCE_LOG,
                 Blocks.SPRUCE_STAIRS, ModBlocks.AIRSHIP_METAL);
         house(world, base.add(11, 0, -6), 6, 6, Blocks.SPRUCE_PLANKS, Blocks.SPRUCE_LOG,
                 Blocks.SPRUCE_STAIRS, Blocks.SPRUCE_PLANKS);
@@ -213,7 +213,7 @@ public final class StructureBuilder {
         boolean western = style == BuildStyle.WESTERN;
         Block wallBlock = western ? ModBlocks.FRONTIER_PLANKS : ModBlocks.CROWN_BRICK;
         Block log = western ? Blocks.OAK_LOG : Blocks.SPRUCE_LOG;
-        int y = plateau(world, base, 17, 17, western ? Blocks.COARSE_DIRT : Blocks.GRAVEL);
+        int y = plateau(world, base, 23, 27, western ? Blocks.COARSE_DIRT : Blocks.GRAVEL);
 
         // Palisade ring with a watch tower in one corner.
         palisade(world, base.add(-8, 0, -8), 17, 17, wallBlock, log);
@@ -235,7 +235,7 @@ public final class StructureBuilder {
 
     /** A stone windmill with canvas sails over a wheat terrace. */
     private static void buildScatteredMill(ServerWorld world, BlockPos base) {
-        int y = plateau(world, base, 25, 25, Blocks.GRASS_BLOCK);
+        int y = plateau(world, base, 29, 29, Blocks.GRASS_BLOCK);
 
         roundTower(world, base.add(-3, 0, -3), 3, 11, Blocks.COBBLESTONE, Blocks.SPRUCE_PLANKS, true);
         // Pinwheel of fence arms and canvas panels on the tower's south face.
@@ -331,10 +331,12 @@ public final class StructureBuilder {
     }
 
     private static void buildCitadel(ServerWorld world, BlockPos base) {
+        // The outer curtain stands OUTSIDE the fortress pad, so claim the
+        // full ring first - walls and corner towers share one honest floor.
+        int y = plateau(world, base, 51, 45, ModBlocks.CASTLE_TILES);
         buildScatteredFortress(world, base);
         Block stone = ModBlocks.CASTLE_STONE;
         Block trim = ModBlocks.CROWN_BRICK;
-        int y = groundAt(world, base.getX(), base.getZ());
 
         // Second, taller curtain with a barbican bridge.
         wall(world, base.add(-22, y, -18), 45, 6, 1, trim);
@@ -361,6 +363,8 @@ public final class StructureBuilder {
     }
 
     private static void buildRoyalCity(ServerWorld world, BlockPos base) {
+        // The capital sprawls past the town grid: park first, then build.
+        plateau(world, base, 45, 45, Blocks.GRASS_BLOCK);
         buildScatteredTown(world, base, BuildStyle.KNIGHT);
         palace(world, base.add(-6, 0, 10), 13, 9, 12);
         marketStall(world, base.add(-16, 0, 1), Blocks.RED_WOOL, Blocks.OAK_LOG);
@@ -378,10 +382,10 @@ public final class StructureBuilder {
         int y = groundAt(world, base.getX(), base.getZ());
         pierCrane(world, base.add(-14, 0, -5));
         pier(world, base.add(-24, 0, -2), 12, Direction.WEST);
-        warehouse(world, base.add(-22, 0, 10), 9, 8, ModBlocks.SHIP_PLANKS, Blocks.DARK_OAK_LOG);
-        warehouse(world, base.add(16, 0, 10), 8, 8, ModBlocks.SHIP_PLANKS, Blocks.SPRUCE_LOG);
-        fill(world, base.add(-22, y, -12), 45, 1, 3, ModBlocks.SHIP_PLANKS);
-        set(world, base.add(0, y + 1, -12), ModBlocks.REALM_BANNER);
+        warehouse(world, base.add(-16, 0, 9), 9, 8, ModBlocks.SHIP_PLANKS, Blocks.DARK_OAK_LOG);
+        warehouse(world, base.add(9, 0, 9), 8, 8, ModBlocks.SHIP_PLANKS, Blocks.SPRUCE_LOG);
+        fill(world, base.add(-16, y, -14), 33, 1, 3, ModBlocks.SHIP_PLANKS);
+        set(world, base.add(0, y + 1, -13), ModBlocks.REALM_BANNER);
         mooredBoat(world, base.add(-18, 0, -8));
         mooredBoat(world, base.add(20, 0, -8));
     }
@@ -409,9 +413,9 @@ public final class StructureBuilder {
     }
 
     private static void buildPirateHarbor(ServerWorld world, BlockPos base) {
-        int y = groundAt(world, base.getX(), base.getZ());
-        // Terraced sand-and-plank harbor town.
-        plateau(world, base, 25, 21, ModBlocks.SHIP_PLANKS);
+        // Terraced sand-and-plank harbor town - wide enough for its tavern,
+        // farmstead and storage yard to stand on the pad, not the slope.
+        int y = plateau(world, base, 41, 35, ModBlocks.SHIP_PLANKS);
         fill(world, base.add(-2, y, -10), 5, 1, 21, Blocks.COARSE_DIRT);
         tavern(world, base.add(-10, 0, -8));
         warehouse(world, base.add(6, 0, -8), 7, 8, ModBlocks.SHIP_PLANKS, Blocks.DARK_OAK_LOG);
@@ -440,9 +444,9 @@ public final class StructureBuilder {
         // mast. Nothing floats; the sky belongs to the ships, not the town.
         int y = plateau(world, base, 25, 21, Blocks.COARSE_DIRT);
         fill(world, base.add(-6, y, -6), 12, 1, 8, ModBlocks.AIRSHIP_METAL);
-        roundTower(world, base.add(-9, 0, 3), 3, 10, ModBlocks.AIRSHIP_METAL, Blocks.SPRUCE_LOG, false);
-        workshop(world, base.add(8, 0, -6), 7, 7, ModBlocks.AIRSHIP_METAL, Blocks.SPRUCE_LOG);
-        house(world, base.add(8, 0, 3), 6, 6, Blocks.SPRUCE_PLANKS, Blocks.SPRUCE_LOG,
+        roundTower(world, base.add(-8, 0, 3), 3, 10, ModBlocks.AIRSHIP_METAL, Blocks.SPRUCE_LOG, false);
+        workshop(world, base.add(5, 0, -6), 7, 7, ModBlocks.AIRSHIP_METAL, Blocks.SPRUCE_LOG);
+        house(world, base.add(6, 0, 3), 6, 6, Blocks.SPRUCE_PLANKS, Blocks.SPRUCE_LOG,
                 Blocks.SPRUCE_STAIRS, ModBlocks.AIRSHIP_METAL);
         set(world, base.add(0, y + 1, 4), ModBlocks.REALM_BANNER);
         stockChest(world, base.add(3, y + 1, 1), new ItemStack(ModItems.AIRSHIP_KIT),
@@ -528,11 +532,11 @@ public final class StructureBuilder {
         // never platforms on stilts.
         switch (level) {
             case 2 -> {
-                storageYard(world, base.add(12, 0, -8), Blocks.SPRUCE_PLANKS);
-                lampPost(world, base.add(11, 0, -5));
+                storageYard(world, base.add(8, 0, -8), Blocks.SPRUCE_PLANKS);
+                lampPost(world, base.add(7, 0, -4));
             }
-            case 3 -> hangar(world, base.add(-15, 0, 5), 8, 9);
-            case 4 -> workshop(world, base.add(12, 0, 6), 7, 6, ModBlocks.AIRSHIP_METAL, Blocks.SPRUCE_LOG);
+            case 3 -> hangar(world, base.add(-12, 0, -10), 8, 9);
+            case 4 -> workshop(world, base.add(8, 0, 6), 7, 6, ModBlocks.AIRSHIP_METAL, Blocks.SPRUCE_LOG);
             case 5 -> mooredAirship(world, base.add(-4, 0, -10));
             default -> {
             }
@@ -543,16 +547,23 @@ public final class StructureBuilder {
 
     /** Flattens and packs a build site; returns the working surface height. */
     private static int plateau(ServerWorld world, BlockPos center, int sizeX, int sizeZ, Block surface) {
-        int y = groundAt(world, center.getX(), center.getZ());
         int x0 = center.getX() - sizeX / 2;
         int z0 = center.getZ() - sizeZ / 2;
+        // Floor at the LOWEST column in the footprint: every structure on the
+        // pad then shares one honest floor and nothing can hang in the air.
+        // Slopes become earthen embankments instead of floating edges.
+        int y = Integer.MAX_VALUE;
+        for (int x = 0; x < sizeX; x++) {
+            for (int z = 0; z < sizeZ; z++) {
+                y = Math.min(y, groundAt(world, x0 + x, z0 + z));
+            }
+        }
         for (int x = 0; x < sizeX; x++) {
             for (int z = 0; z < sizeZ; z++) {
                 int px = x0 + x;
                 int pz = z0 + z;
-                // Cap tall spikes inside the footprint; fill shallow dips.
                 int columnTop = groundAt(world, px, pz);
-                if (columnTop > y + 6) {
+                if (columnTop > y) {
                     clearColumn(world, px, pz, y + 1, columnTop);
                 }
                 set(world, new BlockPos(px, y, pz), surface);
@@ -561,6 +572,14 @@ public final class StructureBuilder {
             }
         }
         return y;
+    }
+
+    /** Lowest ground under a rectangle: how shells avoid straddling slopes. */
+    private static int lowestCorner(ServerWorld world, int x, int z, int sizeX, int sizeZ) {
+        return Math.min(Math.min(groundAt(world, x, z),
+                groundAt(world, x + sizeX - 1, z)),
+                Math.min(groundAt(world, x, z + sizeZ - 1),
+                        groundAt(world, x + sizeX - 1, z + sizeZ - 1)));
     }
 
     private static int groundAt(ServerWorld world, int x, int z) {
@@ -604,7 +623,8 @@ public final class StructureBuilder {
     /** Circular stone tower with arrow slits, a furnished floor and a conical roof. */
     private static void roundTower(ServerWorld world, BlockPos base, int radius, int height,
                                    Block wall, Block trim, boolean roofed) {
-        int y = groundAt(world, base.getX(), base.getZ());
+        int y = lowestCorner(world, base.getX() - radius - 1, base.getZ() - radius - 1,
+                2 * radius + 3, 2 * radius + 3);
         BlockPos origin = new BlockPos(base.getX(), y, base.getZ());
         float radiusF = radius + 0.5f;
 
@@ -616,6 +636,9 @@ public final class StructureBuilder {
                     if (dist <= radiusF && dist > radiusF - 1.15) {
                         boolean merlon = h == height && (dx + dz) % 2 == 0 && !roofed;
                         set(world, pos, merlon ? trim : wall);
+                        if (h == 0) {
+                            foundation(world, pos.getX(), pos.getZ(), y - 1, wall);
+                        }
                     } else if (h == 0 && dist <= radiusF - 1.15) {
                         set(world, pos, ModBlocks.CASTLE_TILES);
                         foundation(world, pos.getX(), pos.getZ(), y - 1, wall);
@@ -675,7 +698,7 @@ public final class StructureBuilder {
     /** Rectangular curtain wall with walk height, used as the fortress ring. */
     private static void curtainWall(ServerWorld world, BlockPos corner, int sizeX, int sizeZ,
                                     int height, Block wall, Block trim, Direction gateSide) {
-        int y = groundAt(world, corner.getX() + sizeX / 2, corner.getZ() + sizeZ / 2);
+        int y = lowestCorner(world, corner.getX(), corner.getZ(), sizeX, sizeZ);
         for (int x = 0; x < sizeX; x++) {
             wallColumn(world, corner.add(x, 0, 0), y, height, wall, trim);
             wallColumn(world, corner.add(x, 0, sizeZ - 1), y, height, wall, trim);
@@ -825,7 +848,7 @@ public final class StructureBuilder {
 
     private static void keep(ServerWorld world, BlockPos corner, int sizeX, int height, int sizeZ,
                              Block wall, Block trim) {
-        int y = groundAt(world, corner.getX() + sizeX / 2, corner.getZ() + sizeZ / 2);
+        int y = lowestCorner(world, corner.getX(), corner.getZ(), sizeX, sizeZ);
         BlockPos origin = new BlockPos(corner.getX(), y, corner.getZ());
         for (int h = 0; h <= height; h++) {
             for (int x = 0; x < sizeX; x++) {
@@ -949,12 +972,26 @@ public final class StructureBuilder {
                 }
             }
         }
+        // Closed gable ends: no see-through triangles under the roof.
+        for (int r = 1; r < ridge; r++) {
+            int h = wallHeight + 1 + r;
+            for (int z = r + 1; z <= sizeZ - 2 - r; z++) {
+                set(world, origin.add(0, h, z), roofAccent);
+                set(world, origin.add(sizeX - 1, h, z), roofAccent);
+            }
+        }
+        // A brick chimney climbs the gable wall past the roofline.
+        for (int h = 1; h <= wallHeight + ridge + 2; h++) {
+            set(world, origin.add(0, h, 2), Blocks.BRICKS);
+        }
         set(world, origin.add(sizeX / 2, wallHeight + ridge + 1, sizeZ / 2), Blocks.LANTERN);
 
         // Furnish the inside.
         int floor = y + 1;
         set(world, origin.add(1, floor, 1), Blocks.CRAFTING_TABLE);
-        set(world, origin.add(1, floor, 2), Blocks.BARREL);
+        set(world, origin.add(1, 0, 2), Blocks.COBBLESTONE);
+        set(world, origin.add(1, floor, 2), Blocks.CAMPFIRE);
+        set(world, origin.add(2, floor, 2), Blocks.BARREL);
         set(world, origin.add(sizeX - 2, floor, 1), Blocks.BOOKSHELF);
         set(world, origin.add(sizeX / 2, floor + 2, sizeZ / 2), Blocks.LANTERN);
         set(world, origin.add(1, floor, sizeZ - 2), Blocks.WHITE_CARPET);
@@ -964,7 +1001,7 @@ public final class StructureBuilder {
 
     private static void palace(ServerWorld world, BlockPos corner, int sizeX, int height, int sizeZ) {
         keep(world, corner, sizeX, height, sizeZ, ModBlocks.CASTLE_STONE, ModBlocks.CROWN_BRICK);
-        int y = groundAt(world, corner.getX() + sizeX / 2, corner.getZ() + sizeZ / 2);
+        int y = lowestCorner(world, corner.getX(), corner.getZ(), sizeX, sizeZ);
         // Front colonnade + gold-accented entry.
         for (int x = 1; x < sizeX - 1; x += 3) {
             for (int h = 1; h <= 4; h++) {
@@ -1000,7 +1037,7 @@ public final class StructureBuilder {
 
     private static void warehouse(ServerWorld world, BlockPos corner, int sizeX, int sizeZ,
                                   Block wall, Block log) {
-        int y = groundAt(world, corner.getX() + sizeX / 2, corner.getZ() + sizeZ / 2);
+        int y = lowestCorner(world, corner.getX(), corner.getZ(), sizeX, sizeZ);
         BlockPos origin = new BlockPos(corner.getX(), y, corner.getZ());
         int height = 5;
         for (int h = 0; h <= height; h++) {
@@ -1035,7 +1072,7 @@ public final class StructureBuilder {
                                  Block wall, Block log) {
         house(world, corner, sizeX, sizeZ, wall, log,
                 wall == ModBlocks.AIRSHIP_METAL ? Blocks.SPRUCE_STAIRS : Blocks.OAK_STAIRS, wall);
-        int y = groundAt(world, corner.getX() + sizeX / 2, corner.getZ() + sizeZ / 2);
+        int y = lowestCorner(world, corner.getX(), corner.getZ(), sizeX, sizeZ);
         set(world, corner.add(1, y + 1, sizeZ - 2), Blocks.ANVIL);
         set(world, corner.add(2, y + 1, sizeZ - 2), Blocks.FURNACE);
         set(world, corner.add(3, y + 1, sizeZ - 2), Blocks.CAULDRON);
@@ -1043,7 +1080,7 @@ public final class StructureBuilder {
     }
 
     private static void stable(ServerWorld world, BlockPos corner, int sizeX, int sizeZ) {
-        int y = groundAt(world, corner.getX() + sizeX / 2, corner.getZ() + sizeZ / 2);
+        int y = lowestCorner(world, corner.getX(), corner.getZ(), sizeX, sizeZ);
         for (int x = 0; x < sizeX; x++) {
             set(world, corner.add(x, y, sizeZ / 2), Blocks.OAK_FENCE);
             set(world, corner.add(x, y + 1, sizeZ / 2), Blocks.OAK_FENCE);
@@ -1087,7 +1124,7 @@ public final class StructureBuilder {
 
     private static void palisade(ServerWorld world, BlockPos corner, int sizeX, int sizeZ,
                                  Block wall, Block log) {
-        int y = groundAt(world, corner.getX() + sizeX / 2, corner.getZ() + sizeZ / 2);
+        int y = lowestCorner(world, corner.getX(), corner.getZ(), sizeX, sizeZ);
         for (int x = 0; x < sizeX; x++) {
             for (int h = 1; h <= 3; h++) {
                 if (h < 3 || (x % 2 == 0)) {
@@ -1115,7 +1152,7 @@ public final class StructureBuilder {
     }
 
     private static void farmPlot(ServerWorld world, BlockPos corner, int sizeX, int sizeZ) {
-        int y = groundAt(world, corner.getX() + sizeX / 2, corner.getZ() + sizeZ / 2);
+        int y = lowestCorner(world, corner.getX(), corner.getZ(), sizeX, sizeZ);
         for (int x = 0; x < sizeX; x++) {
             for (int z = 0; z < sizeZ; z++) {
                 BlockPos pos = corner.add(x, y, z);
@@ -1271,7 +1308,7 @@ public final class StructureBuilder {
     private static void hangar(ServerWorld world, BlockPos corner, int sizeX, int sizeZ) {
         // Open-front ship shelter at ground level: iron sill, arched timber
         // frame, metal roof.
-        int y = groundAt(world, corner.getX() + sizeX / 2, corner.getZ() + sizeZ / 2);
+        int y = lowestCorner(world, corner.getX(), corner.getZ(), sizeX, sizeZ);
         BlockPos origin = new BlockPos(corner.getX(), y, corner.getZ());
         for (int x = 0; x < sizeX; x++) {
             for (int z = 0; z < sizeZ; z++) {
@@ -1388,7 +1425,7 @@ public final class StructureBuilder {
     private static void farmhouse(ServerWorld world, BlockPos corner) {
         Block wall = ModBlocks.FRONTIER_PLANKS;
         Block log = Blocks.SPRUCE_LOG;
-        int y = groundAt(world, corner.getX(), corner.getZ());
+        int y = lowestCorner(world, corner.getX(), corner.getZ(), 6, 5);
         BlockPos origin = new BlockPos(corner.getX(), y, corner.getZ());
 
         foundationRing(world, origin, 6, 5, wall);
