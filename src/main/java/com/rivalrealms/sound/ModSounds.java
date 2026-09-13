@@ -92,6 +92,16 @@ public final class ModSounds {
     public static final SoundEvent HUNGER_CRY = register("voice.hunger_cry");
     public static final SoundEvent TOWN_GROWS = register("voice.town_grows");
     public static final SoundEvent STANDOFF = register("voice.standoff");
+    public static final SoundEvent TO_THE_WALLS = register("voice.to_the_walls");
+    public static final SoundEvent NIGHT_WATCH = register("voice.night_watch");
+    public static final SoundEvent ADMIRE_ARMOR = register("voice.admire_armor");
+    public static final SoundEvent REQUEST_HELP = register("voice.request_help");
+    public static final SoundEvent WORK_SONG = register("voice.work_song");
+    public static final SoundEvent LULLABY = register("voice.lullaby");
+    public static final SoundEvent DRUNK_TAVERN = register("voice.drunk_tavern");
+    public static final SoundEvent HUNT_TALE = register("voice.hunt_tale");
+    public static final SoundEvent FALLEN_TOWN = register("voice.fallen_town");
+    public static final SoundEvent RUINS_WARNING = register("voice.ruins_warning");
 
     private static final Map<String, SoundEvent> VOICES = Map.ofEntries(
             Map.entry("siege_defense", SIEGE_DEFENSE),
@@ -162,7 +172,17 @@ public final class ModSounds {
             Map.entry("market_herald", MARKET_HERALD),
             Map.entry("hunger_cry", HUNGER_CRY),
             Map.entry("town_grows", TOWN_GROWS),
-            Map.entry("standoff", STANDOFF));
+            Map.entry("standoff", STANDOFF),
+            Map.entry("to_the_walls", TO_THE_WALLS),
+            Map.entry("night_watch", NIGHT_WATCH),
+            Map.entry("admire_armor", ADMIRE_ARMOR),
+            Map.entry("request_help", REQUEST_HELP),
+            Map.entry("work_song", WORK_SONG),
+            Map.entry("lullaby", LULLABY),
+            Map.entry("drunk_tavern", DRUNK_TAVERN),
+            Map.entry("hunt_tale", HUNT_TALE),
+            Map.entry("fallen_town", FALLEN_TOWN),
+            Map.entry("ruins_warning", RUINS_WARNING));
 
     private static SoundEvent register(String name) {
         return Registry.register(Registries.SOUND_EVENT, RivalRealms.id(name), SoundEvent.of(RivalRealms.id(name)));

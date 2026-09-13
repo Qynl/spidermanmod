@@ -412,5 +412,65 @@
   "sounds": [
    "rivalrealms:voice/standoff"
   ]
+ },
+ "voice.to_the_walls": {
+  "subtitle": "subtitles.rivalrealms.voice.to_the_walls",
+  "sounds": [
+   "rivalrealms:voice/to_the_walls"
+  ]
+ },
+ "voice.night_watch": {
+  "subtitle": "subtitles.rivalrealms.voice.night_watch",
+  "sounds": [
+   "rivalrealms:voice/night_watch"
+  ]
+ },
+ "voice.admire_armor": {
+  "subtitle": "subtitles.rivalrealms.voice.admire_armor",
+  "sounds": [
+   "rivalrealms:voice/admire_armor"
+  ]
+ },
+ "voice.request_help": {
+  "subtitle": "subtitles.rivalrealms.voice.request_help",
+  "sounds": [
+   "rivalrealms:voice/request_help"
+  ]
+ },
+ "voice.work_song": {
+  "subtitle": "subtitles.rivalrealms.voice.work_song",
+  "sounds": [
+   "rivalrealms:voice/work_song"
+  ]
+ },
+ "voice.lullaby": {
+  "subtitle": "subtitles.rivalrealms.voice.lullaby",
+  "sounds": [
+   "rivalrealms:voice/lullaby"
+  ]
+ },
+ "voice.drunk_tavern": {
+  "subtitle": "subtitles.rivalrealms.voice.drunk_tavern",
+  "sounds": [
+   "rivalrealms:voice/drunk_tavern"
+  ]
+ },
+ "voice.hunt_tale": {
+  "subtitle": "subtitles.rivalrealms.voice.hunt_tale",
+  "sounds": [
+   "rivalrealms:voice/hunt_tale"
+  ]
+ },
+ "voice.fallen_town": {
+  "subtitle": "subtitles.rivalrealms.voice.fallen_town",
+  "sounds": [
+   "rivalrealms:voice/fallen_town"
+  ]
+ },
+ "voice.ruins_warning": {
+  "subtitle": "subtitles.rivalrealms.voice.ruins_warning",
+  "sounds": [
+   "rivalrealms:voice/ruins_warning"
+  ]
  }
 }

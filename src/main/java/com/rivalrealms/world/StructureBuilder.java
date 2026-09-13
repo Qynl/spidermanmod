@@ -458,8 +458,7 @@ public final class StructureBuilder {
     }
 
     private static void buildCommonExpansion(ServerWorld world, BlockPos base, int level) {
-        int y = groundAt(world, base.getX(), base.getZ());
-        plateau(world, base, 17, 17, Blocks.COBBLESTONE);
+        int y = plateau(world, base, 17, 17, Blocks.COBBLESTONE);
         house(world, base.add(-6, 0, -6), 7, 8, Blocks.OAK_PLANKS, Blocks.OAK_LOG,
                 Blocks.OAK_STAIRS, Blocks.COBBLESTONE);
         farmPlot(world, base.add(3, 0, 3), 7, 6);
@@ -475,12 +474,13 @@ public final class StructureBuilder {
     private static void expandKnight(ServerWorld world, BlockPos base, int level) {
         switch (level) {
             case 2 -> {
+                plateau(world, base.add(-24, 0, 8), 14, 11, Blocks.GRASS_BLOCK);
                 farmPlot(world, base.add(-22, 0, 10), 10, 7);
                 workshop(world, base.add(13, 0, 10), 7, 7, ModBlocks.CROWN_BRICK, Blocks.STONE_BRICKS);
             }
             case 3 -> roundTower(world, base.add(-15, 0, 12), 3, 12, Blocks.STONE_BRICKS, ModBlocks.CROWN_BRICK, true);
             case 4 -> {
-                int y = groundAt(world, base.getX(), base.getZ());
+                int y = plateau(world, base.add(0, 0, 13), 37, 5, Blocks.GRASS_BLOCK);
                 wall(world, base.add(-17, y, 12), 35, 5, 1, ModBlocks.CROWN_BRICK);
                 crenellate(world, base.add(-17, y + 5, 12), 35, 1, ModBlocks.CROWN_BRICK);
                 set(world, base.add(0, y + 1, 12), ModBlocks.REALM_BANNER);
@@ -511,11 +511,14 @@ public final class StructureBuilder {
 
     private static void expandWestern(ServerWorld world, BlockPos base, int level) {
         switch (level) {
-            case 2 -> farmPlot(world, base.add(-22, 0, 6), 11, 8);
+            case 2 -> {
+                plateau(world, base.add(-24, 0, 4), 15, 12, Blocks.COARSE_DIRT);
+                farmPlot(world, base.add(-22, 0, 6), 11, 8);
+            }
             case 3 -> workshop(world, base.add(13, 0, 8), 7, 6, ModBlocks.FRONTIER_PLANKS, Blocks.OAK_LOG);
             case 4 -> {
+                int y = plateau(world, base.add(-21, 0, -10), 13, 11, Blocks.COARSE_DIRT);
                 storageYard(world, base.add(-20, 0, -9), Blocks.OAK_PLANKS);
-                int y = groundAt(world, base.getX(), base.getZ());
                 fill(world, base.add(-20, y, -11), 24, 1, 1, Blocks.OAK_FENCE);
             }
             case 5 -> {

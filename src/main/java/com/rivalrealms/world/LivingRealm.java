@@ -272,6 +272,7 @@ public final class LivingRealm {
                 : Archetype.byFaction(winner) == Archetype.SKY_CAPTAIN ? BuildStyle.SKY
                 : Archetype.byFaction(winner) == Archetype.OUTLAW ? BuildStyle.WESTERN
                 : BuildStyle.KNIGHT;
+        com.rivalrealms.sound.ModSounds.playVoice(world, base.center(), "fallen_town");
         base.surrenderTo(newOwner, winner, style.id());
         DialogueEngine.noteEvent(world, base.center(),
                 "The " + loser + " fell here. The " + winner + " raised their banner over our homes.", "grief");
@@ -658,7 +659,8 @@ public final class LivingRealm {
                 defender.addStatusEffect(new StatusEffectInstance(StatusEffects.RESISTANCE, 2400, 0));
             }
         }
-        com.rivalrealms.sound.ModSounds.playVoice(world, base.center(), "siege_defense");
+        com.rivalrealms.sound.ModSounds.playVoice(world, base.center(),
+                world.random.nextBoolean() ? "to_the_walls" : "siege_defense");
     }
 
     /** Advances every live siege: preparation, evacuation, relief, aftermath. */

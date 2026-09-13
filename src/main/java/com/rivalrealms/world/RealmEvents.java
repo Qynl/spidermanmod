@@ -59,6 +59,7 @@ public final class RealmEvents {
                 try {
                     LivingRealm.tick(world);
                     LivingRealm.stormWatch(world);
+                    tickVanillaVillages(world);
                 } catch (RuntimeException exception) {
                     RivalRealms.LOGGER.error("Living realm tick failed in {}",
                             world.getRegistryKey().getValue(), exception);
@@ -141,6 +142,133 @@ public final class RealmEvents {
      * wall and the first workers already about their trade — farmsteads
      * always get their farmhands at once.
      */
+    /** Nice village names for the towns that never had one. */
+    private static final String[] VILLAGE_NAMES = {"Ashford", "Brindlemere", "Copperfield",
+            "Dunhollow", "Elmsworth", "Fernbrook", "Greenhollow", "Hartleigh",
+            "Millbrook", "Oakhaven", "Thornbury", "Westmarch"};
+
+    private static final String[] HEARTH_NAMES = {"Alden", "Bram", "Cedric", "Dorothea",
+            "Edwin", "Freya", "Gundric", "Hilda", "Ivo", "Jorunn", "Klara", "Lennard",
+            "Marta", "Nils", "Ottilie", "Runa"};
+
+    /**
+     * Vanilla villagers become Hearthfolk: the nice folk of the realm, with
+     * a proper name, a trade and a faction. Their villages are claimed for
+     * Hearthfolk whenever a bell stands over their heads.
+     */
+    public static void tickVanillaVillages(ServerWorld world) {
+        if (world.getTime() % 200L != 37L) {
+            return;
+        }
+        for (ServerPlayerEntity player : world.getPlayers()) {
+            if (player.isSpectator()) {
+                continue;
+            }
+            for (net.minecraft.entity.passive.VillagerEntity villager : world.getEntitiesByClass(
+                    net.minecraft.entity.passive.VillagerEntity.class,
+                    player.getBoundingBox().expand(64.0), v -> v.isAlive())) {
+                convertVillager(world, villager);
+            }
+        }
+    }
+
+    private static void convertVillager(ServerWorld world,
+                                        net.minecraft.entity.passive.VillagerEntity villager) {
+        BlockPos at = villager.getBlockPos();
+        boolean baby = villager.isBaby();
+        SettlementRole role = hearthRole(villager);
+        villager.discard();
+
+        SurvivorEntity convert = com.rivalrealms.entity.ModEntities.SURVIVOR.create(world);
+        if (convert == null) {
+            return;
+        }
+        convert.refreshPositionAndAngles(at.getX() + 0.5, at.getY(), at.getZ() + 0.5,
+                world.random.nextFloat() * 360.0f, 0.0f);
+        convert.setArchetype(com.rivalrealms.entity.Archetype.HEARTHFOLK);
+        RealmState state = RealmState.get(world);
+        RealmState.BaseRecord home = state.findBase(at);
+        if (baby) {
+            convert.setChild(true);
+        } else {
+            UUID owner = home != null && "Hearthfolk".equalsIgnoreCase(home.faction())
+                    ? home.owner()
+                    : UUID.nameUUIDFromBytes(("rivalrealms:village:" + at.asLong())
+                            .getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            convert.assignWorker(home != null ? home.center() : at, owner, "Hearthfolk", role);
+        }
+        String given = HEARTH_NAMES[world.random.nextInt(HEARTH_NAMES.length)];
+        convert.setCustomName(Text.literal(baby ? "Little " + given : given));
+        convert.setCustomNameVisible(true);
+        convert.setFamily(LivingRealm.surname("Hearthfolk", world.random), null);
+        world.spawnEntity(convert);
+        if (!baby) {
+            claimVanillaVillage(world, state, at);
+        }
+    }
+
+    /** The villager's trade becomes a real role in the realm. */
+    private static SettlementRole hearthRole(net.minecraft.entity.passive.VillagerEntity villager) {
+        net.minecraft.village.VillagerProfession profession =
+                villager.getVillagerData().getProfession();
+        if (profession == net.minecraft.village.VillagerProfession.FARMER
+                || profession == net.minecraft.village.VillagerProfession.FISHERMAN
+                || profession == net.minecraft.village.VillagerProfession.BUTCHER
+                || profession == net.minecraft.village.VillagerProfession.FLETCHER
+                || profession == net.minecraft.village.VillagerProfession.SHEPHERD
+                || profession == net.minecraft.village.VillagerProfession.LEATHERWORKER) {
+            return SettlementRole.FARMER;
+        }
+        if (profession == net.minecraft.village.VillagerProfession.CLERIC) {
+            return SettlementRole.HERBALIST;
+        }
+        if (profession == net.minecraft.village.VillagerProfession.ARMORER
+                || profession == net.minecraft.village.VillagerProfession.WEAPONSMITH
+                || profession == net.minecraft.village.VillagerProfession.TOOLSMITH) {
+            return SettlementRole.BLACKSMITH;
+        }
+        if (profession == net.minecraft.village.VillagerProfession.MASON) {
+            return SettlementRole.MASON;
+        }
+        if (profession == net.minecraft.village.VillagerProfession.LIBRARIAN
+                || profession == net.minecraft.village.VillagerProfession.CARTOGRAPHER) {
+            return SettlementRole.MERCHANT;
+        }
+        if (profession == net.minecraft.village.VillagerProfession.NITWIT
+                || profession == net.minecraft.village.VillagerProfession.NONE) {
+            return SettlementRole.NONE;
+        }
+        return SettlementRole.TRADER;
+    }
+
+    /** A vanilla village with a bell is claimed for the Hearthfolk, once. */
+    private static void claimVanillaVillage(ServerWorld world, RealmState state, BlockPos at) {
+        if (state.findBase(at) != null || !state.canClaimBase(at)) {
+            return;
+        }
+        BlockPos bell = null;
+        for (BlockPos pos : BlockPos.iterate(at.add(-24, -6, -24), at.add(24, 6, 24))) {
+            if (world.getBlockState(pos).isOf(net.minecraft.block.Blocks.BELL)) {
+                bell = pos.toImmutable();
+                break;
+            }
+        }
+        BlockPos center = bell != null ? bell : at;
+        UUID owner = UUID.nameUUIDFromBytes(("rivalrealms:village:" + center.asLong())
+                .getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        String name = VILLAGE_NAMES[(int) ((center.asLong() & 0x7fffffffL)
+                % VILLAGE_NAMES.length)];
+        RealmState.BaseRecord claimed = state.claimCustomBase(center, owner, "Hearthfolk", name);
+        if (claimed != null) {
+            populateSettlement(world, center, BuildStyle.HEARTHFOLK, SettlementVariant.FARMSTEAD);
+            state.chronicle(world.getTime(), name + " flew no banner of ours until today."
+                    + " The Hearthfolk welcome its folk into the realm.", true);
+            DialogueEngine.noteEvent(world, center,
+                    "You're one of us now, friend. The banner out front flies for every hearth here.");
+            com.rivalrealms.sound.ModSounds.playVoice(world, center, "warm_greeting");
+        }
+    }
+
     public static void populateSettlement(ServerWorld world, BlockPos center,
                                           BuildStyle style, SettlementVariant variant) {
         String faction = style.faction();

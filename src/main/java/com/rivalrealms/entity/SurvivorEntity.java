@@ -145,7 +145,16 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
     protected void initGoals() {
         goalSelector.add(0, new SwimGoal(this));
         goalSelector.add(1, new ConditionalProjectileGoal(this, 1.0, 38, 20.0f));
-        goalSelector.add(2, new MeleeAttackGoal(this, 1.15, true));
+        goalSelector.add(2, new MeleeAttackGoal(this, 1.25, true));
+        // Armed defenders seek out the realm's monsters; nobody idioteer
+        // charges a creeper, though.
+        targetSelector.add(2, new net.minecraft.entity.ai.goal.ActiveTargetGoal<>(this,
+                net.minecraft.entity.mob.HostileEntity.class, 10, true, false,
+                monster -> (settlementRole == SettlementRole.GUARD
+                        || settlementRole == SettlementRole.CAPTAIN
+                        || settlementRole == SettlementRole.WARLORD
+                        || getArchetype() == Archetype.MARAUDER)
+                        && !(monster instanceof net.minecraft.entity.mob.CreeperEntity)));
         goalSelector.add(3, new WanderAroundFarGoal(this, 0.8));
         goalSelector.add(4, new LookAtEntityGoal(this, PlayerEntity.class, 12.0f));
         goalSelector.add(5, new LookAroundGoal(this));
@@ -237,10 +246,30 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
         giftTick(owner);
         quipTick();
 
-        // Ranged cultures keep their offhand weapon stocked so their pose reads
-        // correctly at a glance.
-        if (getWorld().getTime() % 80L == 0 && isRanged() && getOffHandStack().isEmpty()) {
-            setStackInHand(Hand.OFF_HAND, getArchetype().rangedStack());
+        // Ranged folk fight with the right tool in the right hand: the gun
+        // comes UP when the target stands off, steel comes up when it's close.
+        if (!getWorld().isClient && getWorld().getTime() % 20L == 0 && isRanged()) {
+            boolean atRange = getTarget() != null && getTarget().isAlive()
+                    && squaredDistanceTo(getTarget()) > 36.0;
+            net.minecraft.item.ItemStack ranged = getArchetype().rangedStack();
+            net.minecraft.item.ItemStack main = getMainHandStack();
+            if (atRange && !main.isOf(ranged.getItem())) {
+                setStackInHand(Hand.MAIN_HAND, ranged);
+                setStackInHand(Hand.OFF_HAND, main);
+            } else if (!atRange && main.isOf(ranged.getItem())) {
+                net.minecraft.item.ItemStack melee = getOffHandStack();
+                setStackInHand(Hand.MAIN_HAND, melee.isOf(ranged.getItem())
+                        ? net.minecraft.item.ItemStack.EMPTY : melee);
+                setStackInHand(Hand.OFF_HAND, ranged);
+            }
+        }
+
+        // Settlers commute home; nobody colonizes the far hills by accident.
+        if (!getWorld().isClient && guardCenter != null && !isRecruited()
+                && getTarget() == null && getWorld().getTime() % 100L == 13L
+                && getBlockPos().getSquaredDistance(guardCenter) > 3600.0) {
+            getNavigation().startMovingTo(guardCenter.getX() + 0.5, guardCenter.getY() + 1,
+                    guardCenter.getZ() + 0.5, 0.95);
         }
     }
 
@@ -1485,10 +1514,11 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
             if (source.getAttacker() instanceof PlayerEntity player) {
                 witnessAttack(player);
                 if (guardCenter != null && guardOwnerUuid != null && guardOwnerUuid.equals(player.getUuid())) {
-                    // Settlement staff are protected from accidental friendly fire;
-                    // RevengeGoal must never turn an owner's mistake into a revolt.
-                    setTarget(null);
-                    return false;
+                    // Staff forgive the first blow as an accident - RevengeGoal
+                    // must never turn an owner's mistake into a revolt - but a
+                    // beating is a beating, and at half health they defend
+                    // themselves like anyone else.
+                    setTarget(getHealth() < getMaxHealth() * 0.5f ? player : null);
                 }
                 if (isOwner(player)) {
                     trust = Math.max(0, trust - 35);

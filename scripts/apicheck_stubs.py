@@ -288,7 +288,7 @@ add('net.minecraft.block.Block', ['net.minecraft.block.AbstractBlock'], [
 add('net.minecraft.block.Blocks', [], [
     'public static final net.minecraft.block.Block AIR;', 'public static final net.minecraft.block.Block WATER;',
     'public static final net.minecraft.block.Block STONE;', 'public static final net.minecraft.block.Block COBBLESTONE;',
-    'public static final net.minecraft.block.Block STONE_BRICKS;', 'public static final net.minecraft.block.Block BRICKS;', 'public static final net.minecraft.block.Block STONE_BRICK_STAIRS;',
+    'public static final net.minecraft.block.Block STONE_BRICKS;', 'public static final net.minecraft.block.Block BRICKS;', 'public static final net.minecraft.block.Block BELL;', 'public static final net.minecraft.block.Block STONE_BRICK_STAIRS;',
     'public static final net.minecraft.block.Block POLISHED_ANDESITE;', 'public static final net.minecraft.block.Block DEEPSLATE_TILES;',
     'public static final net.minecraft.block.Block DARK_OAK_PLANKS;', 'public static final net.minecraft.block.Block SPRUCE_PLANKS;',
     'public static final net.minecraft.block.Block OAK_PLANKS;', 'public static final net.minecraft.block.Block ACACIA_PLANKS;',
@@ -461,6 +461,8 @@ add('net.minecraft.item.Items', [], [
     'public static final net.minecraft.item.Item SPRUCE_PLANKS;',
     'public static final net.minecraft.item.Item COOKED_COD;', 'public static final net.minecraft.item.Item ROTTEN_FLESH;',
     'public static final net.minecraft.item.Item BONE;',
+    'public static final net.minecraft.item.Item NETHERITE_CHESTPLATE;',
+    'public static final net.minecraft.item.Item GOLDEN_CHESTPLATE;',
 ])
 add('net.minecraft.item.BlockItem', ['net.minecraft.item.Item'], [
     'public BlockItem(net.minecraft.block.Block block, net.minecraft.item.Item.Settings settings);',

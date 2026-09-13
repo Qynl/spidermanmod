@@ -98,13 +98,29 @@ public final class DialogueEngine {
         }
 
         long timeOfDay = world.getTime() % 24000L;
-        // 2. The hour: night roads deserve a warning, dawn a greeting.
+        // 2. The hour: night roads deserve a warning, dawn a greeting -
+        // and the watch challenges you like the watch does.
         if (timeOfDay >= 13500L && timeOfDay <= 23000L && world.random.nextInt(3) == 0) {
+            com.rivalrealms.world.SettlementRole role = npc.settlementRole();
+            boolean armedWatch = role == com.rivalrealms.world.SettlementRole.GUARD
+                    || role == com.rivalrealms.world.SettlementRole.CAPTAIN
+                    || role == com.rivalrealms.world.SettlementRole.SCOUT;
+            if (armedWatch) {
+                return new Moment("night_watch", 0.9f, 1.05f,
+                        npc.getName().getString() + " levels their lantern: \"Who goes "
+                                + "there? ...Oh. It's you. Mind the hour, friend.\"");
+            }
             return new Moment("night_warning", 0.92f, 0.55f,
                     npc.getName().getString() + " murmurs: \"Lights out, stranger. "
                             + "These roads after dark belong to worse than wolves.\"");
         }
         if (timeOfDay <= 800L && world.random.nextInt(3) == 0) {
+            if (npc.guardCenter() != null && world.random.nextBoolean()) {
+                return new Moment("request_help", 1.05f, 1.1f,
+                        npc.getName().getString() + " waves you over: \"You there! An extra "
+                                + "pair of hands is worth more than coin right now. "
+                                + "Care to earn your supper? See the board.\"");
+            }
             return new Moment("morning_greeting", 1.05f, 1.1f,
                     npc.getName().getString() + ": \"Morning! Ovens are hot and the day's still ours.\"");
         }
@@ -121,6 +137,17 @@ public final class DialogueEngine {
         Long lastMet = npc.lastMet(listener.getUuid());
         if (lastMet != null && world.getTime() - lastMet >= 36000L && world.random.nextInt(2) == 0) {
             return Moment.of("known_return");
+        }
+
+        // 4. Ruined places have keepers, and keepers have warnings.
+        BlockPos keepersHome = npc.guardCenter();
+        if (keepersHome != null && world.random.nextInt(2) == 0) {
+            var base = RealmState.get(world).findByCenter(keepersHome);
+            if (base != null && base.name().toLowerCase().contains("ruin")) {
+                return new Moment("ruins_warning", 0.85f, 1.0f,
+                        npc.getName().getString() + " bars the way: \"Don't touch the "
+                                + "old stones, wanderer. The dead here don't care for visitors.\"");
+            }
         }
 
         // 4. Fresh scars: a settlement that bled recently talks about it.
@@ -148,6 +175,21 @@ public final class DialogueEngine {
                         npc.getName().getString() + " settles in to tell a story: \"" + story + "\"");
             }
         }
+        // Fine armor earns a craftsman's nod.
+        net.minecraft.item.ItemStack worn = listener.getEquippedStack(
+                net.minecraft.entity.EquipmentSlot.CHEST);
+        if (!worn.isEmpty()
+                && (worn.isOf(net.minecraft.item.Items.IRON_CHESTPLATE)
+                        || worn.isOf(net.minecraft.item.Items.CHAINMAIL_CHESTPLATE)
+                        || worn.isOf(net.minecraft.item.Items.GOLDEN_CHESTPLATE)
+                        || worn.isOf(net.minecraft.item.Items.DIAMOND_CHESTPLATE)
+                        || worn.isOf(net.minecraft.item.Items.NETHERITE_CHESTPLATE))
+                && world.random.nextInt(3) == 0) {
+            return new Moment("admire_armor", 1.02f, 1.0f,
+                    npc.getName().getString() + " nods at your armor: \"Fine steel, "
+                            + "friend. Not a scratch on it. Yet.\"");
+        }
+
         // Standing changes the hello: the hated are kept at arm's length,
         // and a true friend of the town gets a hero's welcome.
         int standing = RealmState.get(world).getReputation(listener.getUuid(),
@@ -244,8 +286,12 @@ public final class DialogueEngine {
             if (survivor.settlementRole() == SettlementRole.FARMER && farmer == null) {
                 farmer = survivor;
             }
+            if (survivor.settlementRole() == SettlementRole.SCOUT && scout == null) {
+                scout = survivor;
+            }
         }
         SurvivorEntity trader = null;
+        SurvivorEntity scout = null;
         for (SurvivorEntity survivor : population) {
             if (survivor.settlementRole() == SettlementRole.TRADER && trader == null) {
                 trader = survivor;
@@ -257,13 +303,29 @@ public final class DialogueEngine {
             ModSounds.playProfiled(world, child.getBlockPos(), "child_play", child.getUuid(), 1.2f, 1.0f);
         } else if (roll == 1 && farmer != null) {
             LAST_AMBIENT.put(base.center().asLong(), now);
-            ModSounds.playProfiled(world, farmer.getBlockPos(), "work_shout", farmer.getUuid(), 1.0f, 1.8f);
+            if (world.random.nextBoolean()) {
+                ModSounds.playProfiled(world, farmer.getBlockPos(), "work_song",
+                        farmer.getUuid(), 0.95f, 1.1f);
+            } else {
+                ModSounds.playProfiled(world, farmer.getBlockPos(), "work_shout", farmer.getUuid(), 1.0f, 1.8f);
+            }
         } else if (roll == 2 && population.size() >= 2) {
             LAST_AMBIENT.put(base.center().asLong(), now);
             queueChat(population.get(0), population.get(1), world);
         } else if (roll == 3 && trader != null) {
             LAST_AMBIENT.put(base.center().asLong(), now);
             ModSounds.playProfiled(world, trader.getBlockPos(), "trade_patter", trader.getUuid(), 1.0f, 1.15f);
+        } else if (roll == 5 && world.getTime() % 24000L >= 12542L && world.getTime() % 24000L <= 23459L) {
+            LAST_AMBIENT.put(base.center().asLong(), now);
+            if (child != null) {
+                ModSounds.playProfiled(world, child.getBlockPos(), "lullaby", child.getUuid(), 1.05f, 0.9f);
+            } else if (!population.isEmpty()) {
+                ModSounds.playProfiled(world, population.get(0).getBlockPos(), "drunk_tavern",
+                        population.get(0).getUuid(), 0.92f, 1.2f);
+            }
+        } else if (roll == 3 && trader == null && scout != null) {
+            LAST_AMBIENT.put(base.center().asLong(), now);
+            ModSounds.playProfiled(world, scout.getBlockPos(), "hunt_tale", scout.getUuid(), 1.0f, 1.1f);
         } else if (roll == 4 && base.level() >= 4) {
             LAST_AMBIENT.put(base.center().asLong(), now);
             ModSounds.playVoice(world, base.center(), "town_pride");
