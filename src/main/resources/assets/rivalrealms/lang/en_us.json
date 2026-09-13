@@ -94,5 +94,15 @@
   "subtitles.rivalrealms.voice.gather_request": "A plea for honest goods",
   "subtitles.rivalrealms.voice.explore_hint": "Tales of a strange place",
   "subtitles.rivalrealms.voice.deliver_given": "A message entrusted",
-  "subtitles.rivalrealms.voice.board_pitch": "Fresh notices on the board"
+  "subtitles.rivalrealms.voice.board_pitch": "Fresh notices on the board",
+  "subtitles.rivalrealms.voice.combat_bark": "A survivor shouts over the din",
+  "subtitles.rivalrealms.voice.greet_knight": "A knight greets you",
+  "subtitles.rivalrealms.voice.greet_pirate": "A pirate greets you",
+  "subtitles.rivalrealms.voice.greet_outlaw": "An outlaw greets you",
+  "subtitles.rivalrealms.voice.greet_hearthfolk": "A villager greets you",
+  "subtitles.rivalrealms.voice.wedding_officiant": "A wedding is celebrated",
+  "subtitles.rivalrealms.voice.funeral_eulogy": "A eulogy is spoken",
+  "subtitles.rivalrealms.voice.storm_cry": "Folk cry out about the storm",
+  "subtitles.rivalrealms.voice.quake_cry": "Folk cry out as the ground shakes",
+  "subtitles.rivalrealms.voice.treasure_mutter": "A survivor mutters about treasure"
 }

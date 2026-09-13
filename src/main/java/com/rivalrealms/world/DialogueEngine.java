@@ -118,6 +118,33 @@ public final class DialogueEngine {
                         npc.getName().getString() + " settles in to tell a story: \"" + story + "\"");
             }
         }
+        // 6. A people's hello: every culture greets in its own voice.
+        if (world.random.nextInt(2) == 0) {
+            com.rivalrealms.entity.Archetype folk = npc.getArchetype();
+            switch (folk) {
+                case KNIGHT -> {
+                    return new Moment("greet_knight", 0.95f, 1.1f,
+                            npc.getName().getString() + " straightens: \"Well met, traveler. "
+                                    + "The Order keeps these roads - walk them in peace.\"");
+                }
+                case PIRATE -> {
+                    return new Moment("greet_pirate", 1.0f, 1.05f,
+                            npc.getName().getString() + " grins: \"Hoy, stranger! "
+                                    + "Coin's welcome here, and trouble ain't.\"");
+                }
+                case OUTLAW -> {
+                    return new Moment("greet_outlaw", 0.95f, 1.0f,
+                            npc.getName().getString() + " tips their hat: \"Easy, now. "
+                                    + "Out here, folk mind their own business.\"");
+                }
+                case HEARTHFOLK -> {
+                    return new Moment("greet_hearthfolk", 1.0f, 1.0f,
+                            npc.getName().getString() + ": \"Welcome, traveler! "
+                                    + "The kettle's on if you're wanting tea.\"");
+                }
+                default -> { }
+            }
+        }
         return null;
     }
 

@@ -369,7 +369,30 @@ public final class LivingRealm {
     }
 
     /** The ground remembers an old wound: tremors, falling gravel, shaken folk. */
+    /** Thunder over the roofs: folk cry the storm the hour it breaks. */
+    public static void stormWatch(ServerWorld world) {
+        if (!world.isThundering() || world.getTime() - lastStormCry < 4800L) {
+            return;
+        }
+        RealmState state = RealmState.get(world);
+        List<RealmState.BaseRecord> loaded = new ArrayList<>();
+        for (RealmState.BaseRecord base : state.bases()) {
+            if (!base.abandoned() && areaLoaded(world, base.center(), base.radius())) {
+                loaded.add(base);
+            }
+        }
+        if (loaded.isEmpty()) {
+            return;
+        }
+        lastStormCry = world.getTime();
+        RealmState.BaseRecord base = loaded.get(world.random.nextInt(loaded.size()));
+        com.rivalrealms.sound.ModSounds.playVoice(world, base.center(), "storm_cry");
+    }
+
+    private static long lastStormCry;
+
     private static void earthquake(ServerWorld world, RealmState state, RealmState.BaseRecord base) {
+        com.rivalrealms.sound.ModSounds.playVoice(world, base.center(), "quake_cry");
         BlockPos at = surface(world, base.center().add(world.random.nextInt(21) - 10, 0, world.random.nextInt(21) - 10));
         for (int i = 0; i < 4; i++) {
             BlockPos spill = surface(world, at.add(world.random.nextInt(9) - 4, 0, world.random.nextInt(9) - 4));
@@ -879,6 +902,7 @@ public final class LivingRealm {
                         first.getName().getString() + " and " + second.getName().getString()
                                 + " were wed here. You should have heard the singing.");
                 chronicleBroadcast(world, state, "Wedding bells at " + base.name() + "!", true);
+                com.rivalrealms.sound.ModSounds.playVoice(world, base.center(), "wedding_officiant");
                 com.rivalrealms.sound.ModSounds.playVoice(world, base.center(), "celebration");
             }
         } else {

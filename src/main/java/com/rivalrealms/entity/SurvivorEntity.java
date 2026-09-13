@@ -94,6 +94,7 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
     private long nextWorkMove;
     private long nextOwnerDefenseScan;
     private long nextQuip;
+    private long nextBattleCry;
     private long nextEat;
     private long nextGift;
     private long fleeUntil;
@@ -283,6 +284,13 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
         long time = getWorld().getTime();
         if (time < nextQuip) {
             return;
+        }
+        // Battle joined: a bark over the din, never more than one at a time.
+        if (getTarget() != null && time >= nextBattleCry
+                && getWorld() instanceof ServerWorld battleWorld) {
+            com.rivalrealms.sound.ModSounds.playProfiled(battleWorld, getBlockPos(),
+                    "combat_bark", getUuid(), 1.2f, 1.15f);
+            nextBattleCry = time + 500L + random.nextInt(900);
         }
         // Interruptible: trouble cuts chatter off with a startled look.
         if (getTarget() != null && random.nextInt(3) == 0
@@ -1370,6 +1378,11 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
                             || settlementRole == SettlementRole.CAPTAIN;
                     realms.chronicle(getWorld().getTime(), getName().getString() + " of " + base.name()
                             + " was slain by " + killerName + ".", major);
+                    // The settlement gathers for the rite; the town remembers aloud.
+                    com.rivalrealms.world.DialogueEngine.noteEvent(deathWorld, base.center(),
+                            getName().getString() + " was buried at " + base.name()
+                                    + ". They stood in silence, then sang the old road-song.");
+                    com.rivalrealms.sound.ModSounds.playVoice(deathWorld, base.center(), "funeral_eulogy");
                 }
             }
             // Kin and friends mourn - and remember. Family grudges outlive the

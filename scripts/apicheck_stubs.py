@@ -758,6 +758,7 @@ add('net.minecraft.particle.ParticleType', [], [])
 
 # ---- world
 add('net.minecraft.world.World', [], [
+    'public final boolean isThundering();',
     'public boolean isClient;',
     'public long getTime();',
     'public net.minecraft.util.math.random.Random random;',

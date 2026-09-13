@@ -58,6 +58,7 @@ public final class RealmEvents {
             if (world.getTime() % 600L == 0) {
                 try {
                     LivingRealm.tick(world);
+                    LivingRealm.stormWatch(world);
                 } catch (RuntimeException exception) {
                     RivalRealms.LOGGER.error("Living realm tick failed in {}",
                             world.getRegistryKey().getValue(), exception);

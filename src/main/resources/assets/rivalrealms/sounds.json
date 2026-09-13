@@ -1,242 +1,302 @@
 {
-  "voice.siege_defense": {
-    "subtitle": "subtitles.rivalrealms.voice.siege_defense",
-    "sounds": [
-      "rivalrealms:voice/siege_defense"
-    ]
-  },
-  "voice.siege_victory": {
-    "subtitle": "subtitles.rivalrealms.voice.siege_victory",
-    "sounds": [
-      "rivalrealms:voice/siege_victory"
-    ]
-  },
-  "voice.civilian_flee": {
-    "subtitle": "subtitles.rivalrealms.voice.civilian_flee",
-    "sounds": [
-      "rivalrealms:voice/civilian_flee"
-    ]
-  },
-  "voice.greeting_friendly": {
-    "subtitle": "subtitles.rivalrealms.voice.greeting_friendly",
-    "sounds": [
-      "rivalrealms:voice/greeting_friendly"
-    ]
-  },
-  "voice.greeting_hostile": {
-    "subtitle": "subtitles.rivalrealms.voice.greeting_hostile",
-    "sounds": [
-      "rivalrealms:voice/greeting_hostile"
-    ]
-  },
-  "voice.rumor_player": {
-    "subtitle": "subtitles.rivalrealms.voice.rumor_player",
-    "sounds": [
-      "rivalrealms:voice/rumor_player"
-    ]
-  },
-  "voice.merchant_trade": {
-    "subtitle": "subtitles.rivalrealms.voice.merchant_trade",
-    "sounds": [
-      "rivalrealms:voice/merchant_trade"
-    ]
-  },
-  "voice.death_last_words": {
-    "subtitle": "subtitles.rivalrealms.voice.death_last_words",
-    "sounds": [
-      "rivalrealms:voice/death_last_words"
-    ]
-  },
-  "voice.celebration": {
-    "subtitle": "subtitles.rivalrealms.voice.celebration",
-    "sounds": [
-      "rivalrealms:voice/celebration"
-    ]
-  },
-  "voice.lost_child": {
-    "subtitle": "subtitles.rivalrealms.voice.lost_child",
-    "sounds": [
-      "rivalrealms:voice/lost_child"
-    ]
-  },
-  "voice.greeting_neutral": {
-    "subtitle": "subtitles.rivalrealms.voice.greeting_neutral",
-    "sounds": [
-      "rivalrealms:voice/greeting_neutral"
-    ]
-  },
-  "voice.greeting_folksy": {
-    "subtitle": "subtitles.rivalrealms.voice.greeting_folksy",
-    "sounds": [
-      "rivalrealms:voice/greeting_folksy"
-    ]
-  },
-  "voice.quip_idle": {
-    "subtitle": "subtitles.rivalrealms.voice.quip_idle",
-    "sounds": [
-      "rivalrealms:voice/quip_idle"
-    ]
-  },
-  "voice.quip_idle2": {
-    "subtitle": "subtitles.rivalrealms.voice.quip_idle2",
-    "sounds": [
-      "rivalrealms:voice/quip_idle2"
-    ]
-  },
-  "voice.trust_up": {
-    "subtitle": "subtitles.rivalrealms.voice.trust_up",
-    "sounds": [
-      "rivalrealms:voice/trust_up"
-    ]
-  },
-  "voice.recruit_join": {
-    "subtitle": "subtitles.rivalrealms.voice.recruit_join",
-    "sounds": [
-      "rivalrealms:voice/recruit_join"
-    ]
-  },
-  "voice.betray": {
-    "subtitle": "subtitles.rivalrealms.voice.betray",
-    "sounds": [
-      "rivalrealms:voice/betray"
-    ]
-  },
-  "voice.theft_caught": {
-    "subtitle": "subtitles.rivalrealms.voice.theft_caught",
-    "sounds": [
-      "rivalrealms:voice/theft_caught"
-    ]
-  },
-  "voice.guard_warning": {
-    "subtitle": "subtitles.rivalrealms.voice.guard_warning",
-    "sounds": [
-      "rivalrealms:voice/guard_warning"
-    ]
-  },
-  "voice.herald_news": {
-    "subtitle": "subtitles.rivalrealms.voice.herald_news",
-    "sounds": [
-      "rivalrealms:voice/herald_news"
-    ]
-  },
-  "voice.event_aftermath": {
-    "subtitle": "subtitles.rivalrealms.voice.event_aftermath",
-    "sounds": [
-      "rivalrealms:voice/event_aftermath"
-    ]
-  },
-  "voice.story_chronicle": {
-    "subtitle": "subtitles.rivalrealms.voice.story_chronicle",
-    "sounds": [
-      "rivalrealms:voice/story_chronicle"
-    ]
-  },
-  "voice.npc_chat_a": {
-    "subtitle": "subtitles.rivalrealms.voice.npc_chat_a",
-    "sounds": [
-      "rivalrealms:voice/npc_chat_a"
-    ]
-  },
-  "voice.npc_chat_b": {
-    "subtitle": "subtitles.rivalrealms.voice.npc_chat_b",
-    "sounds": [
-      "rivalrealms:voice/npc_chat_b"
-    ]
-  },
-  "voice.night_warning": {
-    "subtitle": "subtitles.rivalrealms.voice.night_warning",
-    "sounds": [
-      "rivalrealms:voice/night_warning"
-    ]
-  },
-  "voice.morning_greeting": {
-    "subtitle": "subtitles.rivalrealms.voice.morning_greeting",
-    "sounds": [
-      "rivalrealms:voice/morning_greeting"
-    ]
-  },
-  "voice.work_shout": {
-    "subtitle": "subtitles.rivalrealms.voice.work_shout",
-    "sounds": [
-      "rivalrealms:voice/work_shout"
-    ]
-  },
-  "voice.child_play": {
-    "subtitle": "subtitles.rivalrealms.voice.child_play",
-    "sounds": [
-      "rivalrealms:voice/child_play"
-    ]
-  },
-  "voice.interrupt_wait": {
-    "subtitle": "subtitles.rivalrealms.voice.interrupt_wait",
-    "sounds": [
-      "rivalrealms:voice/interrupt_wait"
-    ]
-  },
-  "voice.known_return": {
-    "subtitle": "subtitles.rivalrealms.voice.known_return",
-    "sounds": [
-      "rivalrealms:voice/known_return"
-    ]
-  },
-  "voice.contract_offer": {
-    "subtitle": "subtitles.rivalrealms.voice.contract_offer",
-    "sounds": [
-      "rivalrealms:voice/contract_offer"
-    ]
-  },
-  "voice.contract_done": {
-    "subtitle": "subtitles.rivalrealms.voice.contract_done",
-    "sounds": [
-      "rivalrealms:voice/contract_done"
-    ]
-  },
-  "voice.contract_expired": {
-    "subtitle": "subtitles.rivalrealms.voice.contract_expired",
-    "sounds": [
-      "rivalrealms:voice/contract_expired"
-    ]
-  },
-  "voice.hunt_progress": {
-    "subtitle": "subtitles.rivalrealms.voice.hunt_progress",
-    "sounds": [
-      "rivalrealms:voice/hunt_progress"
-    ]
-  },
-  "voice.wanted_you": {
-    "subtitle": "subtitles.rivalrealms.voice.wanted_you",
-    "sounds": [
-      "rivalrealms:voice/wanted_you"
-    ]
-  },
-  "voice.fine_paid": {
-    "subtitle": "subtitles.rivalrealms.voice.fine_paid",
-    "sounds": [
-      "rivalrealms:voice/fine_paid"
-    ]
-  },
-  "voice.gather_request": {
-    "subtitle": "subtitles.rivalrealms.voice.gather_request",
-    "sounds": [
-      "rivalrealms:voice/gather_request"
-    ]
-  },
-  "voice.explore_hint": {
-    "subtitle": "subtitles.rivalrealms.voice.explore_hint",
-    "sounds": [
-      "rivalrealms:voice/explore_hint"
-    ]
-  },
-  "voice.deliver_given": {
-    "subtitle": "subtitles.rivalrealms.voice.deliver_given",
-    "sounds": [
-      "rivalrealms:voice/deliver_given"
-    ]
-  },
-  "voice.board_pitch": {
-    "subtitle": "subtitles.rivalrealms.voice.board_pitch",
-    "sounds": [
-      "rivalrealms:voice/board_pitch"
-    ]
-  }
+ "voice.siege_defense": {
+  "subtitle": "subtitles.rivalrealms.voice.siege_defense",
+  "sounds": [
+   "rivalrealms:voice/siege_defense"
+  ]
+ },
+ "voice.siege_victory": {
+  "subtitle": "subtitles.rivalrealms.voice.siege_victory",
+  "sounds": [
+   "rivalrealms:voice/siege_victory"
+  ]
+ },
+ "voice.civilian_flee": {
+  "subtitle": "subtitles.rivalrealms.voice.civilian_flee",
+  "sounds": [
+   "rivalrealms:voice/civilian_flee"
+  ]
+ },
+ "voice.greeting_friendly": {
+  "subtitle": "subtitles.rivalrealms.voice.greeting_friendly",
+  "sounds": [
+   "rivalrealms:voice/greeting_friendly"
+  ]
+ },
+ "voice.greeting_hostile": {
+  "subtitle": "subtitles.rivalrealms.voice.greeting_hostile",
+  "sounds": [
+   "rivalrealms:voice/greeting_hostile"
+  ]
+ },
+ "voice.rumor_player": {
+  "subtitle": "subtitles.rivalrealms.voice.rumor_player",
+  "sounds": [
+   "rivalrealms:voice/rumor_player"
+  ]
+ },
+ "voice.merchant_trade": {
+  "subtitle": "subtitles.rivalrealms.voice.merchant_trade",
+  "sounds": [
+   "rivalrealms:voice/merchant_trade"
+  ]
+ },
+ "voice.death_last_words": {
+  "subtitle": "subtitles.rivalrealms.voice.death_last_words",
+  "sounds": [
+   "rivalrealms:voice/death_last_words"
+  ]
+ },
+ "voice.celebration": {
+  "subtitle": "subtitles.rivalrealms.voice.celebration",
+  "sounds": [
+   "rivalrealms:voice/celebration"
+  ]
+ },
+ "voice.lost_child": {
+  "subtitle": "subtitles.rivalrealms.voice.lost_child",
+  "sounds": [
+   "rivalrealms:voice/lost_child"
+  ]
+ },
+ "voice.greeting_neutral": {
+  "subtitle": "subtitles.rivalrealms.voice.greeting_neutral",
+  "sounds": [
+   "rivalrealms:voice/greeting_neutral"
+  ]
+ },
+ "voice.greeting_folksy": {
+  "subtitle": "subtitles.rivalrealms.voice.greeting_folksy",
+  "sounds": [
+   "rivalrealms:voice/greeting_folksy"
+  ]
+ },
+ "voice.quip_idle": {
+  "subtitle": "subtitles.rivalrealms.voice.quip_idle",
+  "sounds": [
+   "rivalrealms:voice/quip_idle"
+  ]
+ },
+ "voice.quip_idle2": {
+  "subtitle": "subtitles.rivalrealms.voice.quip_idle2",
+  "sounds": [
+   "rivalrealms:voice/quip_idle2"
+  ]
+ },
+ "voice.trust_up": {
+  "subtitle": "subtitles.rivalrealms.voice.trust_up",
+  "sounds": [
+   "rivalrealms:voice/trust_up"
+  ]
+ },
+ "voice.recruit_join": {
+  "subtitle": "subtitles.rivalrealms.voice.recruit_join",
+  "sounds": [
+   "rivalrealms:voice/recruit_join"
+  ]
+ },
+ "voice.betray": {
+  "subtitle": "subtitles.rivalrealms.voice.betray",
+  "sounds": [
+   "rivalrealms:voice/betray"
+  ]
+ },
+ "voice.theft_caught": {
+  "subtitle": "subtitles.rivalrealms.voice.theft_caught",
+  "sounds": [
+   "rivalrealms:voice/theft_caught"
+  ]
+ },
+ "voice.guard_warning": {
+  "subtitle": "subtitles.rivalrealms.voice.guard_warning",
+  "sounds": [
+   "rivalrealms:voice/guard_warning"
+  ]
+ },
+ "voice.herald_news": {
+  "subtitle": "subtitles.rivalrealms.voice.herald_news",
+  "sounds": [
+   "rivalrealms:voice/herald_news"
+  ]
+ },
+ "voice.event_aftermath": {
+  "subtitle": "subtitles.rivalrealms.voice.event_aftermath",
+  "sounds": [
+   "rivalrealms:voice/event_aftermath"
+  ]
+ },
+ "voice.story_chronicle": {
+  "subtitle": "subtitles.rivalrealms.voice.story_chronicle",
+  "sounds": [
+   "rivalrealms:voice/story_chronicle"
+  ]
+ },
+ "voice.npc_chat_a": {
+  "subtitle": "subtitles.rivalrealms.voice.npc_chat_a",
+  "sounds": [
+   "rivalrealms:voice/npc_chat_a"
+  ]
+ },
+ "voice.npc_chat_b": {
+  "subtitle": "subtitles.rivalrealms.voice.npc_chat_b",
+  "sounds": [
+   "rivalrealms:voice/npc_chat_b"
+  ]
+ },
+ "voice.night_warning": {
+  "subtitle": "subtitles.rivalrealms.voice.night_warning",
+  "sounds": [
+   "rivalrealms:voice/night_warning"
+  ]
+ },
+ "voice.morning_greeting": {
+  "subtitle": "subtitles.rivalrealms.voice.morning_greeting",
+  "sounds": [
+   "rivalrealms:voice/morning_greeting"
+  ]
+ },
+ "voice.work_shout": {
+  "subtitle": "subtitles.rivalrealms.voice.work_shout",
+  "sounds": [
+   "rivalrealms:voice/work_shout"
+  ]
+ },
+ "voice.child_play": {
+  "subtitle": "subtitles.rivalrealms.voice.child_play",
+  "sounds": [
+   "rivalrealms:voice/child_play"
+  ]
+ },
+ "voice.interrupt_wait": {
+  "subtitle": "subtitles.rivalrealms.voice.interrupt_wait",
+  "sounds": [
+   "rivalrealms:voice/interrupt_wait"
+  ]
+ },
+ "voice.known_return": {
+  "subtitle": "subtitles.rivalrealms.voice.known_return",
+  "sounds": [
+   "rivalrealms:voice/known_return"
+  ]
+ },
+ "voice.contract_offer": {
+  "subtitle": "subtitles.rivalrealms.voice.contract_offer",
+  "sounds": [
+   "rivalrealms:voice/contract_offer"
+  ]
+ },
+ "voice.contract_done": {
+  "subtitle": "subtitles.rivalrealms.voice.contract_done",
+  "sounds": [
+   "rivalrealms:voice/contract_done"
+  ]
+ },
+ "voice.contract_expired": {
+  "subtitle": "subtitles.rivalrealms.voice.contract_expired",
+  "sounds": [
+   "rivalrealms:voice/contract_expired"
+  ]
+ },
+ "voice.hunt_progress": {
+  "subtitle": "subtitles.rivalrealms.voice.hunt_progress",
+  "sounds": [
+   "rivalrealms:voice/hunt_progress"
+  ]
+ },
+ "voice.wanted_you": {
+  "subtitle": "subtitles.rivalrealms.voice.wanted_you",
+  "sounds": [
+   "rivalrealms:voice/wanted_you"
+  ]
+ },
+ "voice.fine_paid": {
+  "subtitle": "subtitles.rivalrealms.voice.fine_paid",
+  "sounds": [
+   "rivalrealms:voice/fine_paid"
+  ]
+ },
+ "voice.gather_request": {
+  "subtitle": "subtitles.rivalrealms.voice.gather_request",
+  "sounds": [
+   "rivalrealms:voice/gather_request"
+  ]
+ },
+ "voice.explore_hint": {
+  "subtitle": "subtitles.rivalrealms.voice.explore_hint",
+  "sounds": [
+   "rivalrealms:voice/explore_hint"
+  ]
+ },
+ "voice.deliver_given": {
+  "subtitle": "subtitles.rivalrealms.voice.deliver_given",
+  "sounds": [
+   "rivalrealms:voice/deliver_given"
+  ]
+ },
+ "voice.board_pitch": {
+  "subtitle": "subtitles.rivalrealms.voice.board_pitch",
+  "sounds": [
+   "rivalrealms:voice/board_pitch"
+  ]
+ },
+ "voice.combat_bark": {
+  "subtitle": "subtitles.rivalrealms.voice.combat_bark",
+  "sounds": [
+   "rivalrealms:voice/combat_bark"
+  ]
+ },
+ "voice.greet_knight": {
+  "subtitle": "subtitles.rivalrealms.voice.greet_knight",
+  "sounds": [
+   "rivalrealms:voice/greet_knight"
+  ]
+ },
+ "voice.greet_pirate": {
+  "subtitle": "subtitles.rivalrealms.voice.greet_pirate",
+  "sounds": [
+   "rivalrealms:voice/greet_pirate"
+  ]
+ },
+ "voice.greet_outlaw": {
+  "subtitle": "subtitles.rivalrealms.voice.greet_outlaw",
+  "sounds": [
+   "rivalrealms:voice/greet_outlaw"
+  ]
+ },
+ "voice.greet_hearthfolk": {
+  "subtitle": "subtitles.rivalrealms.voice.greet_hearthfolk",
+  "sounds": [
+   "rivalrealms:voice/greet_hearthfolk"
+  ]
+ },
+ "voice.wedding_officiant": {
+  "subtitle": "subtitles.rivalrealms.voice.wedding_officiant",
+  "sounds": [
+   "rivalrealms:voice/wedding_officiant"
+  ]
+ },
+ "voice.funeral_eulogy": {
+  "subtitle": "subtitles.rivalrealms.voice.funeral_eulogy",
+  "sounds": [
+   "rivalrealms:voice/funeral_eulogy"
+  ]
+ },
+ "voice.storm_cry": {
+  "subtitle": "subtitles.rivalrealms.voice.storm_cry",
+  "sounds": [
+   "rivalrealms:voice/storm_cry"
+  ]
+ },
+ "voice.quake_cry": {
+  "subtitle": "subtitles.rivalrealms.voice.quake_cry",
+  "sounds": [
+   "rivalrealms:voice/quake_cry"
+  ]
+ },
+ "voice.treasure_mutter": {
+  "subtitle": "subtitles.rivalrealms.voice.treasure_mutter",
+  "sounds": [
+   "rivalrealms:voice/treasure_mutter"
+  ]
+ }
 }

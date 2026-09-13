@@ -61,6 +61,15 @@ public class TreasureMapItem extends Item {
                     new ItemStack(ModItems.ROYAL_JEWELRY, 1),
                     serverWorld.random.nextInt(4) == 0 ? new ItemStack(Items.DIAMOND) : ItemStack.EMPTY);
 
+            // Old-timers nearby can't help muttering about buried caches.
+            for (net.minecraft.entity.Entity listener : serverWorld.getOtherEntities(user,
+                    user.getBoundingBox().expand(10.0),
+                    e -> e instanceof com.rivalrealms.entity.SurvivorEntity)) {
+                com.rivalrealms.sound.ModSounds.playProfiled(serverWorld, listener.getBlockPos(),
+                        "treasure_mutter", listener.getUuid(), 0.9f, 1.0f);
+                break;
+            }
+
             // The cryptic line: nearest settlement, a bearing, a pace count.
             RealmState state = RealmState.get(serverWorld);
             String origin = "the open wilds";
