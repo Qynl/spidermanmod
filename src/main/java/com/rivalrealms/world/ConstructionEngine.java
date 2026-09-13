@@ -93,7 +93,7 @@ public final class ConstructionEngine {
                 candidate = new BlockPos(candidate.getX(),
                         groundAt(world, candidate.getX(), candidate.getZ()), candidate.getZ());
                 if (world.getBlockState(candidate.up()).isAir()
-                        && !world.getFluidState(candidate).isEmpty() == false) {
+                        && world.getFluidState(candidate).isEmpty()) {
                     SITES.put(key, candidate);
                     PROGRESS.put(key, 0);
                     return;
