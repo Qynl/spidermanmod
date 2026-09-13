@@ -42,5 +42,14 @@
   "item.rivalrealms.hearthfolk_spawn_egg": "Hearthfolk Spawn Egg",
   "item.rivalrealms.hardtack": "Hardtack",
   "item.rivalrealms.frontier_stew": "Frontier Stew",
-  "item.rivalrealms.mead": "Hearthfolk Mead"
+  "item.rivalrealms.mead": "Hearthfolk Mead",
+  "block.rivalrealms.gilded_brick": "Gilded Brick",
+  "block.rivalrealms.crown_pillar": "Crown Pillar",
+  "block.rivalrealms.war_table": "War Council Table",
+  "block.rivalrealms.weapon_rack": "Weapon Rack",
+  "block.rivalrealms.trophy_skull": "Trophy Skulls",
+  "block.rivalrealms.hearth_lantern": "Hearth Lantern",
+  "block.rivalrealms.supply_crate": "Supply Crate",
+  "block.rivalrealms.road_stone": "Road Stone",
+  "block.rivalrealms.arrow_slit": "Arrow Slit Wall"
 }

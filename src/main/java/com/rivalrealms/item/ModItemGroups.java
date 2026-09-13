@@ -33,6 +33,15 @@ public final class ModItemGroups {
                         entries.add(ModBlocks.FRONTIER_PLANKS);
                         entries.add(ModBlocks.AIRSHIP_METAL);
                         entries.add(ModBlocks.REALM_BANNER);
+                        entries.add(ModBlocks.GILDED_BRICK);
+                        entries.add(ModBlocks.CROWN_PILLAR);
+                        entries.add(ModBlocks.WAR_TABLE);
+                        entries.add(ModBlocks.WEAPON_RACK);
+                        entries.add(ModBlocks.TROPHY_SKULL);
+                        entries.add(ModBlocks.HEARTH_LANTERN);
+                        entries.add(ModBlocks.SUPPLY_CRATE);
+                        entries.add(ModBlocks.ROAD_STONE);
+                        entries.add(ModBlocks.ARROW_SLIT);
                         // Armory
                         entries.add(ModItems.ROYAL_LONGSWORD);
                         entries.add(ModItems.REVOLVER);

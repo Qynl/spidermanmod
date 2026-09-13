@@ -100,6 +100,15 @@ public final class ModItems {
         registerBlockItem("frontier_planks", ModBlocks.FRONTIER_PLANKS);
         ModItems.AIRSHIP_METAL = registerBlockItem("airship_metal", ModBlocks.AIRSHIP_METAL);
         registerBlockItem("realm_banner", ModBlocks.REALM_BANNER);
+        registerBlockItem("gilded_brick", ModBlocks.GILDED_BRICK);
+        registerBlockItem("crown_pillar", ModBlocks.CROWN_PILLAR);
+        registerBlockItem("war_table", ModBlocks.WAR_TABLE);
+        registerBlockItem("weapon_rack", ModBlocks.WEAPON_RACK);
+        registerBlockItem("trophy_skull", ModBlocks.TROPHY_SKULL);
+        registerBlockItem("hearth_lantern", ModBlocks.HEARTH_LANTERN);
+        registerBlockItem("supply_crate", ModBlocks.SUPPLY_CRATE);
+        registerBlockItem("road_stone", ModBlocks.ROAD_STONE);
+        registerBlockItem("arrow_slit", ModBlocks.ARROW_SLIT);
         ModItemGroups.register();
         RivalRealms.LOGGER.info("Registered contracts, guns, ship kits, cannonballs, spawn eggs and settlement blocks.");
     }

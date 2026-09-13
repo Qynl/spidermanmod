@@ -112,6 +112,11 @@ public final class StructureBuilder {
         farmPlot(world, base.add(-13, 0, 14), 9, 6);
         farmhouse(world, base.add(-14, 0, 8));
         scarecrow(world, base.add(-8, 0, 16));
+        fill(world, base.add(-2, y, -11), 5, 1, 8, ModBlocks.ROAD_STONE);
+        set(world, base.add(-4, y + 1, -11), ModBlocks.HEARTH_LANTERN);
+        set(world, base.add(4, y + 1, -11), ModBlocks.HEARTH_LANTERN);
+        set(world, base.add(7, y + 1, -3), ModBlocks.WEAPON_RACK);
+        set(world, base.add(7, y + 1, -2), ModBlocks.WEAPON_RACK);
         set(world, base.add(0, y + 1, -6), ModBlocks.REALM_BANNER);
         stockChest(world, base.add(-3, y + 1, -1), new ItemStack(Items.IRON_SWORD),
                 new ItemStack(Items.SHIELD), new ItemStack(Items.IRON_INGOT, 12),
@@ -130,6 +135,10 @@ public final class StructureBuilder {
         // Crossroads with a market heart.
         fill(world, base.add(-2, y, -17), 5, 1, 35, road);
         fill(world, base.add(-17, y, -2), 35, 1, 5, road);
+        if (!western) {
+            // The old world paves its market heart in dressed stone.
+            fill(world, base.add(-4, y, -4), 9, 1, 9, ModBlocks.ROAD_STONE);
+        }
         house(world, base.add(-15, 0, -14), 7, 8, wood, log,
                 western ? Blocks.ACACIA_STAIRS : Blocks.OAK_STAIRS, wood);
         house(world, base.add(8, 0, -14), 8, 7, Blocks.SPRUCE_PLANKS, Blocks.SPRUCE_LOG,
@@ -148,6 +157,10 @@ public final class StructureBuilder {
         lampPost(world, base.add(8, 0, -1));
         lampPost(world, base.add(-8, 0, 7));
         lampPost(world, base.add(8, 0, 7));
+        set(world, base.add(9, y + 1, 6), ModBlocks.SUPPLY_CRATE);
+        set(world, base.add(10, y + 1, 6), ModBlocks.SUPPLY_CRATE);
+        set(world, base.add(-5, y + 1, 3), ModBlocks.HEARTH_LANTERN);
+        set(world, base.add(6, y + 1, -3), ModBlocks.HEARTH_LANTERN);
         set(world, base.add(0, y + 1, -2), ModBlocks.REALM_BANNER);
         stockChest(world, base.add(2, y + 1, 2), new ItemStack(Items.BREAD, 8),
                 new ItemStack(Items.IRON_NUGGET, 8), new ItemStack(ModItems.RECRUITMENT_CONTRACT),
@@ -201,6 +214,9 @@ public final class StructureBuilder {
         farmhouse(world, base.add(-7, 0, 9));
         scarecrow(world, base.add(7, 0, 5));
         set(world, base.add(0, y + 1, 0), ModBlocks.REALM_BANNER);
+        set(world, base.add(-1, y + 1, 0), ModBlocks.WAR_TABLE);
+        set(world, base.add(-3, y + 1, 0), ModBlocks.WEAPON_RACK);
+        set(world, base.add(-1, y + 1, 2), ModBlocks.SUPPLY_CRATE);
         stockChest(world, base.add(4, y + 1, -4), new ItemStack(Items.IRON_AXE),
                 new ItemStack(Items.BREAD, 4), new ItemStack(ModItems.RECRUITMENT_CONTRACT),
                 new ItemStack(ModItems.CANNONBALL, 1));
@@ -264,6 +280,9 @@ public final class StructureBuilder {
         campfire(world, base.add(2, 0, 2));
         set(world, base.add(-8, y + 2, 8), Blocks.COBWEB);
         set(world, base.add(8, y + 1, -8), Blocks.COBWEB);
+        set(world, base.add(0, y + 1, -3), ModBlocks.CROWN_PILLAR);
+        set(world, base.add(1, y + 1, -3), ModBlocks.GILDED_BRICK);
+        set(world, base.add(-2, y + 1, 4), ModBlocks.TROPHY_SKULL);
         stockChest(world, base.add(5, y + 2, 6), new ItemStack(Items.IRON_NUGGET, 5),
                 new ItemStack(Items.BREAD, 2), new ItemStack(ModItems.RECRUITMENT_CONTRACT));
         spawnGuard(world, base, y, BuildStyle.CUSTOM);
@@ -314,6 +333,13 @@ public final class StructureBuilder {
         wall(world, base.add(22, y, -18), 1, 6, 37, trim);
         crenellate(world, base.add(-22, y + 6, -18), 45, 1, trim);
         crenellate(world, base.add(-22, y + 6, 18), 45, 1, trim);
+        // A gilded course crowns the second curtain.
+        fill(world, base.add(-22, y + 5, -18), 45, 1, 1, ModBlocks.GILDED_BRICK);
+        fill(world, base.add(-22, y + 5, 18), 45, 1, 1, ModBlocks.GILDED_BRICK);
+        fill(world, base.add(-22, y + 5, -18), 1, 1, 37, ModBlocks.GILDED_BRICK);
+        fill(world, base.add(22, y + 5, -18), 1, 1, 37, ModBlocks.GILDED_BRICK);
+        set(world, base.add(6, y + 1, 12), ModBlocks.WAR_TABLE);
+        set(world, base.add(7, y + 1, 12), ModBlocks.WEAPON_RACK);
         roundTower(world, base.add(-22, 0, -18), 3, 13, stone, trim, true);
         roundTower(world, base.add(22, 0, -18), 3, 13, stone, trim, true);
         roundTower(world, base.add(-22, 0, 18), 3, 13, stone, trim, true);
@@ -726,7 +752,7 @@ public final class StructureBuilder {
             if (h >= 3 && h <= 4) {
                 for (int x = 2; x < sizeX - 2; x += 3) {
                     set(world, origin.add(x, h, sizeZ - 1), Blocks.GLASS_PANE);
-                    set(world, origin.add(x, h, 0), Blocks.GLASS_PANE);
+                    set(world, origin.add(x, h, 0), h == 3 ? ModBlocks.ARROW_SLIT : Blocks.GLASS_PANE);
                 }
             }
             // Door gap on the south face.
@@ -751,6 +777,9 @@ public final class StructureBuilder {
         set(world, origin.add(sizeX / 2, floor + 3, sizeZ / 2), Blocks.CHAIN);
         set(world, origin.add(1, floor, sizeZ / 2 - 1), Blocks.ANVIL);
         set(world, origin.add(1, floor, sizeZ / 2 + 1), Blocks.BARREL);
+        set(world, origin.add(2, floor, sizeZ / 2 - 2), ModBlocks.WAR_TABLE);
+        set(world, origin.add(1, floor, sizeZ / 2 - 3), ModBlocks.WEAPON_RACK);
+        set(world, origin.add(3, floor, sizeZ / 2 - 3), ModBlocks.WEAPON_RACK);
         stockChest(world, origin.add(sizeX - 2, floor, sizeZ / 2), new ItemStack(Items.IRON_SWORD),
                 new ItemStack(Items.SHIELD), new ItemStack(Items.GOLD_INGOT, 2),
                 new ItemStack(ModItems.ROYAL_LONGSWORD));
@@ -1074,7 +1103,8 @@ public final class StructureBuilder {
         set(world, base.add(1, y + 1, 1), Blocks.BARREL);
         set(world, base.add(2, y + 1, 1), Blocks.BARREL);
         set(world, base.add(3, y + 1, 1), Blocks.BARREL);
-        set(world, base.add(1, y + 1, 3), Blocks.BARREL);
+        set(world, base.add(1, y + 1, 3), ModBlocks.SUPPLY_CRATE);
+        set(world, base.add(2, y + 1, 3), ModBlocks.SUPPLY_CRATE);
         set(world, base.add(3, y + 1, 3), Blocks.CHEST);
         stockChest(world, base.add(3, y + 1, 3), new ItemStack(Items.ROTTEN_FLESH, 3),
                 new ItemStack(Items.BONE, 2));
@@ -1387,7 +1417,7 @@ public final class StructureBuilder {
             int py = groundAt(world, tp.getX(), tp.getZ());
             set(world, tp.add(0, py - tp.getY() + 1, 0), Blocks.OAK_FENCE);
             set(world, tp.add(0, py - tp.getY() + 2, 0), Blocks.OAK_FENCE);
-            set(world, tp.add(0, py - tp.getY() + 3, 0), Blocks.CARVED_PUMPKIN);
+            set(world, tp.add(0, py - tp.getY() + 3, 0), ModBlocks.TROPHY_SKULL);
         }
 
         // Loot pile and a grim banner.
@@ -1395,6 +1425,9 @@ public final class StructureBuilder {
                 new ItemStack(ModItems.ROYAL_COIN, 2), new ItemStack(Items.GOLD_NUGGET, 8),
                 new ItemStack(ModItems.FLINTLOCK));
         set(world, base.add(0, y + 1, 5), ModBlocks.REALM_BANNER);
+        set(world, base.add(-3, y + 1, 3), ModBlocks.WAR_TABLE);
+        set(world, base.add(3, y + 1, -2), ModBlocks.TROPHY_SKULL);
+        set(world, base.add(-5, y + 1, 0), ModBlocks.WEAPON_RACK);
         lightYard(world, base, y, 8);
     }
 
@@ -1414,6 +1447,10 @@ public final class StructureBuilder {
         lampPost(world, base.add(-6, 0, -1));
         lampPost(world, base.add(6, 0, -1));
         set(world, base.add(0, y + 1, 10), ModBlocks.REALM_BANNER);
+        fill(world, base.add(-1, y, -6), 3, 1, 17, ModBlocks.ROAD_STONE);
+        set(world, base.add(-2, y + 1, 9), ModBlocks.HEARTH_LANTERN);
+        set(world, base.add(2, y + 1, 9), ModBlocks.HEARTH_LANTERN);
+        set(world, base.add(3, y + 1, 3), ModBlocks.SUPPLY_CRATE);
         stockChest(world, base.add(-2, y + 1, 2), new ItemStack(Items.BREAD, 8),
                 new ItemStack(Items.WHEAT_SEEDS, 10), new ItemStack(ModItems.ROYAL_COIN, 2));
     }
@@ -1434,12 +1471,15 @@ public final class StructureBuilder {
                 }
             }
         }
+        for (int[] g : new int[][]{{3, 0}, {-3, 0}, {0, 3}, {0, -3}}) {
+            set(world, origin.add(g[0], 1, g[1]), ModBlocks.GILDED_BRICK);
+        }
         set(world, origin.add(0, 1, 0), Blocks.GOLD_BLOCK);
         // four pillars with gold caps
         for (int[] px : new int[][]{{-4, -4}, {4, -4}, {-4, 4}, {4, 4}}) {
             BlockPos col = origin.add(px[0], 1, px[1]);
             for (int h = 0; h < 4; h++) {
-                set(world, col.up(h), Blocks.STONE_BRICKS);
+                set(world, col.up(h), ModBlocks.CROWN_PILLAR);
             }
             set(world, col.up(3), ModBlocks.CROWN_BRICK);
             set(world, col.up(4), Blocks.GOLD_BLOCK);

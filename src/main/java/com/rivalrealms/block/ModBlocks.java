@@ -26,6 +26,29 @@ public final class ModBlocks {
             .mapColor(MapColor.ORANGE)));
     public static final Block AIRSHIP_METAL = register("airship_metal", new Block(AbstractBlock.Settings.copy(Blocks.CUT_COPPER)
             .mapColor(MapColor.LIGHT_BLUE).strength(5.0f).requiresTool()));
+    public static final Block GILDED_BRICK = register("gilded_brick", new Block(AbstractBlock.Settings.copy(Blocks.STONE_BRICKS)
+            .mapColor(MapColor.GOLD).strength(5.5f).requiresTool()));
+    public static final Block CROWN_PILLAR = register("crown_pillar", new Block(AbstractBlock.Settings.create()
+            .mapColor(MapColor.STONE_GRAY).instrument(NoteBlockInstrument.BASEDRUM)
+            .strength(5.5f).requiresTool().sounds(BlockSoundGroup.STONE)));
+    public static final Block WAR_TABLE = register("war_table", new Block(AbstractBlock.Settings.copy(Blocks.DARK_OAK_PLANKS)
+            .mapColor(MapColor.BROWN).strength(2.8f)));
+    public static final Block WEAPON_RACK = register("weapon_rack", new Block(AbstractBlock.Settings.create()
+            .mapColor(MapColor.OAK_TAN).instrument(NoteBlockInstrument.BASS)
+            .strength(1.6f).sounds(BlockSoundGroup.WOOD).nonOpaque()));
+    public static final Block TROPHY_SKULL = register("trophy_skull", new Block(AbstractBlock.Settings.create()
+            .mapColor(MapColor.PALE_YELLOW).instrument(NoteBlockInstrument.XYLOPHONE)
+            .strength(1.8f).sounds(BlockSoundGroup.BONE)));
+    public static final Block HEARTH_LANTERN = register("hearth_lantern", new Block(AbstractBlock.Settings.create()
+            .mapColor(MapColor.ORANGE).instrument(NoteBlockInstrument.BASEDRUM)
+            .strength(2.0f).sounds(BlockSoundGroup.LANTERN).luminance(state -> 15)));
+    public static final Block SUPPLY_CRATE = register("supply_crate", new Block(AbstractBlock.Settings.copy(Blocks.BARREL)
+            .mapColor(MapColor.SPRUCE_BROWN).strength(2.4f)));
+    public static final Block ROAD_STONE = register("road_stone", new Block(AbstractBlock.Settings.copy(Blocks.COBBLESTONE)
+            .mapColor(MapColor.GRAY).strength(3.2f).requiresTool()));
+    public static final Block ARROW_SLIT = register("arrow_slit", new Block(AbstractBlock.Settings.create()
+            .mapColor(MapColor.STONE_GRAY).instrument(NoteBlockInstrument.BASEDRUM)
+            .strength(4.5f).requiresTool().nonOpaque()));
     public static final Block CANNON = register("cannon", new CannonBlock(AbstractBlock.Settings.create()
             .mapColor(MapColor.IRON_GRAY).instrument(NoteBlockInstrument.BASEDRUM)
             .strength(5.5f).requiresTool().sounds(BlockSoundGroup.COPPER)));

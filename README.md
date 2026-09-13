@@ -155,6 +155,12 @@ Claimed settlements recruit guards and workers up to their level. Jobs (guard, b
 
 ---
 
+## Build the realm
+
+- **Nine new hand-painted building blocks**, all craftable and all used by the world generator: Gilded Brick (gold-seamed masonry), Crown Pillar (fluted, gilded capital), War Council Table (campaign map under glass-free parchment), Weapon Rack (hangs sword, spear and axe — thin wall piece you can shoot past), Trophy Skulls, Hearth Lantern (warm full-brightness amber glow), Supply Crate (crown-branded), Road Stone (wheel-rut cobbles), Arrow Slit Wall (real see-through sight line for defenders)
+- **They appear everywhere**: keeps and citadels grow arrow slits, war councils and weapon racks; fortresses pave their yard in road stone with lantern-lit gates; marauder camps raise trophy-skull totems around a war table; hearthfolk hamlets line their lane with hearth lanterns and supply crates; old-world towns pave the market heart; ruins and shrines scatter gilded relics
+- **Every custom block now drops itself** when mined — the older palette blocks silently dropped nothing before this pass
+
 ## Roads & riches
 
 - **Treasure shrines** dot the wilds regardless of biome: gold circle, four gilded pillars, braziers, one guarded chest — and yes, the keeper is a Custom-culture veteran
@@ -162,6 +168,9 @@ Claimed settlements recruit guards and workers up to their level. Jobs (guard, b
 - **Hearthfolk caravans** walk the roads (1-in-5 wanderer groups): traders who buy your goodwill in emeralds
 - **Travel food**: Hardtack (3 wheat), Frontier Stew (full meal in a bowl, sold by caravans), Hearthfolk Mead (honey + wheat, +nutrition)
 - **Item art pass**: every 16×16 icon now gets a crisp dark outline + edge highlight for hotbar readability; blocks gained bevels and brushed-metal detail; the mod icon is a full sunset siege scene
+- **Knightsword redo**: the Royal Longsword icon is a proper fullered greatblade — bright cutting edge, gemmed crossguard, wire-wrapped grip, ruby pommel — no more flat stick
+- **Knight redo**: crimson plume on the great helm, gold crown emblem on the tabard, breastplate ridge, steel bracers and plate greaves
+- **Ranged crews fire from the chest**: gunfire and crossbow bolts (and their muzzle smoke) now originate from the middle of a shooter's body, so nobody shoots out of their own face or through the weapon sprite
 
 ## Realms at war
 

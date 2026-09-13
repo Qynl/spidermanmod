@@ -1,9 +1,12 @@
 package com.rivalrealms.client;
 
+import com.rivalrealms.block.ModBlocks;
 import com.rivalrealms.entity.ModEntities;
 import net.fabricmc.api.ClientModInitializer;
+import net.fabricmc.fabric.api.client.rendering.v1.BlockRenderLayerMap;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityModelLayerRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
+import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.entity.FlyingItemEntityRenderer;
 
 /**
@@ -28,5 +31,9 @@ public final class RivalRealmsClient implements ClientModInitializer {
         EntityRendererRegistry.register(ModEntities.CANNONBALL, FlyingItemEntityRenderer::new);
 
         VehicleInputProxy.register();
+
+        // Cutout blocks: see-through slots let you sight (and shoot) through.
+        BlockRenderLayerMap.INSTANCE.putBlock(ModBlocks.ARROW_SLIT, RenderLayer.getCutout());
+        BlockRenderLayerMap.INSTANCE.putBlock(ModBlocks.WEAPON_RACK, RenderLayer.getCutout());
     }
 }

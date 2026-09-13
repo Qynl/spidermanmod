@@ -345,24 +345,41 @@ def flintlock_texture(path):
 
 
 def longsword_texture(path):
+    """The Royal Longsword: a proper fullered greatblade - ice steel with a
+    bright cutting edge and dark spine, gemmed gold crossguard, wire-wrapped
+    grip and a ruby-set pommel."""
     p = canvas(16, 16, (0, 0, 0, 0))
-    # blade (diagonal, ice-steel with bright edge)
-    for i in range(9):
-        x = 5 + i
-        y = 10 - i
-        px(p, 16, x, y, STEEL)
-        px(p, 16, x, y - 1, brighten(STEEL, 1.25))
-        px(p, 16, x + 1 if x < 15 else x, y, STEEL_D)
-    px(p, 16, 14, 1, (236, 245, 252, 255))
-    # crossguard
-    rect(p, 16, 3, 10, 6, 12, GOLD)
-    px(p, 16, 2, 9, GOLD)
-    px(p, 16, 7, 13, GOLD)
-    hline(p, 16, 3, 6, 10, brighten(GOLD, 1.2))
-    # grip + pommel
-    px(p, 16, 4, 12, (74, 48, 30, 255))
-    px(p, 16, 3, 13, (74, 48, 30, 255))
-    px(p, 16, 2, 14, GOLD)
+    blade_hi = (238, 244, 252, 255)
+    blade = (198, 208, 222, 255)
+    blade_d = (148, 158, 174, 255)
+    fuller = (170, 182, 198, 255)
+    # blade: diagonal with a bright top edge, dark spine, sunken fuller
+    for i in range(10):
+        x = 4 + i
+        y = 11 - i
+        px(p, 16, x, y - 1, blade_hi)                # cutting edge
+        px(p, 16, x, y, blade)
+        px(p, 16, x + 1, y, fuller)                  # fuller line
+        if x + 2 < 16:
+            px(p, 16, x + 2, y, blade_d)             # spine shadow
+    px(p, 16, 14, 1, (255, 255, 255, 255))           # tip glint
+    px(p, 16, 13, 2, blade_hi)
+    # crossguard: gold bar with darker underside and a sapphire centre
+    rect(p, 16, 2, 9, 6, 11, GOLD)
+    hline(p, 16, 2, 6, 9, brighten(GOLD, 1.22))
+    hline(p, 16, 2, 6, 11, GOLD_D)
+    px(p, 16, 1, 8, GOLD); px(p, 16, 7, 12, GOLD)    # quillon tips
+    px(p, 16, 4, 10, (66, 118, 220, 255))            # sapphire
+    px(p, 16, 4, 10, (66, 118, 220, 255))
+    px(p, 16, 4, 9, (150, 190, 250, 255))
+    # grip: dark leather with wire wraps
+    for (gx, gy) in ((4, 12), (3, 13)):
+        px(p, 16, gx, gy, (64, 42, 26, 255))
+    px(p, 16, 3, 12, (108, 74, 44, 255))             # wire wrap
+    px(p, 16, 2, 13, (108, 74, 44, 255))
+    # pommel: gold disc set with a ruby
+    px(p, 16, 2, 14, GOLD); px(p, 16, 1, 15, GOLD_D)
+    px(p, 16, 1, 14, (214, 68, 88, 255))             # ruby
     outline(p, 16, (24, 26, 34, 255))
     save16(path, p)
 
@@ -577,6 +594,205 @@ def food_textures():
     save16(TEX / "item/mead.png", p)
 
 
+def settlement_block_textures(folder):
+    """Ten hand-painted settlement blocks: gold-inlay masonry, a carved
+    pillar, the war council table, a weapon rack, trophy skulls, the warm
+    hearth lantern, dock crates, a worn road tile and an arrow-slit wall."""
+    # -- gilded brick: dressed masonry with gold-seamed celebration stones --
+    g = canvas(16, 16, (74, 72, 70, 255))
+    state = 5
+    for row in range(4):
+        offset = (row % 2) * 4
+        y0 = row * 4
+        for bx in range(-1, 3):
+            x0 = bx * 8 + offset
+            rect(g, 16, x0, y0, x0 + 7, y0 + 3, (128, 124, 118, 255))
+            hline(g, 16, x0, x0 + 7, y0, (150, 146, 138, 255))
+            vline(g, 16, x0, y0, y0 + 3, (150, 146, 138, 255))
+            hline(g, 16, x0, x0 + 7, y0 + 3, (96, 92, 88, 255))
+            state = (state * 31 + 17) & 0xffff
+            if state % 3 == 0:                     # gold-seamed stone
+                hline(g, 16, x0 + 1, x0 + 6, y0 + 1, GOLD)
+                px(g, 16, x0 + 2, y0 + 2, GOLD_D)
+                px(g, 16, x0 + 5, y0 + 2, GOLD_D)
+            elif state % 3 == 1:
+                px(g, 16, x0 + 3 + state % 3, y0 + 2, GOLD)
+    jitter(g, 16, 9, 6)
+    png(folder / "gilded_brick.png", 16, 16, g)
+
+    # -- crown pillar: fluted column, gilded capital and plinth --
+    c = canvas(16, 16)
+    rect(c, 16, 2, 4, 13, 12, (140, 136, 128, 255))
+    for x in range(3, 13, 2):                       # flutes
+        vline(c, 16, x, 4, 12, (162, 158, 148, 255))
+        vline(c, 16, x + 1, 4, 12, (110, 106, 100, 255))
+    rect(c, 16, 0, 0, 15, 3, GOLD)                  # capital band
+    hline(c, 16, 0, 16, 0, brighten(GOLD, 1.25))
+    hline(c, 16, 0, 16, 3, GOLD_D)
+    for x in (2, 6, 10, 14):                        # dentil notches
+        vline(c, 16, x, 1, 2, GOLD_D)
+    rect(c, 16, 0, 13, 15, 15, (104, 100, 94, 255))  # plinth
+    hline(c, 16, 0, 16, 13, (126, 122, 114, 255))
+    px(c, 16, 3, 14, (86, 82, 78, 255)); px(c, 16, 12, 14, (86, 82, 78, 255))
+    png(folder / "crown_pillar.png", 16, 16, c)
+
+    # -- war table top: parchment campaign map pinned to dark oak --
+    t = canvas(16, 16, (56, 40, 28, 255))
+    for y in range(0, 16, 4):                       # plank field
+        hline(t, 16, 0, 16, y + 3, (44, 31, 22, 255))
+        hline(t, 16, 0, 16, y, (66, 48, 34, 255))
+    rect(t, 16, 2, 2, 13, 13, (214, 196, 158, 255))  # parchment
+    hline(t, 16, 2, 13, 2, (232, 216, 178, 255))
+    vline(t, 16, 2, 2, 13, (232, 216, 178, 255))
+    hline(t, 16, 2, 13, 13, (176, 158, 120, 255))
+    vline(t, 16, 13, 2, 13, (176, 158, 120, 255))
+    vline(t, 16, 8, 3, 12, (96, 118, 168, 255))     # realm border
+    for (mx, my, col) in ((5, 5, (168, 56, 48, 255)), (11, 9, (96, 118, 168, 255)),
+                          (7, 10, (72, 132, 86, 255))):   # army pins
+        px(t, 16, mx, my, col); px(t, 16, mx, my - 1, col)
+    rect(t, 16, 3, 3, 4, 4, GOLD)                   # compass rose
+    px(t, 16, 3, 3, brighten(GOLD, 1.3))
+    px(t, 16, 6, 7, (40, 34, 30, 255)); px(t, 16, 7, 7, (40, 34, 30, 255))  # fleet mark
+    png(folder / "war_table_top.png", 16, 16, t)
+
+    # -- war table side: panelled front with a map drawer --
+    sd = canvas(16, 16, (52, 37, 26, 255))
+    for y in range(0, 16, 4):
+        hline(sd, 16, 0, 16, y + 3, (40, 28, 20, 255))
+    rect(sd, 16, 2, 4, 13, 11, (62, 45, 32, 255))   # recessed panel
+    rect(sd, 16, 3, 10, 6, 12, (48, 34, 24, 255))   # drawer
+    px(sd, 16, 4, 11, GOLD); px(sd, 16, 5, 11, GOLD)  # brass pull
+    hline(sd, 16, 0, 16, 0, (74, 54, 38, 255))
+    png(folder / "war_table_side.png", 16, 16, sd)
+
+    # -- weapon rack (cutout): posts + bar with sword, spear and axe --
+    r = canvas(16, 16, (0, 0, 0, 0))
+    rect(r, 16, 1, 0, 2, 15, WOOD_D)                # posts
+    rect(r, 16, 13, 0, 14, 15, WOOD_D)
+    vline(r, 16, 1, 0, 15, WOOD)
+    vline(r, 16, 13, 0, 15, WOOD)
+    rect(r, 16, 1, 1, 14, 2, WOOD)                  # crossbar
+    hline(r, 16, 1, 15, 2, WOOD_D)
+    # longsword hung centre
+    for i in range(7):
+        px(r, 16, 8, 4 + i, STEEL)
+    vline(r, 16, 8, 4, 10, brighten(STEEL, 1.2))
+    px(r, 16, 8, 3, (226, 234, 244, 255))           # tip glint
+    rect(r, 16, 7, 11, 9, 11, GOLD)                 # guard
+    vline(r, 16, 8, 12, 13, (74, 48, 30, 255))      # grip
+    px(r, 16, 8, 14, GOLD_D)                        # pommel
+    # spear hung left
+    for i in range(9):
+        px(r, 16, 4, 5 + i, (96, 66, 38, 255))
+    px(r, 16, 4, 4, STEEL)
+    px(r, 16, 4, 3, (226, 234, 244, 255))           # head glint
+    # axe hung right
+    for i in range(9):
+        px(r, 16, 11, 6 + i, (96, 66, 38, 255))
+    rect(r, 16, 10, 3, 13, 6, STEEL)
+    vline(r, 16, 10, 3, 6, brighten(STEEL, 1.2))
+    vline(r, 16, 13, 3, 6, STEEL_D)
+    outline(r, 16, (26, 22, 18, 255))
+    png(folder / "weapon_rack.png", 16, 16, r)
+
+    # -- trophy skull: old bones stacked under a staring skull --
+    k = canvas(16, 16, (146, 138, 120, 255))
+    for y in range(0, 16, 5):                       # bone dust strata
+        hline(k, 16, 0, 16, y, (128, 120, 104, 255))
+    disc(k, 16, 8, 6, 4, (222, 214, 196, 255))      # great skull
+    rect(k, 16, 5, 7, 10, 9, (222, 214, 196, 255))  # jaw block
+    px(k, 16, 6, 6, (30, 26, 24, 255)); px(k, 16, 9, 6, (30, 26, 24, 255))  # eyes
+    px(k, 16, 7, 6, (198, 190, 172, 255)); px(k, 16, 8, 6, (198, 190, 172, 255))
+    rect(k, 16, 7, 8, 8, 8, (30, 26, 24, 255))      # nasal pit
+    for x in (6, 8):                                # teeth gaps
+        vline(k, 16, x, 9, 9, (30, 26, 24, 255))
+    disc(k, 16, 2, 12, 2, (206, 198, 180, 255))     # lesser skulls
+    px(k, 16, 2, 12, (30, 26, 24, 255))
+    disc(k, 16, 13, 13, 2, (206, 198, 180, 255))
+    px(k, 16, 13, 13, (30, 26, 24, 255))
+    hline(k, 16, 4, 12, 14, (186, 178, 160, 255))   # crossed long bone
+    vline(k, 16, 8, 11, 15, (186, 178, 160, 255))
+    jitter(k, 16, 13, 5)
+    png(folder / "trophy_skull.png", 16, 16, k)
+
+    # -- hearth lantern: black iron cage around a warm amber heart --
+    hl = canvas(16, 16, (34, 30, 28, 255))
+    rect(hl, 16, 2, 2, 13, 13, (58, 48, 40, 255))   # iron frame
+    rect(hl, 16, 3, 3, 12, 12, (250, 168, 72, 255))  # amber glass
+    rect(hl, 16, 4, 4, 11, 11, (252, 196, 108, 255))
+    rect(hl, 16, 6, 6, 9, 9, (255, 226, 156, 255))   # hot core
+    px(hl, 16, 7, 7, (255, 246, 208, 255)); px(hl, 16, 8, 7, (255, 246, 208, 255))
+    px(hl, 16, 7, 8, (255, 238, 180, 255)); px(hl, 16, 8, 8, (255, 238, 180, 255))
+    for (x, y) in ((2, 2), (13, 2), (2, 13), (13, 13)):  # corner rivets
+        px(hl, 16, x, y, (16, 14, 14, 255))
+    rect(hl, 16, 7, 0, 8, 1, (16, 14, 14, 255))      # hanging loop
+    png(folder / "hearth_lantern.png", 16, 16, hl)
+
+    # -- supply crate top: strapped lid with a hoist ring --
+    ct = canvas(16, 16, (128, 96, 58, 255))
+    for y in range(0, 16, 4):
+        hline(ct, 16, 0, 16, y + 3, (98, 72, 44, 255))
+        hline(ct, 16, 0, 16, y, (144, 110, 68, 255))
+    rect(ct, 16, 0, 0, 15, 1, (70, 74, 78, 255))     # iron straps
+    rect(ct, 16, 0, 14, 15, 15, (70, 74, 78, 255))
+    rect(ct, 16, 6, 6, 9, 9, (94, 98, 104, 255))     # hoist ring plate
+    disc(ct, 16, 8, 8, 2, (0, 0, 0, 0))
+    disc(ct, 16, 8, 8, 1, (60, 62, 66, 255))
+    png(folder / "supply_crate_top.png", 16, 16, ct)
+
+    # -- supply crate side: planks, straps, burnt-in crown brand --
+    cs = canvas(16, 16, (120, 90, 54, 255))
+    for y in range(0, 16, 4):
+        hline(cs, 16, 0, 16, y + 3, (92, 68, 42, 255))
+        hline(cs, 16, 0, 16, y, (136, 104, 64, 255))
+    rect(cs, 16, 2, 0, 3, 15, (70, 74, 78, 255))     # vertical straps
+    rect(cs, 16, 12, 0, 13, 15, (70, 74, 78, 255))
+    px(cs, 16, 2, 2, (96, 100, 106, 255)); px(cs, 16, 13, 13, (52, 54, 58, 255))
+    for (bx, by) in ((6, 6), (7, 6), (8, 6), (9, 6),  # crown brand
+                     (6, 7), (9, 7), (6, 8), (9, 8),
+                     (6, 9), (7, 9), (8, 9), (9, 9),
+                     (7, 5), (8, 5)):
+        px(cs, 16, bx, by, (74, 48, 26, 255))
+    jitter(cs, 16, 17, 5)
+    png(folder / "supply_crate_side.png", 16, 16, cs)
+
+    # -- road stone: worn cobbles with cart ruts --
+    rs = canvas(16, 16, (72, 70, 68, 255))
+    stones = [(0, 0, 7, 6), (8, 0, 7, 4), (0, 7, 4, 4), (5, 5, 5, 5),
+              (11, 5, 4, 6), (0, 12, 6, 3), (7, 11, 5, 4), (13, 12, 3, 3)]
+    state = 3
+    for (x0, y0, w, h) in stones:
+        shade = 118 + (state % 3) * 14
+        state = (state * 31 + 7) & 0xffff
+        base = (shade, shade - 4, shade - 8, 255)
+        rect(rs, 16, x0, y0, x0 + w - 1, y0 + h - 1, base)
+        hline(rs, 16, x0, x0 + w - 1, y0, (shade + 22, shade + 18, shade + 12, 255))
+        hline(rs, 16, x0, x0 + w - 1, y0 + h - 1, (shade - 26, shade - 28, shade - 30, 255))
+    hline(rs, 16, 0, 16, 3, (58, 56, 54, 255))       # wheel ruts
+    hline(rs, 16, 0, 16, 12, (58, 56, 54, 255))
+    px(rs, 16, 4, 3, (84, 82, 78, 255)); px(rs, 16, 11, 12, (84, 82, 78, 255))
+    jitter(rs, 16, 21, 6)
+    png(folder / "road_stone.png", 16, 16, rs)
+
+    # -- arrow slit (cutout): masonry pierced by a cross-shaped sight --
+    a = canvas(16, 16, (96, 92, 88, 255))
+    blocks = [(0, 0, 8, 5), (8, 0, 8, 5), (0, 5, 5, 5), (5, 5, 6, 5),
+              (11, 5, 5, 5), (0, 10, 8, 6), (8, 10, 8, 6)]
+    for (x0, y0, w, h) in blocks:
+        rect(a, 16, x0, y0, x0 + w - 1, y0 + h - 1, (126, 122, 116, 255))
+        hline(a, 16, x0, x0 + w - 1, y0, (148, 144, 136, 255))
+        vline(a, 16, x0, y0, y0 + h - 1, (148, 144, 136, 255))
+        hline(a, 16, x0, x0 + w - 1, y0 + h - 1, (100, 96, 92, 255))
+    jitter(a, 16, 7, 5)
+    # cut the sight: tall slit + cross bar, chipped dark rim
+    for (x0, y0, x1, y1) in ((7, 3, 8, 12), (4, 7, 11, 8)):
+        rect(a, 16, x0, y0, x1, y1, (0, 0, 0, 0))
+    for (x0, y0, x1, y1) in ((6, 3, 6, 12), (9, 3, 9, 12),
+                             (4, 6, 11, 6), (4, 9, 11, 9)):
+        rect(a, 16, x0, y0, x1, y1, (74, 70, 66, 255))
+    png(folder / "arrow_slit.png", 16, 16, a)
+
+
 def cannon_block_textures(folder):
     """Two 16x16 block textures: dark bronze barrel + oak-and-iron carriage."""
     barrel = canvas(16, 16)
@@ -763,6 +979,13 @@ def skin_texture(name, face, hair, shirt, trim, pants, hat, hat_kind="cap", eye=
         px(p, 64, 43, 11, (90, 110, 150, 255)); px(p, 64, 44, 11, (120, 150, 190, 255))
         rect(p, 64, 47, 8, 49, 14, brighten(hat, 1.25))  # nasal bar
         hline(p, 64, 32, 64, 7, hat_d)
+        if name == "knight":
+            # crimson plume crest + steel rivets along the brow
+            rect(p, 64, 43, 0, 44, 6, (172, 52, 44, 255))
+            vline(p, 64, 43, 0, 6, (204, 74, 60, 255))
+            px(p, 64, 43, 0, (232, 104, 84, 255)); px(p, 64, 44, 0, (232, 104, 84, 255))
+            for rx in (33, 36, 56, 59):
+                px(p, 64, rx, 10, brighten(hat, 1.35))
     elif hat_kind == "band":
         head(32, 0, hat, hat_l, hat, hat, hat_d, hat_d)
         hline(p, 64, 40, 48, 8, hat_l)                # band over the forehead
@@ -812,8 +1035,13 @@ def skin_texture(name, face, hair, shirt, trim, pants, hat, hat_kind="cap", eye=
         rect(p, 64, 22, 20, 26, 32, trim)             # tabard
         px(p, 64, 23, 22, GOLD); px(p, 64, 24, 22, GOLD)
         px(p, 64, 23, 23, GOLD); px(p, 64, 24, 23, GOLD); px(p, 64, 22, 23, GOLD); px(p, 64, 25, 23, GOLD)
+        for cx in (23, 24, 25):                       # gold crown emblem
+            px(p, 64, cx, 25, GOLD)
+        px(p, 64, 23, 26, GOLD); px(p, 64, 25, 26, GOLD)
         rect(p, 64, 16, 20, 20, 32, trim_d)           # pauldron stripe
         rect(p, 64, 28, 20, 32, 32, trim_l)
+        hline(p, 64, 20, 28, 24, trim_l)              # breastplate ridge
+        px(p, 64, 20, 24, trim); px(p, 64, 27, 24, trim_d)
     elif name == "pirate":
         rect(p, 64, 20, 20, 22, 30, trim)             # open vest edges
         rect(p, 64, 26, 20, 28, 30, trim_d)
@@ -849,6 +1077,11 @@ def skin_texture(name, face, hair, shirt, trim, pants, hat, hat_kind="cap", eye=
     arm(32, 48, shirt_l, skin_l, shirt_d, shirt_l)        # left arm
     for ox, oy in ((40, 16), (32, 48)):                   # cuffs
         hline(p, 64, ox + 4, ox + 8, oy + 3, trim if name != "knight" else trim_d)
+    if name == "knight":                                  # steel bracers
+        for ox, oy in ((40, 16), (32, 48)):
+            rect(p, 64, ox + 4, oy + 10, ox + 8, oy + 12, trim)
+            hline(p, 64, ox + 4, ox + 8, oy + 10, trim_l)
+            px(p, 64, ox + 4, oy + 12, trim_d); px(p, 64, ox + 7, oy + 12, GOLD)
     if name == "pirate":                                  # striped sleeves
         for ox, oy in ((40, 16), (32, 48)):
             hline(p, 64, ox, ox + 16, oy + 7, trim_d)
@@ -868,6 +1101,11 @@ def skin_texture(name, face, hair, shirt, trim, pants, hat, hat_kind="cap", eye=
 
     leg(0, 16)    # right leg
     leg(16, 48)   # left leg
+    if name == "knight":                                  # plate greaves
+        for ox, oy in ((0, 16), (16, 48)):
+            rect(p, 64, ox + 4, oy + 8, ox + 8, oy + 11, trim_d)
+            hline(p, 64, ox + 4, ox + 8, oy + 8, trim)
+            px(p, 64, ox + 6, oy + 10, GOLD)
 
     # ---------------- torso overlay (vest / scarf / cloak) ------------------
     if name == "knight":
@@ -1335,6 +1573,7 @@ def main():
     war_weapon_textures()
     food_textures()
     cannon_block_textures(TEX / "block")
+    settlement_block_textures(TEX / "block")
     airship_kit_texture(TEX / "item/airship_kit.png")
 
     # spawn eggs

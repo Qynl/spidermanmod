@@ -292,6 +292,7 @@ add('net.minecraft.block.Blocks', [], [
     'public static final net.minecraft.block.Block CHEST;', 'public static final net.minecraft.block.Block BARREL;',
     'public static final net.minecraft.block.Block LANTERN;', 'public static final net.minecraft.block.Block CHAIN;',
     'public static final net.minecraft.block.Block CAMPFIRE;', 'public static final net.minecraft.block.Block FARMLAND;', 'public static final net.minecraft.block.Block GOLD_BLOCK;',
+        'public class RenderLayer extends RenderPhase { public static RenderLayer getCutout(); public static RenderLayer getTranslucent(); }',
     'public static final net.minecraft.block.Block WHEAT;', 'public static final net.minecraft.block.Block COARSE_DIRT;', 'public static final net.minecraft.block.Block SOUL_LANTERN;', 'public static final net.minecraft.block.Block COBBLESTONE_SLAB;', 'public static final net.minecraft.block.Block STONE_BRICK_SLAB;', 'public static final net.minecraft.block.Block DEAD_BUSH;', 'public static final net.minecraft.block.Block MOSSY_COBBLESTONE;', 'public static final net.minecraft.block.Block PODZOL;', 'public static final net.minecraft.block.Block COBWEB;', 'public static final net.minecraft.block.Block GRASS_BLOCK;', 'public static final net.minecraft.block.Block CARVED_PUMPKIN;', 'public static final net.minecraft.block.Block WATER;', 'public static final net.minecraft.block.Block CARROTS;', 'public static final net.minecraft.block.Block POTATOES;', 'public static final net.minecraft.block.Block BEETROOTS;', 'public static final net.minecraft.block.Block BARREL;', 'public static final net.minecraft.block.Block LANTERN;',
     'public static final net.minecraft.block.Block GRAVEL;', 'public static final net.minecraft.block.Block RED_SANDSTONE;',
     'public static final net.minecraft.block.Block WHITE_CARPET;', 'public static final net.minecraft.block.Block CRAFTING_TABLE;',
@@ -995,6 +996,10 @@ add('net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry', [], [
 ])
 add('net.fabricmc.fabric.api.client.rendering.v1.EntityModelLayerRegistry', [], [
     'public static void registerModelLayer(net.minecraft.client.render.entity.model.EntityModelLayer layer, java.util.function.Supplier<net.minecraft.client.model.TexturedModelData> provider);',
+])
+add('net.fabricmc.fabric.api.client.rendering.v1.BlockRenderLayerMap', [], [
+    'public static final net.fabricmc.fabric.api.client.rendering.v1.BlockRenderLayerMap INSTANCE;',
+    'public void putBlock(net.minecraft.block.Block block, net.minecraft.client.render.RenderLayer renderLayer);',
 ])
 add('net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents', [], [
     'public static final net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents.EndClientTick END_CLIENT_TICK;',

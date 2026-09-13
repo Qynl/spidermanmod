@@ -1,0 +1,1 @@
+{"type": "minecraft:crafting_shaped", "pattern": ["SPS", "SPS", "PPP"], "key": {"S": {"item": "minecraft:iron_nugget"}, "P": {"item": "minecraft:spruce_planks"}}, "result": {"id": "rivalrealms:supply_crate", "count": 2}}

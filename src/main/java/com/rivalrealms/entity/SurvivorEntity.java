@@ -916,12 +916,18 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
         }
     }
 
-    /** Outlaws and pirates shoot loud, smoky gunshots instead of silent arrows. */
+    /**
+     * Outlaws and pirates shoot loud, smoky gunshots instead of silent arrows.
+     * Shots and muzzle smoke come from the middle of the body, so the tracer
+     * never reads as firing out of the face or the held weapon.
+     */
     private void fireGunshot(LivingEntity target, Archetype archetype) {
         ServerWorld serverWorld = (ServerWorld) getWorld();
         ArrowEntity bullet = new ArrowEntity(getWorld(), this, new ItemStack(Items.ARROW), null);
+        double muzzleY = getY() + getHeight() * 0.55;
+        bullet.setPosition(getX(), muzzleY, getZ());
         double dx = target.getX() - getX();
-        double dy = target.getY() + target.getStandingEyeHeight() * 0.55 - bullet.getY();
+        double dy = target.getY() + target.getStandingEyeHeight() * 0.5 - muzzleY;
         double dz = target.getZ() - getZ();
         double horizontal = Math.sqrt(dx * dx + dz * dz);
         bullet.setVelocity(dx, dy + horizontal * 0.10, dz, 2.1f, 4.0f);
@@ -933,17 +939,19 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
         serverWorld.playSound(null, getX(), getY(), getZ(), SoundEvents.ENTITY_WITHER_SHOOT,
                 SoundCategory.NEUTRAL, 0.35f, 1.8f);
         serverWorld.spawnParticles(ParticleTypes.POOF,
-                getX() + dx * 0.08, getEyeY(), getZ() + dz * 0.08, 5, 0.12, 0.08, 0.12, 0.01);
+                getX() + dx * 0.08, muzzleY, getZ() + dz * 0.08, 5, 0.12, 0.08, 0.12, 0.01);
         serverWorld.spawnParticles(ParticleTypes.FLAME,
-                getX() + dx * 0.08, getEyeY(), getZ() + dz * 0.08, 2, 0.05, 0.03, 0.05, 0.01);
+                getX() + dx * 0.08, muzzleY, getZ() + dz * 0.08, 2, 0.05, 0.03, 0.05, 0.01);
     }
 
-    /** Sky captains keep the classic crossbow bolt. */
+    /** Sky captains keep the classic crossbow bolt, loosed from chest height. */
     private void fireBolt(LivingEntity target, Archetype archetype) {
         ServerWorld serverWorld = (ServerWorld) getWorld();
         ArrowEntity bolt = new ArrowEntity(getWorld(), this, new ItemStack(Items.ARROW), null);
+        double muzzleY = getY() + getHeight() * 0.55;
+        bolt.setPosition(getX(), muzzleY, getZ());
         double dx = target.getX() - getX();
-        double dy = target.getY() + target.getStandingEyeHeight() * 0.55 - bolt.getY();
+        double dy = target.getY() + target.getStandingEyeHeight() * 0.5 - muzzleY;
         double dz = target.getZ() - getZ();
         double horizontal = Math.sqrt(dx * dx + dz * dz);
         bolt.setVelocity(dx, dy + horizontal * 0.16, dz, 1.6f, 10.0f);
