@@ -12,8 +12,11 @@ import com.spiderman.mod.client.WheelScreen;
 import com.spiderman.mod.state.ClientPowers;
 
 /**
- * Dynamic FOV: speed kick while swinging/fast, focus zoom while the ability
- * wheel is open.
+ * ULTIMATE FOV AND EFFECTS - Cinematic Spider-Man feel.
+ * - Speed FOV while swinging, zipping, wall-running
+ * - Focus zoom for wheel
+ * - Dive FOV
+ * - Slow-mo sense effect
  */
 @Mixin(GameRenderer.class)
 public class GameRendererMixin {
@@ -24,16 +27,48 @@ public class GameRendererMixin {
         if (client.player == null || !ClientPowers.has) {
             return;
         }
-        double speed = client.player.getVelocity().horizontalLength();
+        
+        double speed = 0;
+        try {
+            speed = client.player.getVelocity().length();
+        } catch (Exception ignored) {}
+        
         double boost = 0.0;
+        
+        // Swing FOV - epic speed feel
         if (ClientPowers.swingActive) {
-            boost += 10.0 + Math.min(10.0, speed * 4.0);
-        } else if (speed > 0.45) {
-            boost += Math.min(8.0, (speed - 0.45) * 6.0);
+            boost += 15.0 + Math.min(15.0, speed * 5.0);
+            if (client.options.sprintKey.isPressed()) {
+                boost += 8.0; // Sprint boost FOV
+            }
+        } else if (ClientPowers.slowMoActive) {
+            // Slow-mo sense - reduce FOV for focus
+            boost -= 10.0;
+        } else if (speed > 0.5) {
+            // General speed FOV
+            boost += Math.min(12.0, (speed - 0.5) * 7.0);
         }
+        
+        // Wall running FOV
+        if (ClientPowers.wallRunning) {
+            boost += 8.0;
+        }
+        
+        // Diving FOV
+        if (ClientPowers.diving) {
+            boost += 12.0 + Math.min(10.0, speed * 3.0);
+        }
+        
+        // Wheel focus zoom
         if (client.currentScreen instanceof WheelScreen) {
-            boost -= 18.0;
+            boost -= 20.0;
         }
+        
+        // Cinematic zoom
+        if (ClientPowers.cinematicTicks > 0) {
+            boost -= 5.0 + Math.sin(ClientPowers.cinematicTicks * 0.2) * 3.0;
+        }
+        
         if (boost != 0.0) {
             cir.setReturnValue(cir.getReturnValue() + boost);
         }

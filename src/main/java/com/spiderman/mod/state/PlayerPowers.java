@@ -9,10 +9,10 @@ import java.util.UUID;
 import com.spiderman.mod.config.SpiderConfig;
 
 /**
- * Authoritative per-player powers state (server-side).
+ * Authoritative per-player powers state (server-side) - OVERHAULED.
  *
- * Persistent: hasPowers, stage, mastery, selected, timeWithPowers
- * Transient: everything else including new pull state for hold-to-pull.
+ * Persistent: hasPowers, stage, mastery, selected, timeWithPowers, style, perks
+ * Transient: everything else including advanced movement state
  */
 public class PlayerPowers {
     public boolean hasPowers;
@@ -20,6 +20,13 @@ public class PlayerPowers {
     public int mastery;
     public int selected;
     public long timeWithPowers;
+    
+    // Style and progression
+    public int stylePoints;
+    public int airTime;
+    public int maxCombo;
+    public long totalSwings;
+    public long totalWallRuns;
 
     // Transient session state
     public final Map<Integer, Long> cooldowns = new HashMap<>();
@@ -31,17 +38,39 @@ public class PlayerPowers {
     public int swingHand;
     public int zipTicks;
     public double zipX, zipY, zipZ;
+    
     // Pull: hold to pull — continuous pull while pullTicks >0
     public int pullTicks;
     public double pullX, pullY, pullZ;
     public UUID pullTargetId;
-    public boolean pullingPlayer; // true if pulling self to target, false if pulling target to self
+    public boolean pullingPlayer;
 
     public boolean doubleJumpUsed;
     public boolean climbing;
     public long wallRunUntil;
+    public int wallRunTicks;
+    public int wallJumpChain;
+    public long lastWallJumpTime;
     public int focusTicks;
     public long lastPassiveTick;
+    
+    // New movement
+    public boolean diving;
+    public int diveTicks;
+    public boolean slingshotCharging;
+    public int slingshotCharge;
+    public double slingshotX, slingshotY, slingshotZ;
+    public int airTricks;
+    public long lastGroundedTime;
+    public boolean wasInAir;
+    public int consecutiveSwings;
+    public long lastSwingTime;
+    
+    // Sense
+    public boolean senseActive;
+    public int senseTicks;
+    public boolean slowMoActive;
+    public int slowMoTicks;
 
     public boolean canUse(int ability, long time) {
         if (!hasPowers || !AbilityIds.valid(ability)) {
@@ -66,6 +95,13 @@ public class PlayerPowers {
         try {
             int cd = SpiderConfig.get().cooldownFor(ability);
             if (cd < 0) cd = 0;
+            // Style reduces cooldowns slightly
+            if (stylePoints > 100) {
+                cd = (int)(cd * 0.9);
+            }
+            if (stylePoints > 500) {
+                cd = (int)(cd * 0.85);
+            }
             cooldowns.put(ability, time + cd);
         } catch (Exception e) {
             cooldowns.put(ability, time + 20);
@@ -85,13 +121,38 @@ public class PlayerPowers {
         doubleJumpUsed = false;
         climbing = false;
         wallRunUntil = 0;
+        wallRunTicks = 0;
+        wallJumpChain = 0;
+        lastWallJumpTime = 0;
         focusTicks = 0;
         lastPassiveTick = 0;
+        diving = false;
+        diveTicks = 0;
+        slingshotCharging = false;
+        slingshotCharge = 0;
+        airTricks = 0;
+        lastGroundedTime = 0;
+        wasInAir = false;
+        consecutiveSwings = 0;
+        lastSwingTime = 0;
+        senseActive = false;
+        senseTicks = 0;
+        slowMoActive = false;
+        slowMoTicks = 0;
     }
 
     public void stopSwing() {
         swinging = false;
         ropeLen = 0.0;
+        // Track consecutive swings for style
+        long now = System.currentTimeMillis();
+        if (now - lastSwingTime < 3000) {
+            consecutiveSwings++;
+        } else {
+            consecutiveSwings = 1;
+        }
+        lastSwingTime = now;
+        totalSwings++;
     }
 
     public void stopPull() {
@@ -106,6 +167,11 @@ public class PlayerPowers {
             nbt.putInt("Mastery", Math.max(0, Math.min(100000, mastery)));
             nbt.putInt("Selected", AbilityIds.valid(selected) ? selected : 0);
             nbt.putLong("TimeWithPowers", Math.max(0, timeWithPowers));
+            nbt.putInt("Style", Math.max(0, stylePoints));
+            nbt.putInt("AirTime", Math.max(0, airTime));
+            nbt.putInt("MaxCombo", Math.max(0, maxCombo));
+            nbt.putLong("TotalSwings", Math.max(0, totalSwings));
+            nbt.putLong("TotalWallRuns", Math.max(0, totalWallRuns));
         } catch (Exception ignored) {}
     }
 
@@ -116,6 +182,7 @@ public class PlayerPowers {
             mastery = 0;
             selected = 0;
             timeWithPowers = 0;
+            stylePoints = 0;
             return;
         }
         try {
@@ -137,12 +204,18 @@ public class PlayerPowers {
             } else {
                 timeWithPowers = 0;
             }
+            stylePoints = nbt.contains("Style") ? nbt.getInt("Style") : 0;
+            airTime = nbt.contains("AirTime") ? nbt.getInt("AirTime") : 0;
+            maxCombo = nbt.contains("MaxCombo") ? nbt.getInt("MaxCombo") : 0;
+            totalSwings = nbt.contains("TotalSwings") ? nbt.getLong("TotalSwings") : 0;
+            totalWallRuns = nbt.contains("TotalWallRuns") ? nbt.getLong("TotalWallRuns") : 0;
         } catch (Exception e) {
             hasPowers = false;
             stage = 0;
             mastery = 0;
             selected = 0;
             timeWithPowers = 0;
+            stylePoints = 0;
         }
     }
 }

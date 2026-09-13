@@ -343,8 +343,14 @@ def e2e():
     mix = CB()
     mix.mref(9, MIXIN, "rightArm", MODELPART)
     mix.mref(9, MIXIN, "leftArm", MODELPART)
+    mix.mref(9, MIXIN, "rightLeg", MODELPART)
+    mix.mref(9, MIXIN, "leftLeg", MODELPART)
+    mix.mref(9, MIXIN, "head", MODELPART)
+    mix.mref(9, MIXIN, "body", MODELPART)
     mix_bytes = mix.build(MIXIN, "java/lang/Object", [], [
-        (1, "rightArm", MODELPART), (1, "leftArm", MODELPART)],
+        (1, "rightArm", MODELPART), (1, "leftArm", MODELPART),
+        (1, "rightLeg", MODELPART), (1, "leftLeg", MODELPART),
+        (1, "head", MODELPART), (1, "body", MODELPART)],
         [(1, "<init>", "()V")])
 
     with tempfile.TemporaryDirectory() as tmp:
@@ -401,12 +407,28 @@ def e2e():
           "shadow usage renames")
     check((MIXIN, "field_27433", "Lnet/minecraft/class_630;") in mrefs,
           "shadow usage renames (leftArm)")
+    check((MIXIN, "field_3392", "Lnet/minecraft/class_630;") in mrefs,
+          "shadow usage renames (rightLeg)")
+    check((MIXIN, "field_3397", "Lnet/minecraft/class_630;") in mrefs,
+          "shadow usage renames (leftLeg)")
+    check((MIXIN, "field_3398", "Lnet/minecraft/class_630;") in mrefs,
+          "shadow usage renames (head)")
+    check((MIXIN, "field_3391", "Lnet/minecraft/class_630;") in mrefs,
+          "shadow usage renames (body)")
     check(("field_3401", "Lnet/minecraft/class_630;") in mdefs,
           "shadow def renames")
     check(("field_27433", "Lnet/minecraft/class_630;") in mdefs,
           "shadow def renames (leftArm)")
-    check(len(m2.shadow_applied) == 2,
-          f"both shadows applied ({len(m2.shadow_applied)})")
+    check(("field_3392", "Lnet/minecraft/class_630;") in mdefs,
+          "shadow def renames (rightLeg)")
+    check(("field_3397", "Lnet/minecraft/class_630;") in mdefs,
+          "shadow def renames (leftLeg)")
+    check(("field_3398", "Lnet/minecraft/class_630;") in mdefs,
+          "shadow def renames (head)")
+    check(("field_3391", "Lnet/minecraft/class_630;") in mdefs,
+          "shadow def renames (body)")
+    check(len(m2.shadow_applied) == 6,
+          f"all shadows applied ({len(m2.shadow_applied)})")
 
     # T4: the gate passes the remapped output.
     with tempfile.TemporaryDirectory() as tmp:
@@ -452,9 +474,17 @@ def e2e():
     mix2 = CB()
     mix2.mref(9, MIXIN, "field_3401", "Lnet/minecraft/class_630;")
     mix2.mref(9, MIXIN, "field_27433", "Lnet/minecraft/class_630;")
+    mix2.mref(9, MIXIN, "field_3392", "Lnet/minecraft/class_630;")
+    mix2.mref(9, MIXIN, "field_3397", "Lnet/minecraft/class_630;")
+    mix2.mref(9, MIXIN, "field_3398", "Lnet/minecraft/class_630;")
+    mix2.mref(9, MIXIN, "field_3391", "Lnet/minecraft/class_630;")
     mix2_bytes = mix2.build(MIXIN, "java/lang/Object", [], [
         (1, "field_3401", "Lnet/minecraft/class_630;"),
-        (1, "field_27433", "Lnet/minecraft/class_630;")],
+        (1, "field_27433", "Lnet/minecraft/class_630;"),
+        (1, "field_3392", "Lnet/minecraft/class_630;"),
+        (1, "field_3397", "Lnet/minecraft/class_630;"),
+        (1, "field_3398", "Lnet/minecraft/class_630;"),
+        (1, "field_3391", "Lnet/minecraft/class_630;")],
         [(1, "<init>", "()V")])
     with tempfile.TemporaryDirectory() as tmp:
         for rel, data in (("com/spiderman/mod/Broken.class", bro_bytes),

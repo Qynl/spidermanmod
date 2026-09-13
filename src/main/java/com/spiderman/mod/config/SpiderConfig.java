@@ -11,11 +11,8 @@ import java.nio.file.Path;
 import com.spiderman.mod.SpiderManMod;
 
 /**
- * Server-side JSON config ({@code config/spiderman.json}). All gameplay tuning
- * lives here so server owners can rebalance without rebuilding.
- *
- * Bughunt: thresholds now forced to be strictly increasing to prevent
- * progression deadlocks; masteryMult clamped to prevent zero progression.
+ * OVERHAULED CONFIG - More options for the ultimate Spider-Man experience.
+ * All gameplay tuning lives here.
  */
 public final class SpiderConfig {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
@@ -26,62 +23,88 @@ public final class SpiderConfig {
     public double biteChance = 1.0;
     public boolean spiderDiesAfterBite = true;
 
-    // Ranges (blocks) — increased for better web-slinging feel
-    public double webRange = 32.0;
-    public double swingRange = 80.0;
-    public double zipRange = 50.0;
+    // Ranges — increased for better web-slinging
+    public double webRange = 38.0;
+    public double swingRange = 90.0;
+    public double zipRange = 60.0;
+    public double pullRange = 45.0;
+    public double trapRange = 35.0;
 
-    // Cooldowns (ticks)
-    public int shotCooldown = 10;
-    public int swingCooldown = 4;
-    public int zipCooldown = 40;
-    public int pullCooldown = 60;
-    public int trapCooldown = 30;
-    public int lineCooldown = 100;
-    public int burstCooldown = 120;
-    public int impactCooldown = 80;
-    public int platformCooldown = 200;
-    public int doubleCooldown = 60;
+    // Cooldowns (ticks) - reduced for more fun
+    public int shotCooldown = 8;
+    public int swingCooldown = 3;
+    public int zipCooldown = 30;
+    public int pullCooldown = 45;
+    public int trapCooldown = 25;
+    public int lineCooldown = 80;
+    public int burstCooldown = 100;
+    public int impactCooldown = 60;
+    public int platformCooldown = 150;
+    public int doubleCooldown = 40;
 
-    // Damage
-    public double shotDamage = 4.0;
-    public double impactDamage = 10.0;
-    public double burstDamage = 8.0;
-    public double burstRadius = 5.0;
+    // Damage - increased for more impact
+    public double shotDamage = 5.0;
+    public double impactDamage = 14.0;
+    public double burstDamage = 10.0;
+    public double burstRadius = 6.5;
+    public double trapDamage = 3.0;
+    public double pullDamage = 4.0;
 
-    // Combos
-    public int comboWindow = 80;
-    public double comboBonus = 0.25;
-    public int comboCap = 4;
+    // Combos - more rewarding
+    public int comboWindow = 100;
+    public double comboBonus = 0.3;
+    public int comboCap = 6;
 
-    // Physical boosts
-    public double jumpMult = 1.35;
-    public double speedMult = 1.15;
-    public double strengthMult = 1.5;
-    public double fallMult = 0.1;
+    // Physical boosts - more superhuman
+    public double jumpMult = 1.5;
+    public double speedMult = 1.25;
+    public double strengthMult = 1.8;
+    public double fallMult = 0.05;
     public boolean stepHeight = true;
+    public double wallRunSpeed = 1.15;
+    public double swingBoost = 1.3;
+    public double zipBoost = 1.4;
 
-    // Spider-sense
-    public double senseRadiusBase = 10.0;
-    public double senseRadiusPerStage = 4.0;
+    // Spider-sense - more immersive
+    public double senseRadiusBase = 12.0;
+    public double senseRadiusPerStage = 5.0;
+    public boolean senseSlowMo = true;
+    public double senseSlowMoChance = 0.25;
+    public int senseDuration = 60;
 
     // Web cleanup
-    public int webLiveTicks = 100;
-    public int maxTrapWebs = 24;
+    public int webLiveTicks = 150;
+    public int maxTrapWebs = 32;
+    public boolean websAreSolid = true;
+    public boolean spidersIgnoreWebs = true;
 
-    // Progression — now with time-based defaults that feel natural
-    // 100 → 1-2 min, 300 → 5 min, 700 → 12 min, 1400 → 23 min with passive + active
-    public int[] stageThresholds = {100, 300, 700, 1400};
-    public double masteryMult = 1.0;
+    // Progression — faster and more rewarding
+    public int[] stageThresholds = {80, 250, 600, 1200};
+    public double masteryMult = 1.2;
     public boolean transformEffects = true;
+    public int passiveMasteryPerSecond = 2;
+    public int movementBonusMastery = 2;
+    public int styleBonusMastery = 3;
 
-    // Passive progression tuning
-    public int passiveMasteryPerSecond = 1;
-    public int movementBonusMastery = 1;
+    // Movement - new options
+    public boolean enableWallRun = true;
+    public boolean enableWallJumpChain = true;
+    public boolean enableDive = true;
+    public boolean enableSlingshot = true;
+    public boolean enableAirTricks = true;
+    public double diveSpeed = 2.5;
+    public double wallJumpBoost = 1.2;
 
-    // Experimental powers (opt-in)
-    public boolean experimentalDoubleJump = false;
+    // Visuals
+    public boolean enableScreenEffects = true;
+    public boolean enableParticles = true;
+    public boolean enableWebGlow = true;
+    public boolean comicHud = true;
+
+    // Experimental
+    public boolean experimentalDoubleJump = true;
     public boolean experimentalVenomBlast = false;
+    public boolean experimentalWebWings = false;
 
     private SpiderConfig() {
     }
@@ -105,71 +128,68 @@ public final class SpiderConfig {
         } catch (Exception e) {
             SpiderManMod.LOGGER.warn("[spiderman] failed to load config, using defaults", e);
         }
-        // Always sanitize: a hand-edited file may hold nulls, negatives, NaN
-        // or infinities, any of which can crash the server on next use.
         instance.sanitize();
     }
 
-    /**
-     * Clamps every tunable into a crash-safe range. Runs on every load,
-     * including the built-in defaults.
-     */
     private void sanitize() {
         spiderWeight = atLeast(spiderWeight, 0, 4);
-        biteChance = Double.isFinite(biteChance)
-                ? Math.min(1.0, Math.max(0.0, biteChance)) : 1.0;
-        webRange = nonNegative(webRange, 24.0);
-        swingRange = nonNegative(swingRange, 40.0);
-        zipRange = nonNegative(zipRange, 32.0);
-        shotCooldown = atLeast(shotCooldown, 0, 10);
-        swingCooldown = atLeast(swingCooldown, 0, 4);
-        zipCooldown = atLeast(zipCooldown, 0, 40);
-        pullCooldown = atLeast(pullCooldown, 0, 60);
-        trapCooldown = atLeast(trapCooldown, 0, 30);
-        lineCooldown = atLeast(lineCooldown, 0, 100);
-        burstCooldown = atLeast(burstCooldown, 0, 120);
-        impactCooldown = atLeast(impactCooldown, 0, 80);
-        platformCooldown = atLeast(platformCooldown, 0, 200);
-        doubleCooldown = atLeast(doubleCooldown, 0, 60);
-        shotDamage = nonNegative(shotDamage, 4.0);
-        impactDamage = nonNegative(impactDamage, 10.0);
-        burstDamage = nonNegative(burstDamage, 8.0);
-        burstRadius = nonNegative(burstRadius, 5.0);
-        comboWindow = atLeast(comboWindow, 0, 80);
-        comboBonus = nonNegative(comboBonus, 0.25);
-        comboCap = atLeast(comboCap, 0, 4);
-        jumpMult = nonNegative(jumpMult, 1.35);
-        speedMult = nonNegative(speedMult, 1.15);
-        strengthMult = nonNegative(strengthMult, 1.5);
-        fallMult = nonNegative(fallMult, 0.1);
-        senseRadiusBase = nonNegative(senseRadiusBase, 10.0);
-        senseRadiusPerStage = nonNegative(senseRadiusPerStage, 4.0);
-        webLiveTicks = atLeast(webLiveTicks, 0, 100);
-        // Must stay >= 1: the trap-web eviction loop removes index 0 while
-        // capped, which would throw on an empty list if this were 0.
-        maxTrapWebs = atLeast(maxTrapWebs, 1, 24);
+        biteChance = Double.isFinite(biteChance) ? Math.min(1.0, Math.max(0.0, biteChance)) : 1.0;
+        webRange = nonNegative(webRange, 38.0);
+        swingRange = nonNegative(swingRange, 90.0);
+        zipRange = nonNegative(zipRange, 60.0);
+        pullRange = nonNegative(pullRange, 45.0);
+        trapRange = nonNegative(trapRange, 35.0);
+        shotCooldown = atLeast(shotCooldown, 0, 8);
+        swingCooldown = atLeast(swingCooldown, 0, 3);
+        zipCooldown = atLeast(zipCooldown, 0, 30);
+        pullCooldown = atLeast(pullCooldown, 0, 45);
+        trapCooldown = atLeast(trapCooldown, 0, 25);
+        lineCooldown = atLeast(lineCooldown, 0, 80);
+        burstCooldown = atLeast(burstCooldown, 0, 100);
+        impactCooldown = atLeast(impactCooldown, 0, 60);
+        platformCooldown = atLeast(platformCooldown, 0, 150);
+        doubleCooldown = atLeast(doubleCooldown, 0, 40);
+        shotDamage = nonNegative(shotDamage, 5.0);
+        impactDamage = nonNegative(impactDamage, 14.0);
+        burstDamage = nonNegative(burstDamage, 10.0);
+        burstRadius = nonNegative(burstRadius, 6.5);
+        trapDamage = nonNegative(trapDamage, 3.0);
+        pullDamage = nonNegative(pullDamage, 4.0);
+        comboWindow = atLeast(comboWindow, 0, 100);
+        comboBonus = nonNegative(comboBonus, 0.3);
+        comboCap = atLeast(comboCap, 0, 6);
+        jumpMult = nonNegative(jumpMult, 1.5);
+        speedMult = nonNegative(speedMult, 1.25);
+        strengthMult = nonNegative(strengthMult, 1.8);
+        fallMult = nonNegative(fallMult, 0.05);
+        wallRunSpeed = nonNegative(wallRunSpeed, 1.15);
+        swingBoost = nonNegative(swingBoost, 1.3);
+        zipBoost = nonNegative(zipBoost, 1.4);
+        senseRadiusBase = nonNegative(senseRadiusBase, 12.0);
+        senseRadiusPerStage = nonNegative(senseRadiusPerStage, 5.0);
+        senseSlowMoChance = Double.isFinite(senseSlowMoChance) ? Math.min(1.0, Math.max(0.0, senseSlowMoChance)) : 0.25;
+        senseDuration = atLeast(senseDuration, 0, 60);
+        webLiveTicks = atLeast(webLiveTicks, 0, 150);
+        maxTrapWebs = atLeast(maxTrapWebs, 1, 32);
         if (stageThresholds == null || stageThresholds.length != 4) {
-            stageThresholds = new int[]{100, 300, 700, 1400};
+            stageThresholds = new int[]{80, 250, 600, 1200};
         } else {
             for (int i = 0; i < stageThresholds.length; i++) {
-                if (stageThresholds[i] < 1) {
-                    stageThresholds[i] = 1;
-                }
+                if (stageThresholds[i] < 1) stageThresholds[i] = 1;
             }
-            // Bughunt: ensure strictly increasing thresholds to prevent deadlock
-            // where you can never reach next stage because threshold <= previous
             for (int i = 1; i < stageThresholds.length; i++) {
                 if (stageThresholds[i] <= stageThresholds[i - 1]) {
                     stageThresholds[i] = stageThresholds[i - 1] + 50;
                 }
             }
         }
-        masteryMult = nonNegative(masteryMult, 1.0);
-        // Prevent zero mult from breaking time progression — at least 0.1
+        masteryMult = nonNegative(masteryMult, 1.2);
         if (masteryMult < 0.1) masteryMult = 0.1;
-
-        passiveMasteryPerSecond = atLeast(passiveMasteryPerSecond, 0, 1);
-        movementBonusMastery = atLeast(movementBonusMastery, 0, 1);
+        passiveMasteryPerSecond = atLeast(passiveMasteryPerSecond, 0, 2);
+        movementBonusMastery = atLeast(movementBonusMastery, 0, 2);
+        styleBonusMastery = atLeast(styleBonusMastery, 0, 3);
+        diveSpeed = nonNegative(diveSpeed, 2.5);
+        wallJumpBoost = nonNegative(wallJumpBoost, 1.2);
     }
 
     private static int atLeast(int value, int min, int dflt) {

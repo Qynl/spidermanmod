@@ -1,23 +1,39 @@
 {
-  "category.spiderman": "Spider-Man",
-  "key.spiderman.wheel": "Ability Wheel (Hold)",
-  "key.spiderman.use_ability": "Use Selected Ability",
-  "key.spiderman.quick_shot": "Quick Web Shot",
-  "key.spiderman.swing": "Web Swing",
-  "key.spiderman.zip": "Web Zip",
+  "category.spiderman": "§cSpider-Man §7- Ultimate",
 
-  "entity.spiderman.radioactive_spider": "Radioactive Spider",
-  "entity.spiderman.web_shot": "Web Shot",
-  "item.spiderman.radioactive_spider_spawn_egg": "Radioactive Spider Spawn Egg",
+  "key.spiderman.wheel": "§eAbility Wheel §7(Hold)",
+  "key.spiderman.use_ability": "§aUse Selected Ability",
+  "key.spiderman.quick_shot": "§fQuick Web Shot",
+  "key.spiderman.swing": "§bWeb Swing",
+  "key.spiderman.zip": "§9Web Zip",
 
-  "advancement.spiderman.transformation.title": "With Great Power...",
-  "advancement.spiderman.transformation.description": "Get bitten by a radioactive spider",
-  "advancement.spiderman.stage_1.title": "Superhuman",
-  "advancement.spiderman.stage_1.description": "Reach spider power stage 1: stronger, faster and harder to hurt",
-  "advancement.spiderman.stage_2.title": "Web Slinger",
-  "advancement.spiderman.stage_2.description": "Reach spider power stage 2: fire your first webs",
-  "advancement.spiderman.stage_3.title": "Sky Dancer",
-  "advancement.spiderman.stage_3.description": "Reach spider power stage 3: swing and zip through the sky",
-  "advancement.spiderman.stage_4.title": "Spider Master",
-  "advancement.spiderman.stage_4.description": "Reach spider power stage 4: master every web ability"
+  "entity.spiderman.radioactive_spider": "§c§lRadioactive Spider §7- Grants Powers!",
+  "entity.spiderman.web_shot": "§fWeb Shot",
+  "item.spiderman.radioactive_spider_spawn_egg": "§cRadioactive Spider §7Spawn Egg",
+
+  "advancement.spiderman.transformation.title": "§c§lWith Great Power...",
+  "advancement.spiderman.transformation.description": "§7Get bitten by a §cRadioactive Spider§7. Your life will never be the same. §8[Tip: Powers grow with time and style!]",
+
+  "advancement.spiderman.stage_1.title": "§aWall Crawler",
+  "advancement.spiderman.stage_1.description": "§7Stage 1: §fSuperhuman strength, speed, wall-crawling, wall-running, and spider-sense! §8[Climb walls, wall-jump chain for style]",
+
+  "advancement.spiderman.stage_2.title": "§bWeb Slinger",
+  "advancement.spiderman.stage_2.description": "§7Stage 2: §fWeb Shot, Swing, Zip, Pull, Trap! §8[Hold G for wheel, R to use, look up while swinging to go FAST]",
+
+  "advancement.spiderman.stage_3.title": "§9Sky Dancer",
+  "advancement.spiderman.stage_3.description": "§7Stage 3: §fLine, Burst, Impact, Platform + ultimate swinging, diving, slingshot! §8[Sprint while swinging = boost, Sneak in air = dive]",
+
+  "advancement.spiderman.stage_4.title": "§6§lSpider Master",
+  "advancement.spiderman.stage_4.description": "§7Stage 4: §6§lULTIMATE §f- Max powers, style bonuses, slow-mo sense, all abilities maxed! §8[You are truly Amazing! Spectacular! Ultimate!]",
+
+  "message.spiderman.style.rank.nice": "§eNice!",
+  "message.spiderman.style.rank.great": "§a§lGREAT!",
+  "message.spiderman.style.rank.amazing": "§5§lAMAZING!",
+  "message.spiderman.style.rank.spectacular": "§c§lSPECTACULAR!",
+  "message.spiderman.style.rank.ultimate": "§6§lULTIMATE!",
+
+  "message.spiderman.hud.swing": "§aSwinging! §7Up=fast §8| §7Down=arc §8| §7Sprint=boost §8| §7Jump=launch §8| §7Sneak=dive",
+  "message.spiderman.hud.wallrun": "§bWall Running! §7Chain wall jumps for style!",
+  "message.spiderman.hud.dive": "§cDiving! §7Slam for style bonus!",
+  "message.spiderman.hud.slingshot": "§eSlingshot Charging! §7Release jump for launch!"
 }

@@ -16,12 +16,10 @@ import com.spiderman.mod.state.PlayerPowers;
 import com.spiderman.mod.state.SpiderState;
 
 /**
- * Per-tick server driver: persistence, cleanup and per-player power ticks.
- * Now includes:
- * - time-based progression
- * - pull hold logic (as long as you hold it)
- * - web standing (cobwebs become solid for Spider-Man)
- * - spider protection (spiders don't attack when on webs)
+ * ULTIMATE SERVER TICK - Handles all Spider-Man systems with style.
+ * - Time + movement + style progression
+ * - Advanced pull, web standing, spider protection
+ * - Air time, tricks, combos
  */
 public final class ServerTickHandler {
     private static int tickCount;
@@ -74,21 +72,61 @@ public final class ServerTickHandler {
         powers.timeWithPowers++;
         powers.lastPassiveTick = player.age;
 
-        // --- Time-based progression ---
+        // ULTIMATE PROGRESSION - Time + movement + style + air
         if (player.age % 20 == 0) {
             MasteryLogic.addMastery(player, 1);
             double horiz = player.getVelocity().horizontalLength();
             if (horiz > 0.1) MasteryLogic.addMastery(player, 1);
-            if (player.isSprinting() && horiz > 0.2) MasteryLogic.addMastery(player, 1);
-            if (!player.isOnGround() && player.getVelocity().y < -0.1) MasteryLogic.addMastery(player, 1);
-            if (player.getY() > 100) MasteryLogic.addMastery(player, 1);
+            if (player.isSprinting() && horiz > 0.2) {
+                MasteryLogic.addMastery(player, 2);
+                powers.stylePoints += 1;
+            }
+            if (!player.isOnGround() && player.getVelocity().y < -0.1) {
+                MasteryLogic.addMastery(player, 1);
+            }
+            if (player.getY() > 100) {
+                MasteryLogic.addMastery(player, 2);
+                powers.stylePoints += 1;
+            }
+            if (powers.swinging) {
+                MasteryLogic.addMastery(player, 2);
+                if (powers.consecutiveSwings >= 3) {
+                    MasteryLogic.addMastery(player, 2);
+                }
+            }
+            if (powers.climbing) {
+                MasteryLogic.addMastery(player, 1);
+            }
         }
-        if (powers.climbing && player.age % 10 == 0) MasteryLogic.addMastery(player, 1);
+        
+        if (powers.climbing && player.age % 10 == 0) {
+            MasteryLogic.addMastery(player, 1);
+            if (powers.wallRunTicks > 20) {
+                powers.stylePoints += 1;
+            }
+        }
+        
         if (player.isSneaking() && player.getVelocity().horizontalLength() < 0.05 && player.isOnGround()) {
             powers.focusTicks++;
-            if (powers.focusTicks % 40 == 0) MasteryLogic.addMastery(player, 1);
+            if (powers.focusTicks % 40 == 0) {
+                MasteryLogic.addMastery(player, 2);
+                powers.stylePoints += 1;
+            }
         } else {
             powers.focusTicks = 0;
+        }
+        
+        // Style decay if not moving stylishly
+        if (player.age % 200 == 0 && !powers.swinging && !powers.climbing && player.getVelocity().length() < 0.1) {
+            if (powers.stylePoints > 0) powers.stylePoints -= 1;
+        }
+        
+        // Max combo tracking
+        if (powers.combo > powers.maxCombo) {
+            powers.maxCombo = powers.combo;
+            if (powers.maxCombo >= 5) {
+                powers.stylePoints += powers.maxCombo * 2;
+            }
         }
 
         ComboTracker.tick(player, powers);
@@ -98,11 +136,28 @@ public final class ServerTickHandler {
         ClimbLogic.tick(player, powers);
         tickWebStanding(player, powers);
         tickSpiderProtection(player, powers);
+        tickSlingshot(player, powers);
 
         if (player.isOnGround()) {
             powers.doubleJumpUsed = false;
             if (!player.isSneaking()) powers.focusTicks = 0;
+            
+            // Landing style
+            if (powers.wasInAir && powers.airTime > 40) {
+                int airBonus = powers.airTime / 20;
+                powers.stylePoints += airBonus;
+                if (powers.airTime > 80) {
+                    MasteryLogic.addMastery(player, airBonus);
+                }
+            }
+            powers.airTime = 0;
+            powers.wasInAir = false;
+            powers.lastGroundedTime = player.age;
+        } else {
+            powers.wasInAir = true;
+            powers.airTime++;
         }
+        
         if (player.age % 10 == 0) SenseLogic.tick(player, powers);
         if (powers.swinging && player.age % 20 == 0) MasteryLogic.addMastery(player, 2);
         if (player.age % 40 == 0) TransformLogic.tryStageUp(player);
@@ -112,14 +167,27 @@ public final class ServerTickHandler {
         if (powers.stage > 4) powers.stage = 4;
         if (powers.mastery < 0) powers.mastery = 0;
         if (powers.mastery > 100000) powers.mastery = 100000;
+        if (powers.stylePoints < 0) powers.stylePoints = 0;
+        if (powers.stylePoints > 10000) powers.stylePoints = 10000;
 
-        if (!powers.swinging && powers.zipTicks == 0 && powers.pullTicks == 0 && !powers.climbing) {
+        if (!powers.swinging && powers.zipTicks == 0 && powers.pullTicks == 0 && !powers.climbing && !powers.diving) {
             try {
                 if (player.hasNoGravity()) player.setNoGravity(false);
             } catch (Exception ignored) {}
         }
         if (player.getAbilities().flying && powers.climbing) {
             ClimbLogic.cancel(player, powers);
+        }
+    }
+
+    private static void tickSlingshot(ServerPlayerEntity player, PlayerPowers powers) {
+        if (powers.slingshotCharging) {
+            powers.slingshotCharge++;
+            if (powers.slingshotCharge > 60) powers.slingshotCharge = 60;
+            
+            if (powers.slingshotCharge % 10 == 0) {
+                MasteryLogic.addMastery(player, 1);
+            }
         }
     }
 
@@ -141,27 +209,25 @@ public final class ServerTickHandler {
             return;
         }
 
-        // If pulling player to target (grapple)
         if (powers.pullingPlayer) {
             Vec3d dir = toTarget.normalize();
-            double speed = Math.min(1.8, 0.5 + dist * 0.08);
+            double speed = Math.min(2.2, 0.6 + dist * 0.1);
+            if (powers.stylePoints > 200) speed *= 1.15;
             if (!Double.isFinite(dir.x)) dir = new Vec3d(0, 0, 1);
             Vec3d vel = dir.multiply(speed);
             player.fallDistance = 0;
             SwingPhysics.push(player, vel);
-            // If close, stop
             if (dist < 2.0) {
                 powers.stopPull();
+                powers.stylePoints += 5;
             }
         } else {
-            // Pulling target entity to player — find entity by UUID
             LivingEntity target = null;
             try {
                 if (powers.pullTargetId != null) {
                     ServerWorld world = player.getServerWorld();
-                    // Search nearby for entity with matching UUID
-                    Box box = new Box(playerPos.x - 24, playerPos.y - 24, playerPos.z - 24,
-                            playerPos.x + 24, playerPos.y + 24, playerPos.z + 24);
+                    Box box = new Box(playerPos.x - 30, playerPos.y - 30, playerPos.z - 30,
+                            playerPos.x + 30, playerPos.y + 30, playerPos.z + 30);
                     List<LivingEntity> nearby = world.getEntitiesByClass(LivingEntity.class, box,
                             e -> e != null && e.isAlive() && e.getUuid().equals(powers.pullTargetId));
                     if (!nearby.isEmpty()) target = nearby.get(0);
@@ -169,7 +235,6 @@ public final class ServerTickHandler {
             } catch (Exception ignored) {}
 
             if (target == null || !target.isAlive()) {
-                // No entity, just pull to point? Stop
                 powers.stopPull();
                 return;
             }
@@ -178,14 +243,18 @@ public final class ServerTickHandler {
             double d = fromTargetToPlayer.length();
             if (d < 2.0) {
                 powers.stopPull();
+                // Hit!
+                try {
+                    target.damage(player.getWorld().getDamageSources().playerAttack(player), 4.0f);
+                } catch (Exception ignored) {}
+                powers.stylePoints += 8;
                 return;
             }
             Vec3d dir = fromTargetToPlayer.normalize();
             if (!Double.isFinite(dir.x)) dir = new Vec3d(0, 0, 1);
-            double speed = Math.min(1.5, 0.4 + d * 0.07);
+            double speed = Math.min(1.8, 0.5 + d * 0.09);
             Vec3d yank = dir.multiply(speed);
-            // Keep some upward to not drag on ground
-            yank = new Vec3d(yank.x, Math.max(0.2, yank.y + 0.2), yank.z);
+            yank = new Vec3d(yank.x, Math.max(0.3, yank.y + 0.3), yank.z);
             target.setVelocity(yank.x, yank.y, yank.z);
             target.velocityModified = true;
         }
@@ -193,7 +262,6 @@ public final class ServerTickHandler {
 
     private static void tickWebStanding(ServerPlayerEntity player, PlayerPowers powers) {
         try {
-            // Check if player is in or on cobweb
             BlockPos feet = player.getBlockPos();
             BlockPos below = feet.down();
             BlockPos at = BlockPos.ofFloored(player.getX(), player.getY(), player.getZ());
@@ -205,39 +273,40 @@ public final class ServerTickHandler {
                 if (player.getWorld().getBlockState(feet).isOf(Blocks.COBWEB)) onWeb = true;
                 if (player.getWorld().getBlockState(at).isOf(Blocks.COBWEB)) onWeb = true;
                 if (player.getWorld().getBlockState(atEye).isOf(Blocks.COBWEB)) onWeb = true;
+                // Also check 2 blocks below for platform
+                if (player.getWorld().getBlockState(below.down()).isOf(Blocks.COBWEB)) onWeb = true;
             } catch (Exception ignored) {}
 
             if (onWeb) {
                 player.fallDistance = 0;
-                // Cancel cobweb slowing for Spider-Man — allow movement and standing
                 Vec3d vel = player.getVelocity();
                 if (vel != null) {
-                    // If sneaking, allow slow descent through web, else stand
                     if (player.isSneaking()) {
-                        // Slow fall through web when sneaking
                         if (vel.y < -0.1) {
-                            SwingPhysics.push(player, new Vec3d(vel.x * 0.8, -0.1, vel.z * 0.8));
+                            SwingPhysics.push(player, new Vec3d(vel.x * 0.75, -0.12, vel.z * 0.75));
                         }
                     } else {
-                        // Stand on web: cancel downward velocity, allow horizontal movement
                         if (vel.y < 0) {
-                            SwingPhysics.push(player, new Vec3d(vel.x * 0.9, 0.0, vel.z * 0.9));
+                            // Bouncy webs!
+                            double bounce = 0.0;
+                            if (vel.y < -0.5) bounce = 0.15;
+                            SwingPhysics.push(player, new Vec3d(vel.x * 0.92, bounce, vel.z * 0.92));
                         }
-                        // Make player effectively on ground when on web for jump purposes
-                        // We don't set onGround directly (it's calculated), but we prevent falling
+                        // Allow jumping from webs
+                        if (player.isOnGround() || onWeb) {
+                            powers.doubleJumpUsed = false;
+                        }
                     }
                 }
-                // Give slight resistance to being knocked off web
                 if (player.age % 20 == 0) {
                     MasteryLogic.addMastery(player, 1);
+                    powers.stylePoints += 1;
                 }
             }
         } catch (Exception ignored) {}
     }
 
     private static void tickSpiderProtection(ServerPlayerEntity player, PlayerPowers powers) {
-        // Spiders don't attack Spider-Man when on webs or at higher stages
-        // At stage 0, only when on web; at stage 1+, always reduced targeting
         if (player.age % 20 != 0) return;
         try {
             boolean onWeb = false;
@@ -251,16 +320,21 @@ public final class ServerTickHandler {
             if (!shouldProtect) return;
 
             ServerWorld world = player.getServerWorld();
-            Box box = new Box(player.getX() - 16, player.getY() - 8, player.getZ() - 16,
-                    player.getX() + 16, player.getY() + 8, player.getZ() + 16);
+            Box box = new Box(player.getX() - 20, player.getY() - 10, player.getZ() - 20,
+                    player.getX() + 20, player.getY() + 10, player.getZ() + 20);
             List<HostileEntity> hostiles = world.getEntitiesByClass(HostileEntity.class, box,
                     e -> e != null && e.isAlive() && e.getTarget() == player);
             for (HostileEntity hostile : hostiles) {
-                // If spider and player is Spider-Man on web, clear target
                 String type = hostile.getType().toString().toLowerCase();
-                if (type.contains("spider") || onWeb) {
+                boolean isSpider = type.contains("spider") || type.contains("cave");
+                if (isSpider || onWeb || powers.stage >= 3) {
                     try {
                         hostile.setTarget(null);
+                        hostile.setAttacking(false);
+                        // Make spider friendly to Spider-Man at high stage
+                        if (powers.stage >= 4 && isSpider) {
+                            // Could add taming logic here
+                        }
                     } catch (Exception ignored) {}
                 }
             }

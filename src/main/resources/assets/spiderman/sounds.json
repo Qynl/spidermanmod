@@ -8,7 +8,19 @@
   "web_zip": {
     "sounds": [{ "name": "spiderman:web_zip", "stream": false }]
   },
+  "web_trap": {
+    "sounds": [{ "name": "spiderman:web_splat", "stream": false }]
+  },
+  "web_burst": {
+    "sounds": [{ "name": "spiderman:web_splat", "stream": false }]
+  },
+  "web_impact": {
+    "sounds": [{ "name": "spiderman:web_shot", "stream": false }]
+  },
   "sense_tingle": {
+    "sounds": [{ "name": "spiderman:sense_tingle", "stream": false }]
+  },
+  "sense_danger": {
     "sounds": [{ "name": "spiderman:sense_tingle", "stream": false }]
   },
   "stage_up": {
@@ -19,5 +31,32 @@
   },
   "wheel_tick": {
     "sounds": [{ "name": "spiderman:wheel_tick", "stream": false }]
+  },
+  "wheel_open": {
+    "sounds": [{ "name": "spiderman:wheel_tick", "stream": false }]
+  },
+  "wall_run": {
+    "sounds": [{ "name": "spiderman:web_zip", "stream": false }]
+  },
+  "wall_jump": {
+    "sounds": [{ "name": "spiderman:web_zip", "stream": false }]
+  },
+  "swing_loop": {
+    "sounds": [{ "name": "spiderman:web_zip", "stream": false }]
+  },
+  "swing_fling": {
+    "sounds": [{ "name": "spiderman:web_zip", "stream": false }]
+  },
+  "dive": {
+    "sounds": [{ "name": "spiderman:web_zip", "stream": false }]
+  },
+  "slingshot": {
+    "sounds": [{ "name": "spiderman:web_zip", "stream": false }]
+  },
+  "combo": {
+    "sounds": [{ "name": "spiderman:stage_up", "stream": false }]
+  },
+  "style_up": {
+    "sounds": [{ "name": "spiderman:stage_up", "stream": false }]
   }
 }

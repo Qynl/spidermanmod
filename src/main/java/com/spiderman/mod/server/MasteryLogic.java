@@ -8,9 +8,10 @@ import com.spiderman.mod.state.PlayerPowers;
 import com.spiderman.mod.state.SpiderState;
 
 /**
- * Mastery XP feeding the staged power progression.
- * Now includes time-based progression: you gain mastery just by living with powers,
- * plus bonuses for active use. This makes stages progress naturally over time.
+ * ULTIMATE MASTERY - Fast, rewarding, style-based progression.
+ * - Time + movement + combat + style
+ * - Early game bonus
+ * - Style points integration
  */
 public final class MasteryLogic {
     private MasteryLogic() {
@@ -25,9 +26,10 @@ public final class MasteryLogic {
             return;
         }
         if (powers.stage >= 4) {
-            // At max stage, still track mastery for display but cap it
             if (powers.mastery < 10000) {
-                powers.mastery += Math.max(1, (int) (amount * SpiderConfig.get().masteryMult * 0.2));
+                int gain = Math.max(1, (int) (amount * SpiderConfig.get().masteryMult * 0.3));
+                gain += powers.stylePoints / 100;
+                powers.mastery += gain;
                 if (powers.mastery > 10000) powers.mastery = 10000;
                 ServerNetworking.sendPowers(player);
             }
@@ -36,39 +38,56 @@ public final class MasteryLogic {
         if (amount <= 0) amount = 1;
 
         double mult = SpiderConfig.get().masteryMult;
-        if (!Double.isFinite(mult) || mult < 0.0) mult = 1.0;
+        if (!Double.isFinite(mult) || mult < 0.0) mult = 1.2;
         int gain = Math.max(1, (int) (amount * mult));
 
-        // Early stages get bonus to help new players feel progression
+        // Early stages bonus
         if (powers.stage == 0) {
-            gain = (int) (gain * 1.5);
-            if (gain < 1) gain = 1;
+            gain = (int) (gain * 1.8);
+            if (gain < 2) gain = 2;
+        } else if (powers.stage == 1) {
+            gain = (int) (gain * 1.4);
         }
 
-        // Prevent overflow
+        // Style bonus
+        gain += powers.stylePoints / 200;
+        
+        // Combo bonus
+        if (powers.combo >= 3) {
+            gain += powers.combo;
+        }
+        
+        // Air time bonus
+        if (powers.airTime > 40) {
+            gain += powers.airTime / 40;
+        }
+
         if (powers.mastery > 100000) {
             powers.mastery = 100000;
         }
 
         powers.mastery += gain;
 
-        // Try stage up — this also saves and syncs if it succeeds
         if (TransformLogic.tryStageUp(player) < 0) {
-            // No stage up, just sync mastery
             ServerNetworking.sendPowers(player);
         }
     }
 
-    /**
-     * Time-based mastery: called every second for passive growth.
-     * This is the "progresses with the time" requirement.
-     */
     public static void addTimeMastery(ServerPlayerEntity player) {
         PlayerPowers powers = SpiderState.get(player.getUuid());
         if (!powers.hasPowers || powers.stage >= 4) return;
-        // Base time mastery + bonus based on stage (higher stages need more time)
-        int base = 1;
-        if (powers.stage == 0) base = 2; // Faster early game
+        int base = 2;
+        if (powers.stage == 0) base = 3;
+        base += powers.stylePoints / 150;
         addMastery(player, base);
+    }
+    
+    public static void addStyleMastery(ServerPlayerEntity player, int stylePoints) {
+        PlayerPowers powers = SpiderState.get(player.getUuid());
+        if (!powers.hasPowers) return;
+        int masteryGain = stylePoints / 5;
+        if (masteryGain > 0) {
+            addMastery(player, masteryGain);
+        }
     }
 }

@@ -3,7 +3,10 @@ package com.spiderman.mod.entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.ai.goal.MeleeAttackGoal;
 import net.minecraft.entity.mob.PathAwareEntity;
+import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.world.ServerWorld;
+import net.minecraft.sound.SoundEvents;
 
 import com.spiderman.mod.SpiderManMod;
 import com.spiderman.mod.config.SpiderConfig;
@@ -11,22 +14,18 @@ import com.spiderman.mod.server.TransformLogic;
 import com.spiderman.mod.state.SpiderState;
 
 /**
- * Melee attack that can infect the player with spider powers on a damaging bite.
- * Runs server-side only.
- *
- * Bughunt improvements:
- * - Checks if player already has powers before attempting bite (no wasted bites)
- * - Null checks for world, player, config
- * - Cooldown to prevent spam biting
- * - Logs bite attempts for debugging
- * - Handles spider death safely (checks if mob is still alive)
+ * ULTIMATE BITE GOAL - Epic, rare, unforgettable.
+ * - Radioactive spider seeks player with purpose
+ * - Epic bite effects
+ * - Style and mastery
  */
 public class BiteGoal extends MeleeAttackGoal {
     private final PathAwareEntity mob;
     private int biteCooldown = 0;
+    private int stalkTicks = 0;
 
     public BiteGoal(PathAwareEntity mob) {
-        super(mob, 1.25, true); // Faster than vanilla spider chase (1.0 -> 1.25)
+        super(mob, 1.4, true); // Even faster - radioactive urgency
         this.mob = mob;
     }
 
@@ -36,7 +35,31 @@ public class BiteGoal extends MeleeAttackGoal {
             biteCooldown--;
             return false;
         }
+        // Only target players without powers
+        if (mob.getTarget() instanceof ServerPlayerEntity player) {
+            try {
+                if (SpiderState.get(player.getUuid()).hasPowers) {
+                    return false;
+                }
+            } catch (Exception ignored) {}
+        }
         return super.canStart();
+    }
+
+    @Override
+    public void tick() {
+        super.tick();
+        // Stalking behavior - epic
+        if (mob.getTarget() != null) {
+            stalkTicks++;
+            if (stalkTicks % 20 == 0 && mob.getWorld() instanceof ServerWorld sw) {
+                try {
+                    sw.spawnParticles(ParticleTypes.ELECTRIC_SPARK, mob.getX(), mob.getY() + 0.5, mob.getZ(), 2, 0.2, 0.2, 0.2, 0.02);
+                } catch (Exception ignored) {}
+            }
+        } else {
+            stalkTicks = 0;
+        }
     }
 
     @Override
@@ -52,16 +75,12 @@ public class BiteGoal extends MeleeAttackGoal {
         if (!player.isAlive() || player.isSpectator()) {
             return;
         }
-        // Bughunt: don't bite if player already has powers — wasteful and confusing
         try {
             if (SpiderState.get(player.getUuid()).hasPowers) {
                 return;
             }
-        } catch (Exception ignored) {
-            // If state lookup fails, still try bite
-        }
+        } catch (Exception ignored) {}
 
-        // Config check
         double chance;
         try {
             chance = SpiderConfig.get().biteChance;
@@ -73,7 +92,6 @@ public class BiteGoal extends MeleeAttackGoal {
             return;
         }
 
-        // Attempt bite
         boolean fresh;
         try {
             fresh = TransformLogic.grantBite(player);
@@ -83,8 +101,22 @@ public class BiteGoal extends MeleeAttackGoal {
         }
 
         if (fresh) {
-            biteCooldown = 100; // Prevent immediate re-bite
-            SpiderManMod.LOGGER.info("[spiderman] radioactive bite succeeded for {}", player.getGameProfile().getName());
+            biteCooldown = 120;
+            SpiderManMod.LOGGER.info("[spiderman] ULTIMATE bite for {}", player.getGameProfile().getName());
+            
+            // Epic bite effects
+            try {
+                if (player.getWorld() instanceof ServerWorld sw) {
+                    sw.spawnParticles(ParticleTypes.EXPLOSION, mob.getX(), mob.getY() + 0.5, mob.getZ(), 1, 0.1, 0.1, 0.1, 0.0);
+                    sw.spawnParticles(ParticleTypes.ITEM_COBWEB, player.getX(), player.getY() + 1, player.getZ(), 30, 0.5, 0.5, 0.5, 0.2);
+                    sw.spawnParticles(ParticleTypes.ELECTRIC_SPARK, player.getX(), player.getY() + 1, player.getZ(), 20, 0.4, 0.4, 0.4, 0.1);
+                    sw.spawnParticles(ParticleTypes.GLOW, player.getX(), player.getY() + 1, player.getZ(), 10, 0.3, 0.3, 0.3, 0.05);
+                }
+                player.playSound(SoundEvents.ENTITY_SPIDER_HURT, 1.0f, 0.4f);
+                player.playSound(SoundEvents.ENTITY_GENERIC_EXPLODE, 0.6f, 1.8f);
+                mob.playSound(SoundEvents.ENTITY_SPIDER_DEATH, 1.0f, 1.5f);
+            } catch (Exception ignored) {}
+            
             boolean diesAfter;
             try {
                 diesAfter = SpiderConfig.get().spiderDiesAfterBite;

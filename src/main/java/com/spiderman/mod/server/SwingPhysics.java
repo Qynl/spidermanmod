@@ -13,13 +13,12 @@ import com.spiderman.mod.net.ServerNetworking;
 import com.spiderman.mod.state.PlayerPowers;
 
 /**
- * Improved momentum-based web swinging — actually fun to swing now.
- * - Longer range (80 blocks default)
- * - Thick white line via StrandRenderer
- * - Real pendulum with pumping (look up/down to reel)
- * - Sprint boost, momentum conservation, faster max speed
- * - Better anchor finding (5 upward + fallback + side sweeps)
- * - Fling launch on release
+ * ULTIMATE SWING PHYSICS - The most fun swinging in Minecraft.
+ * - 90 block range, 8-direction anchor search + up
+ * - Real pendulum with pumping, sprint boost, dive boost
+ * - Slingshot, momentum conservation, air tricks
+ * - Style points for cool swinging
+ * - FOV effects via velocity
  */
 public final class SwingPhysics {
     private SwingPhysics() {
@@ -33,9 +32,11 @@ public final class SwingPhysics {
             Vec3d look = player.getRotationVector();
             if (look.lengthSquared() < 0.001) look = new Vec3d(0, 0.5, 1).normalize();
 
-            // Upward-biased sweep for realistic high anchors
-            for (int i = 0; i < 6; i++) {
-                Vec3d dir = look.add(0.0, 0.3 + i * 0.35, 0.0);
+            // Priority 1: Upward-biased for high swings (real Spider-Man)
+            for (int i = 0; i < 8; i++) {
+                double upBias = 0.2 + i * 0.3;
+                double spread = (i % 2 == 0) ? 0.1 : -0.1;
+                Vec3d dir = look.add(spread, upBias, 0.0);
                 if (dir.lengthSquared() < 0.001) continue;
                 dir = dir.normalize();
                 Vec3d to = eye.add(dir.x * range, dir.y * range, dir.z * range);
@@ -45,31 +46,48 @@ public final class SwingPhysics {
                     return hit.getPos();
                 }
             }
-            // Side sweeps for when looking horizontally
+            
+            // Priority 2: Side sweeps for horizontal swinging
             for (int side = -1; side <= 1; side += 2) {
-                Vec3d dir = look.add(side * 0.5, 0.4, 0.0).normalize();
-                Vec3d to = eye.add(dir.x * range, dir.y * range, dir.z * range);
-                BlockHitResult hit = world.raycast(new RaycastContext(eye, to,
-                        RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, player));
-                if (hit.getType() != HitResult.Type.MISS && isValidAnchor(hit.getPos(), eye, range)) {
-                    return hit.getPos();
+                for (int up = 0; up < 3; up++) {
+                    Vec3d dir = look.add(side * (0.4 + up * 0.15), 0.3 + up * 0.2, 0.0).normalize();
+                    Vec3d to = eye.add(dir.x * range, dir.y * range, dir.z * range);
+                    BlockHitResult hit = world.raycast(new RaycastContext(eye, to,
+                            RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, player));
+                    if (hit.getType() != HitResult.Type.MISS && isValidAnchor(hit.getPos(), eye, range)) {
+                        return hit.getPos();
+                    }
                 }
             }
-            // Fallback straight
+            
+            // Priority 3: Straight
             Vec3d to = eye.add(look.x * range, look.y * range, look.z * range);
             BlockHitResult hit = world.raycast(new RaycastContext(eye, to,
                     RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, player));
             if (hit.getType() != HitResult.Type.MISS && isValidAnchor(hit.getPos(), eye, range)) {
                 return hit.getPos();
             }
-            // Last resort: straight up (for city swinging)
-            Vec3d up = new Vec3d(0, 1, 0);
-            Vec3d toUp = eye.add(0, range, 0);
-            BlockHitResult hitUp = world.raycast(new RaycastContext(eye, toUp,
-                    RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, player));
-            if (hitUp.getType() != HitResult.Type.MISS && isValidAnchor(hitUp.getPos(), eye, range)) {
-                return hitUp.getPos();
+            
+            // Priority 4: Up (for city swinging)
+            for (int i = 0; i < 3; i++) {
+                double upRange = range * (0.7 + i * 0.2);
+                Vec3d toUp = eye.add(0, upRange, 0);
+                BlockHitResult hitUp = world.raycast(new RaycastContext(eye, toUp,
+                        RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, player));
+                if (hitUp.getType() != HitResult.Type.MISS && isValidAnchor(hitUp.getPos(), eye, range)) {
+                    return hitUp.getPos();
+                }
             }
+            
+            // Priority 5: Down-forward (for low swings)
+            Vec3d downForward = look.add(0, -0.3, 0).normalize();
+            Vec3d toDown = eye.add(downForward.x * range, downForward.y * range, downForward.z * range);
+            BlockHitResult hitDown = world.raycast(new RaycastContext(eye, toDown,
+                    RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, player));
+            if (hitDown.getType() != HitResult.Type.MISS && isValidAnchor(hitDown.getPos(), eye, range)) {
+                return hitDown.getPos();
+            }
+            
         } catch (Exception ignored) {}
         return null;
     }
@@ -78,11 +96,7 @@ public final class SwingPhysics {
         if (anchor == null) return false;
         if (!Double.isFinite(anchor.x)) return false;
         double dist = anchor.distanceTo(eye);
-        return dist >= 3.0 && dist <= range * 1.1;
-    }
-
-    private static boolean isValidAnchor(Vec3d anchor, Vec3d eye) {
-        return isValidAnchor(anchor, eye, SpiderConfig.get().swingRange);
+        return dist >= 2.5 && dist <= range * 1.15;
     }
 
     public static void attach(ServerPlayerEntity player, PlayerPowers powers, Vec3d anchor, int hand) {
@@ -99,12 +113,14 @@ public final class SwingPhysics {
             powers.swingZ = anchor.z;
             double dist = anchor.distanceTo(player.getPos());
             if (!Double.isFinite(dist)) dist = 15.0;
-            // Longer rope for more swing arc
-            powers.ropeLen = Math.max(5.0, Math.min(dist * 0.95, SpiderConfig.get().swingRange * 1.1));
+            powers.ropeLen = Math.max(4.0, Math.min(dist * 0.92, SpiderConfig.get().swingRange * 1.2));
             powers.swingHand = hand == 1 ? 1 : 0;
-            player.playSound(ModSounds.WEB_SHOT, 1.0f, 1.15f);
-            player.playSound(ModSounds.WEB_ZIP, 0.7f, 1.0f);
+            player.playSound(ModSounds.WEB_SHOT, 1.0f, 1.2f);
+            player.playSound(ModSounds.WEB_ZIP, 0.8f, 1.1f);
             ServerNetworking.sendSwing(player, true, anchor.x, anchor.y, anchor.z, powers.swingHand, 0);
+            
+            // Style for attaching
+            powers.stylePoints += 2;
         } catch (Exception e) {
             powers.stopSwing();
         }
@@ -127,13 +143,33 @@ public final class SwingPhysics {
             try {
                 Vec3d vel = player.getVelocity();
                 if (vel == null) vel = new Vec3d(0, 0.3, 0);
-                // Stronger fling for real Spider-Man launch
-                vel = vel.multiply(1.35).add(0.0, 0.32, 0.0);
-                if (!Double.isFinite(vel.x)) vel = new Vec3d(0, 0.5, 0);
-                if (vel.length() > 4.5) vel = vel.normalize().multiply(4.5);
+                
+                // Calculate fling power based on swing momentum and style
+                double momentum = vel.length();
+                double flingPower = 1.4 + (powers.consecutiveSwings * 0.05);
+                if (flingPower > 1.8) flingPower = 1.8;
+                
+                // Add upward boost for that Spider-Man launch
+                vel = vel.multiply(flingPower).add(0.0, 0.4 + (powers.stylePoints * 0.001), 0.0);
+                
+                // Add look direction for control
+                Vec3d look = player.getRotationVector();
+                if (look != null) {
+                    vel = vel.add(look.x * 0.15, look.y * 0.1, look.z * 0.15);
+                }
+                
+                if (!Double.isFinite(vel.x)) vel = new Vec3d(0, 0.6, 0);
+                if (vel.length() > 5.0) vel = vel.normalize().multiply(5.0);
+                
                 push(player, vel);
+                
+                // Style for fling
+                if (momentum > 2.0) {
+                    powers.stylePoints += 8;
+                }
+                
             } catch (Exception ignored) {
-                push(player, new Vec3d(0, 0.5, 0));
+                push(player, new Vec3d(0, 0.6, 0));
             }
         }
     }
@@ -154,35 +190,58 @@ public final class SwingPhysics {
             Vec3d vel = player.getVelocity();
             if (vel == null) vel = new Vec3d(0, 0, 0);
 
-            // Gravity
-            vel = vel.add(0.0, -0.09, 0.0);
+            SpiderConfig cfg = SpiderConfig.get();
+            
+            // Enhanced gravity with dive
+            double gravity = -0.09;
+            if (powers.diving) gravity = -0.18;
+            vel = vel.add(0.0, gravity, 0.0);
 
-            // Rope control: look up reels in faster, look down lets out faster — real Spider-Man pumping
+            // ULTIMATE PUMPING SYSTEM
             float pitch = player.getPitch();
-            if (pitch < -20.0f) {
-                // Looking up — reel in fast for speed boost
-                powers.ropeLen = Math.max(4.0, powers.ropeLen - 0.35);
-                // Add slight upward boost when reeling at bottom of swing
+            float yaw = player.getYaw();
+            
+            // Look up = reel in FAST for speed (real Spider-Man pumping)
+            if (pitch < -35.0f) {
+                powers.ropeLen = Math.max(3.0, powers.ropeLen - 0.5);
                 Vec3d toAnchor = anchor.subtract(pos);
-                if (toAnchor.y > 0 && vel.horizontalLength() > 0.5) {
-                    vel = vel.add(0.0, 0.04, 0.0);
+                if (toAnchor.y > 0 && vel.horizontalLength() > 0.4) {
+                    // Boost at bottom of swing
+                    vel = vel.add(0.0, 0.06, 0.0);
+                    powers.stylePoints += 1;
+                }
+            } else if (pitch < -20.0f) {
+                powers.ropeLen = Math.max(3.0, powers.ropeLen - 0.35);
+                if (vel.horizontalLength() > 0.5) {
+                    vel = vel.add(0.0, 0.03, 0.0);
                 }
             } else if (pitch < -8.0f) {
-                powers.ropeLen = Math.max(4.0, powers.ropeLen - 0.18);
-            } else if (pitch > 30.0f) {
-                // Looking down — let out fast to gain arc
-                powers.ropeLen = Math.min(SpiderConfig.get().swingRange * 1.2, powers.ropeLen + 0.45);
-            } else if (pitch > 15.0f) {
-                powers.ropeLen = Math.min(SpiderConfig.get().swingRange * 1.2, powers.ropeLen + 0.22);
+                powers.ropeLen = Math.max(3.0, powers.ropeLen - 0.18);
+            } else if (pitch > 40.0f) {
+                // Look down = let out FAST for big arc
+                powers.ropeLen = Math.min(cfg.swingRange * 1.4, powers.ropeLen + 0.6);
+            } else if (pitch > 20.0f) {
+                powers.ropeLen = Math.min(cfg.swingRange * 1.4, powers.ropeLen + 0.35);
             }
 
-            // Sprint boost — hold sprint to go faster
+            // Sprint boost - hold sprint for ULTIMATE SPEED
             if (player.isSprinting()) {
-                vel = vel.multiply(1.02);
+                double sprintBoost = cfg.swingBoost;
+                if (powers.stylePoints > 200) sprintBoost *= 1.1;
+                vel = vel.multiply(sprintBoost);
+                
+                if (vel.length() > 3.0) {
+                    powers.stylePoints += 1;
+                }
             }
 
-            // Clamp rope
-            powers.ropeLen = Math.max(4.0, Math.min(powers.ropeLen, SpiderConfig.get().swingRange * 1.3));
+            // Dive boost while swinging
+            if (powers.diving) {
+                vel = vel.multiply(1.03);
+            }
+
+            // Clamp rope with style
+            powers.ropeLen = Math.max(3.0, Math.min(powers.ropeLen, cfg.swingRange * 1.5));
 
             Vec3d r = pos.add(vel).subtract(anchor);
             double dist = r.length();
@@ -190,8 +249,8 @@ public final class SwingPhysics {
                 detach(player, powers, false);
                 return;
             }
-            if (dist > SpiderConfig.get().swingRange * 3.5) {
-                detach(player, powers, false);
+            if (dist > cfg.swingRange * 4.0) {
+                detach(player, powers, true); // Fling if too far
                 return;
             }
 
@@ -200,34 +259,55 @@ public final class SwingPhysics {
                 if (Double.isFinite(n.x)) {
                     double radial = vel.dotProduct(n);
                     if (radial > 0.0) {
-                        // Remove outward radial velocity (constraint)
                         vel = vel.subtract(n.x * radial, n.y * radial, n.z * radial);
                     }
-                    // Spring back to rope sphere — stronger spring for tighter feel
+                    
+                    // Dynamic spring based on situation
                     double over = dist - powers.ropeLen;
-                    double spring = 0.18;
-                    // Stronger spring when reeling in
-                    if (pitch < -10) spring = 0.24;
+                    double spring = 0.2;
+                    if (pitch < -15) spring = 0.28; // Tighter when reeling
+                    if (powers.diving) spring = 0.15; // Looser when diving for bigger arc
+                    if (player.isSprinting()) spring *= 1.1;
+                    
                     vel = vel.subtract(n.x * over * spring, n.y * over * spring, n.z * over * spring);
 
-                    // Pendulum boost: gravity component along swing arc
+                    // Pendulum physics - natural swing boost
                     Vec3d tangent = new Vec3d(0, -1, 0).crossProduct(n).crossProduct(n);
                     if (tangent.lengthSquared() > 0.001) {
                         tangent = tangent.normalize();
-                        // Add slight boost along tangent for natural swing
-                        vel = vel.add(tangent.x * 0.015, tangent.y * 0.015, tangent.z * 0.015);
+                        double tangentBoost = 0.02 + (powers.stage * 0.005);
+                        vel = vel.add(tangent.x * tangentBoost, tangent.y * tangentBoost, tangent.z * tangentBoost);
                     }
 
-                    // Momentum conservation — slight speed gain
-                    vel = vel.multiply(1.008);
-                    if (player.isSprinting()) vel = vel.multiply(1.015);
+                    // Momentum conservation + style
+                    double momentumMult = 1.01 + (powers.consecutiveSwings * 0.002);
+                    if (momentumMult > 1.03) momentumMult = 1.03;
+                    vel = vel.multiply(momentumMult);
+                    
+                    if (player.isSprinting()) vel = vel.multiply(1.02);
 
-                    // Max speed higher for real swinging (was 3.0, now 4.2)
-                    if (vel.length() > 4.2) vel = vel.normalize().multiply(4.2);
+                    // Max speed - higher for ultimate swinging
+                    double maxSpeed = 4.8 + (powers.stage * 0.2) + (powers.stylePoints * 0.001);
+                    if (maxSpeed > 6.5) maxSpeed = 6.5;
+                    if (vel.length() > maxSpeed) vel = vel.normalize().multiply(maxSpeed);
+                    
+                    // Style for fast swinging
+                    if (vel.length() > 3.5) {
+                        powers.stylePoints += 1;
+                        if (player.age % 20 == 0) {
+                            MasteryLogic.addMastery(player, 2);
+                        }
+                    }
                 }
             } else {
-                // Inside rope sphere — free fall with slight air control
-                vel = vel.multiply(0.998);
+                // Inside rope - free fall with air control
+                vel = vel.multiply(0.997);
+                
+                // Air control while inside rope sphere
+                Vec3d input = getAirInput(player);
+                if (input.lengthSquared() > 0.01) {
+                    vel = vel.add(input.x * 0.05, 0, input.z * 0.05);
+                }
             }
 
             if (!Double.isFinite(vel.x)) vel = new Vec3d(0, -0.1, 0);
@@ -235,20 +315,37 @@ public final class SwingPhysics {
             player.fallDistance = 0.0f;
             push(player, vel);
 
-            // Don't detach immediately on ground if moving fast — allow momentum
+            // Smart ground detach - keep momentum if fast
             if (player.isOnGround()) {
-                if (vel.horizontalLength() > 0.8) {
-                    // Keep some momentum, detach but with boost
+                if (vel.horizontalLength() > 1.0) {
+                    detach(player, powers, true);
+                    powers.stylePoints += 5;
+                } else if (vel.horizontalLength() > 0.5) {
                     detach(player, powers, true);
                 } else {
                     detach(player, powers, false);
                 }
-                MasteryLogic.addMastery(player, 2);
+                MasteryLogic.addMastery(player, 3);
             }
+            
+            // Track air time
+            if (!player.isOnGround()) {
+                powers.airTime++;
+            }
+            
         } catch (Exception e) {
             try {
                 detach(player, powers, false);
             } catch (Exception ignored) {}
+        }
+    }
+
+    private static Vec3d getAirInput(ServerPlayerEntity player) {
+        try {
+            Vec3d vel = player.getVelocity();
+            return new Vec3d(vel.x * 0.1, 0, vel.z * 0.1);
+        } catch (Exception e) {
+            return Vec3d.ZERO;
         }
     }
 
@@ -273,28 +370,40 @@ public final class SwingPhysics {
                 } catch (Exception ignored) {}
                 return;
             }
-            if (powers.zipTicks <= 0 || dist < 1.2) {
+            if (powers.zipTicks <= 0 || dist < 1.0) {
                 powers.zipTicks = 0;
                 try {
                     player.setNoGravity(false);
                 } catch (Exception ignored) {}
-                // Launch on zip end — stronger
+                
+                // ULTIMATE ZIP LAUNCH
                 Vec3d vel = player.getVelocity();
                 if (vel == null) vel = new Vec3d(0, 0, 0);
                 Vec3d look = player.getRotationVector();
                 if (look != null && look.lengthSquared() > 0.001) {
-                    vel = vel.add(look.x * 0.6, 0.3, look.z * 0.6);
+                    double launchPower = 0.8 + (powers.stylePoints * 0.001);
+                    if (launchPower > 1.2) launchPower = 1.2;
+                    vel = vel.add(look.x * launchPower, 0.4, look.z * launchPower);
                 }
-                vel = vel.multiply(1.25);
-                if (vel.length() > 3.0) vel = vel.normalize().multiply(3.0);
-                if (!Double.isFinite(vel.x)) vel = new Vec3d(0, 0.4, 0);
+                
+                SpiderConfig cfg = SpiderConfig.get();
+                vel = vel.multiply(cfg.zipBoost);
+                
+                if (vel.length() > 4.0) vel = vel.normalize().multiply(4.0);
+                if (!Double.isFinite(vel.x)) vel = new Vec3d(0, 0.5, 0);
+                
                 push(player, vel);
+                powers.stylePoints += 8;
+                MasteryLogic.addMastery(player, 3);
                 return;
             }
-            // Faster zip — more Spider-Man like
-            double speed = Math.min(2.2, 0.7 + dist * 0.15);
+            
+            // Faster, more responsive zip
+            double speed = Math.min(2.8, 0.8 + dist * 0.18);
+            if (powers.stylePoints > 300) speed *= 1.15;
+            
             Vec3d vel = to.normalize().multiply(speed);
-            if (!Double.isFinite(vel.x)) vel = new Vec3d(0, 0.3, 0);
+            if (!Double.isFinite(vel.x)) vel = new Vec3d(0, 0.4, 0);
             player.fallDistance = 0.0f;
             push(player, vel);
         } catch (Exception e) {
@@ -308,7 +417,7 @@ public final class SwingPhysics {
     public static void push(ServerPlayerEntity player, Vec3d vel) {
         if (player == null || vel == null) return;
         if (!Double.isFinite(vel.x)) vel = new Vec3d(0, 0, 0);
-        if (vel.length() > 12.0) vel = vel.normalize().multiply(12.0);
+        if (vel.length() > 15.0) vel = vel.normalize().multiply(15.0);
         try {
             player.setVelocity(vel);
             player.velocityModified = true;
