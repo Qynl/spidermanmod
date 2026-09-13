@@ -549,6 +549,7 @@ public final class ModCommands {
         realms.adjustReputation(player.getUuid(), match.faction(), 8);
         player.sendMessage(Text.literal("The " + match.faction() + " accept your gift. Reputation now "
                 + realms.getReputation(player.getUuid(), match.faction()) + ".").formatted(net.minecraft.util.Formatting.GREEN), false);
+        com.rivalrealms.sound.ModSounds.playVoice(player.getServerWorld(), player.getBlockPos(), "haggle");
         player.getServerWorld().playSound(null, player.getBlockPos(), net.minecraft.sound.SoundEvents.ENTITY_VILLAGER_YES,
                 net.minecraft.sound.SoundCategory.NEUTRAL, 0.9f, 1.1f);
         return 1;

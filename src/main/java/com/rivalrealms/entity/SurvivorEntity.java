@@ -1013,7 +1013,10 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
                             SoundCategory.NEUTRAL, 0.5f, 1.3f);
                 }
             } else if (bond < 0 && random.nextInt(6) == 0) {
-                // A rivalry boils over: a shove, a stumble, hard words.
+                // A rivalry boils over: hard words first, then hands.
+                if (random.nextInt(2) == 0) {
+                    com.rivalrealms.world.DialogueEngine.queueQuarrel(this, other, serverWorld);
+                }
                 other.takeKnockback(0.5, getX() - other.getX(), getZ() - other.getZ());
                 serverWorld.playSound(null, getBlockPos(),
                         net.minecraft.sound.SoundEvents.ENTITY_PLAYER_ATTACK_SWEEP,
@@ -1381,7 +1384,7 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
                     // The settlement gathers for the rite; the town remembers aloud.
                     com.rivalrealms.world.DialogueEngine.noteEvent(deathWorld, base.center(),
                             getName().getString() + " was buried at " + base.name()
-                                    + ". They stood in silence, then sang the old road-song.");
+                                    + ". They stood in silence, then sang the old road-song.", "grief");
                     com.rivalrealms.sound.ModSounds.playVoice(deathWorld, base.center(), "funeral_eulogy");
                 }
             }

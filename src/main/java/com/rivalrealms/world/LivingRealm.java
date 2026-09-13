@@ -156,6 +156,7 @@ public final class LivingRealm {
         tickSieges(world, state);
         tickSeason(world, state);
         tickExpeditions(world);
+        tickExpeditionArrivals(world);
         tickTreasureHints(world);
         if (world.getTime() % 1200L == 0L) {
             tickCelebrations(world, state);
@@ -269,7 +270,7 @@ public final class LivingRealm {
                 : BuildStyle.KNIGHT;
         base.surrenderTo(newOwner, winner, style.id());
         DialogueEngine.noteEvent(world, base.center(),
-                "The " + loser + " fell here. The " + winner + " raised their banner over our homes.");
+                "The " + loser + " fell here. The " + winner + " raised their banner over our homes.", "grief");
         state.adjustWealth(winner, 6);
         state.adjustWealth(loser, -6);
         state.chronicle(world.getTime(), base.name() + " has fallen! The " + winner + " seized it from the "
@@ -639,7 +640,7 @@ public final class LivingRealm {
         }
         SIEGES.put(base.center().asLong(), new Siege(attackerFaction, world.getTime()));
         DialogueEngine.noteEvent(world, base.center(),
-                "The " + attackerFaction + " laid siege to these walls. We closed the gates and prayed.");
+                "The " + attackerFaction + " laid siege to these walls. We closed the gates and prayed.", "grief");
         RealmState state = RealmState.get(world);
         state.chronicle(world.getTime(), "SIEGE: the " + attackerFaction + " close around " + base.name() + ".", true);
         chronicleBroadcast(world, state, "SIEGE at " + base.name() + "! The " + attackerFaction
@@ -691,6 +692,8 @@ public final class LivingRealm {
                 chronicleBroadcast(world, state, base.name() + " has held the siege!", true);
                 RealmMusic.play(world, base.center(), RealmMusic.VICTORY_FANFARE);
                 com.rivalrealms.sound.ModSounds.playVoice(world, base.center(), "siege_victory");
+                DialogueEngine.noteEvent(world, base.center(),
+                        "The siege broke against these walls. We cheered until our voices gave out.", "triumph");
                 state.adjustWealth(base.faction(), 2);
                 continue;
             }
@@ -900,7 +903,7 @@ public final class LivingRealm {
                         + ". The whole settlement feasted.", true);
                 DialogueEngine.noteEvent(world, base.center(),
                         first.getName().getString() + " and " + second.getName().getString()
-                                + " were wed here. You should have heard the singing.");
+                                + " were wed here. You should have heard the singing.", "triumph");
                 chronicleBroadcast(world, state, "Wedding bells at " + base.name() + "!", true);
                 com.rivalrealms.sound.ModSounds.playVoice(world, base.center(), "wedding_officiant");
                 com.rivalrealms.sound.ModSounds.playVoice(world, base.center(), "celebration");
@@ -925,7 +928,8 @@ public final class LivingRealm {
 
     // ------------------------------------------------------------- expeditions
 
-    private record Expedition(ServerWorld world, BlockPos destination, long founded) {
+    private record Expedition(ServerWorld world, BlockPos destination, BlockPos home,
+                              String faction, java.util.UUID owner, long founded) {
     }
 
     private static final List<Expedition> EXPEDITIONS = new ArrayList<>();
@@ -968,11 +972,88 @@ public final class LivingRealm {
             founded++;
         }
         if (founded > 0) {
-            EXPEDITIONS.add(new Expedition(world, destination, world.getTime()));
+            EXPEDITIONS.add(new Expedition(world, destination, home.center(), home.faction(),
+                    home.owner(), world.getTime()));
+            com.rivalrealms.sound.ModSounds.playVoice(world, home.center(), "expedition_depart");
             state_of(world).chronicle(world.getTime(), founded + " pioneers left " + home.name()
                     + " to found a home in the wilds.", true);
             chronicleBroadcast(world, state_of(world), "An expedition departs " + home.name() + " for the unknown.", true);
         }
+    }
+
+    /**
+     * Pioneers who survive the walk found a real settlement at their goal:
+     * claimed land, starter stores, walls raised by the same hands. Fewer
+     * than two arrivals, and the expedition is written off as lost.
+     */
+    private static void tickExpeditionArrivals(ServerWorld world) {
+        if (EXPEDITIONS.isEmpty() || world.getTime() % 200L != 0L) {
+            return;
+        }
+        java.util.Iterator<Expedition> iterator = EXPEDITIONS.iterator();
+        while (iterator.hasNext()) {
+            Expedition expedition = iterator.next();
+            if (!expedition.world().equals(world)
+                    || world.getTime() - expedition.founded() < 7200L) {
+                continue;
+            }
+            iterator.remove();
+            RealmState state = state_of(world);
+            List<SurvivorEntity> pioneers = new ArrayList<>();
+            for (Entity entity : world.getOtherEntities(null,
+                    new Box(expedition.destination()).expand(48.0),
+                    candidate -> candidate instanceof SurvivorEntity survivor && survivor.isAlive()
+                            && expedition.destination().equals(survivor.guardCenter()))) {
+                pioneers.add((SurvivorEntity) entity);
+            }
+            if (pioneers.size() < 2 || !state.canClaimBase(expedition.destination())) {
+                state.chronicle(world.getTime(),
+                        "No word from the pioneers who walked into the wilds.", true);
+                DialogueEngine.noteEvent(world, expedition.home(),
+                        "We've heard nothing from the pioneers. The wilds keep what it takes.", "grief");
+                com.rivalrealms.sound.ModSounds.playVoice(world, expedition.home(), "expedition_lost");
+                continue;
+            }
+            RealmState.BaseRecord founded = state.claimBase(expedition.destination(),
+                    expedition.owner(), styleForFaction(expedition.faction()));
+            if (founded == null) {
+                state.chronicle(world.getTime(),
+                        "The pioneers returned: their goal stood too near other walls.", true);
+                DialogueEngine.noteEvent(world, expedition.home(),
+                        "The pioneers came back. Nowhere there to build, they said.", "neutral");
+                continue;
+            }
+            founded.setFamineCycles(0);
+            state.recordSettlementWork(founded, 40, 15, 0);
+            for (SurvivorEntity pioneer : pioneers) {
+                pioneer.assignWorker(founded.center(), expedition.owner(),
+                        expedition.faction(), SettlementRole.BUILDER);
+            }
+            DialogueEngine.noteEvent(world, founded.center(),
+                    "These walls rose from nothing. Every stone laid by pioneer hands.", "triumph");
+            state.chronicle(world.getTime(),
+                    founded.name() + " was founded by pioneers from the wilds.", true);
+            chronicleBroadcast(world, state, founded.name() + " has been founded!", true);
+            com.rivalrealms.sound.ModSounds.playVoice(world, founded.center(), "expedition_return");
+        }
+    }
+
+    /** The building style a faction raises, matching conquest and worldgen. */
+    private static BuildStyle styleForFaction(String faction) {
+        com.rivalrealms.entity.Archetype folk = com.rivalrealms.entity.Archetype.byFaction(faction);
+        if (folk == com.rivalrealms.entity.Archetype.PIRATE) {
+            return BuildStyle.PIRATE;
+        }
+        if (folk == com.rivalrealms.entity.Archetype.MARAUDER) {
+            return BuildStyle.MARAUDER;
+        }
+        if (folk == com.rivalrealms.entity.Archetype.SKY_CAPTAIN) {
+            return BuildStyle.SKY;
+        }
+        if (folk == com.rivalrealms.entity.Archetype.OUTLAW) {
+            return BuildStyle.WESTERN;
+        }
+        return BuildStyle.KNIGHT;
     }
 
     private static RealmState state_of(ServerWorld world) {
@@ -1009,7 +1090,7 @@ public final class LivingRealm {
             state.chronicle(world.getTime(), "Smoke rises again from " + base.name()
                     + ": new folk have begun rebuilding the old walls.", true);
             DialogueEngine.noteEvent(world, base.center(),
-                    "This place emptied once. Then new folk came and lit the hearths again.");
+                    "This place emptied once. Then new folk came and lit the hearths again.", "triumph");
             chronicleBroadcast(world, state, base.name() + " is being rebuilt!", true);
         }
     }

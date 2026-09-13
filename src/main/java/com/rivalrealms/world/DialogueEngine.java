@@ -43,15 +43,28 @@ public final class DialogueEngine {
     /** Settlement heart -> the story of its last big event. */
     private static final Map<Long, String> LAST_MAJOR = new HashMap<>();
     private static final Map<Long, Long> LAST_MAJOR_AT = new HashMap<>();
+    private static final Map<Long, String> LAST_MAJOR_TONE = new HashMap<>();
     /** Settlement heart -> last time ambient chatter played there. */
     private static final Map<Long, Long> LAST_AMBIENT = new HashMap<>();
 
     // --------------------------------------------------------- event memory
 
     /** Settlements remember their scars; NPCs draw dialogue from this. */
+    /** A rivalry boils over: hard words, the second voice a beat later. */
+    public static void queueQuarrel(SurvivorEntity first, SurvivorEntity second, ServerWorld world) {
+        ModSounds.playProfiled(world, first.getBlockPos(), "quarrel_a", first.getUuid(), 1.1f, 1.1f);
+        QUEUE.add(new Scheduled(world, second.getBlockPos(), "quarrel_b", second.getUuid(),
+                1.05f, 1.1f, System.currentTimeMillis() / 100L + 25L));
+    }
+
     public static void noteEvent(ServerWorld world, BlockPos center, String story) {
+        noteEvent(world, center, story, "neutral");
+    }
+
+    public static void noteEvent(ServerWorld world, BlockPos center, String story, String tone) {
         LAST_MAJOR.put(center.asLong(), story);
         LAST_MAJOR_AT.put(center.asLong(), world.getTime());
+        LAST_MAJOR_TONE.put(center.asLong(), tone);
     }
 
     /** Seconds-later audio scheduling (the reply in a two-NPC chat). */
@@ -109,6 +122,15 @@ public final class DialogueEngine {
             String story = LAST_MAJOR.get(home.asLong());
             if (at != null && story != null && world.getTime() - at <= 72000L
                     && world.random.nextInt(2) == 0) {
+                String tone = LAST_MAJOR_TONE.getOrDefault(home.asLong(), "neutral");
+                if ("grief".equals(tone)) {
+                    return new Moment("grief_recount", 0.88f, 1.0f,
+                            npc.getName().getString() + "'s voice drops: \"" + story + "\"");
+                }
+                if ("triumph".equals(tone)) {
+                    return new Moment("triumph_recount", 1.08f, 1.15f,
+                            npc.getName().getString() + " beams: \"" + story + "\"");
+                }
                 return new Moment("event_aftermath", 0.9f, 1.0f,
                         npc.getName().getString() + ": \"" + story + "\"");
             }
@@ -141,6 +163,11 @@ public final class DialogueEngine {
                     return new Moment("greet_hearthfolk", 1.0f, 1.0f,
                             npc.getName().getString() + ": \"Welcome, traveler! "
                                     + "The kettle's on if you're wanting tea.\"");
+                }
+                case SKY_CAPTAIN -> {
+                    return new Moment("greet_sky_captain", 0.95f, 1.1f,
+                            npc.getName().getString() + " squints against the wind: \"Winds fair, "
+                                    + "groundling. Mind the anchor chains.\"");
                 }
                 default -> { }
             }
@@ -195,6 +222,12 @@ public final class DialogueEngine {
                 farmer = survivor;
             }
         }
+        SurvivorEntity trader = null;
+        for (SurvivorEntity survivor : population) {
+            if (survivor.settlementRole() == SettlementRole.TRADER && trader == null) {
+                trader = survivor;
+            }
+        }
         int roll = world.random.nextInt(6);
         if (roll == 0 && child != null) {
             LAST_AMBIENT.put(base.center().asLong(), now);
@@ -205,6 +238,12 @@ public final class DialogueEngine {
         } else if (roll == 2 && population.size() >= 2) {
             LAST_AMBIENT.put(base.center().asLong(), now);
             queueChat(population.get(0), population.get(1), world);
+        } else if (roll == 3 && trader != null) {
+            LAST_AMBIENT.put(base.center().asLong(), now);
+            ModSounds.playProfiled(world, trader.getBlockPos(), "trade_patter", trader.getUuid(), 1.0f, 1.15f);
+        } else if (roll == 4 && base.level() >= 4) {
+            LAST_AMBIENT.put(base.center().asLong(), now);
+            ModSounds.playVoice(world, base.center(), "town_pride");
         }
     }
 }

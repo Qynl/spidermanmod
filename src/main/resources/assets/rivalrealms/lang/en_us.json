@@ -104,5 +104,15 @@
   "subtitles.rivalrealms.voice.funeral_eulogy": "A eulogy is spoken",
   "subtitles.rivalrealms.voice.storm_cry": "Folk cry out about the storm",
   "subtitles.rivalrealms.voice.quake_cry": "Folk cry out as the ground shakes",
-  "subtitles.rivalrealms.voice.treasure_mutter": "A survivor mutters about treasure"
+  "subtitles.rivalrealms.voice.treasure_mutter": "A survivor mutters about treasure",
+  "subtitles.rivalrealms.voice.expedition_depart": "Pioneers set out",
+  "subtitles.rivalrealms.voice.expedition_return": "A settlement is founded",
+  "subtitles.rivalrealms.voice.expedition_lost": "Folk mourn the lost pioneers",
+  "subtitles.rivalrealms.voice.greet_sky_captain": "A sky captain greets you",
+  "subtitles.rivalrealms.voice.haggle": "A trader haggles",
+  "subtitles.rivalrealms.voice.grief_recount": "A survivor grieves",
+  "subtitles.rivalrealms.voice.triumph_recount": "A survivor tells of a triumph",
+  "subtitles.rivalrealms.voice.quarrel_a": "A survivor snaps",
+  "subtitles.rivalrealms.voice.quarrel_b": "A survivor snaps back",
+  "subtitles.rivalrealms.voice.town_pride": "A survivor boasts of the town"
 }

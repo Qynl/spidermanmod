@@ -298,5 +298,65 @@
   "sounds": [
    "rivalrealms:voice/treasure_mutter"
   ]
+ },
+ "voice.expedition_depart": {
+  "subtitle": "subtitles.rivalrealms.voice.expedition_depart",
+  "sounds": [
+   "rivalrealms:voice/expedition_depart"
+  ]
+ },
+ "voice.expedition_return": {
+  "subtitle": "subtitles.rivalrealms.voice.expedition_return",
+  "sounds": [
+   "rivalrealms:voice/expedition_return"
+  ]
+ },
+ "voice.expedition_lost": {
+  "subtitle": "subtitles.rivalrealms.voice.expedition_lost",
+  "sounds": [
+   "rivalrealms:voice/expedition_lost"
+  ]
+ },
+ "voice.greet_sky_captain": {
+  "subtitle": "subtitles.rivalrealms.voice.greet_sky_captain",
+  "sounds": [
+   "rivalrealms:voice/greet_sky_captain"
+  ]
+ },
+ "voice.haggle": {
+  "subtitle": "subtitles.rivalrealms.voice.haggle",
+  "sounds": [
+   "rivalrealms:voice/haggle"
+  ]
+ },
+ "voice.grief_recount": {
+  "subtitle": "subtitles.rivalrealms.voice.grief_recount",
+  "sounds": [
+   "rivalrealms:voice/grief_recount"
+  ]
+ },
+ "voice.triumph_recount": {
+  "subtitle": "subtitles.rivalrealms.voice.triumph_recount",
+  "sounds": [
+   "rivalrealms:voice/triumph_recount"
+  ]
+ },
+ "voice.quarrel_a": {
+  "subtitle": "subtitles.rivalrealms.voice.quarrel_a",
+  "sounds": [
+   "rivalrealms:voice/quarrel_a"
+  ]
+ },
+ "voice.quarrel_b": {
+  "subtitle": "subtitles.rivalrealms.voice.quarrel_b",
+  "sounds": [
+   "rivalrealms:voice/quarrel_b"
+  ]
+ },
+ "voice.town_pride": {
+  "subtitle": "subtitles.rivalrealms.voice.town_pride",
+  "sounds": [
+   "rivalrealms:voice/town_pride"
+  ]
  }
 }

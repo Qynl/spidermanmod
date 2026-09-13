@@ -72,6 +72,16 @@ public final class ModSounds {
     public static final SoundEvent STORM_CRY = register("voice.storm_cry");
     public static final SoundEvent QUAKE_CRY = register("voice.quake_cry");
     public static final SoundEvent TREASURE_MUTTER = register("voice.treasure_mutter");
+    public static final SoundEvent EXPEDITION_DEPART = register("voice.expedition_depart");
+    public static final SoundEvent EXPEDITION_RETURN = register("voice.expedition_return");
+    public static final SoundEvent EXPEDITION_LOST = register("voice.expedition_lost");
+    public static final SoundEvent GREET_SKY_CAPTAIN = register("voice.greet_sky_captain");
+    public static final SoundEvent HAGGLE = register("voice.haggle");
+    public static final SoundEvent GRIEF_RECOUNT = register("voice.grief_recount");
+    public static final SoundEvent TRIUMPH_RECOUNT = register("voice.triumph_recount");
+    public static final SoundEvent QUARREL_A = register("voice.quarrel_a");
+    public static final SoundEvent QUARREL_B = register("voice.quarrel_b");
+    public static final SoundEvent TOWN_PRIDE = register("voice.town_pride");
 
     private static final Map<String, SoundEvent> VOICES = Map.ofEntries(
             Map.entry("siege_defense", SIEGE_DEFENSE),
@@ -123,7 +133,17 @@ public final class ModSounds {
             Map.entry("funeral_eulogy", FUNERAL_EULOGY),
             Map.entry("storm_cry", STORM_CRY),
             Map.entry("quake_cry", QUAKE_CRY),
-            Map.entry("treasure_mutter", TREASURE_MUTTER));
+            Map.entry("treasure_mutter", TREASURE_MUTTER),
+            Map.entry("expedition_depart", EXPEDITION_DEPART),
+            Map.entry("expedition_return", EXPEDITION_RETURN),
+            Map.entry("expedition_lost", EXPEDITION_LOST),
+            Map.entry("greet_sky_captain", GREET_SKY_CAPTAIN),
+            Map.entry("haggle", HAGGLE),
+            Map.entry("grief_recount", GRIEF_RECOUNT),
+            Map.entry("triumph_recount", TRIUMPH_RECOUNT),
+            Map.entry("quarrel_a", QUARREL_A),
+            Map.entry("quarrel_b", QUARREL_B),
+            Map.entry("town_pride", TOWN_PRIDE));
 
     private static SoundEvent register(String name) {
         return Registry.register(Registries.SOUND_EVENT, RivalRealms.id(name), SoundEvent.of(RivalRealms.id(name)));
