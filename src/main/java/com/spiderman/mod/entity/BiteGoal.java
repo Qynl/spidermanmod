@@ -112,9 +112,9 @@ public class BiteGoal extends MeleeAttackGoal {
                     sw.spawnParticles(ParticleTypes.ELECTRIC_SPARK, player.getX(), player.getY() + 1, player.getZ(), 20, 0.4, 0.4, 0.4, 0.1);
                     sw.spawnParticles(ParticleTypes.GLOW, player.getX(), player.getY() + 1, player.getZ(), 10, 0.3, 0.3, 0.3, 0.05);
                 }
-                player.playSound(SoundEvents.ENTITY_SPIDER_HURT, 1.0f, 0.4f);
-                player.playSound(SoundEvents.ENTITY_GENERIC_EXPLODE, 0.6f, 1.8f);
-                mob.playSound(SoundEvents.ENTITY_SPIDER_DEATH, 1.0f, 1.5f);
+                player.playSound(SoundEvents.ENTITY_SPIDER_HURT.value(), 1.0f, 0.4f);
+                player.playSound(SoundEvents.ENTITY_GENERIC_EXPLODE.value(), 0.6f, 1.8f);
+                mob.playSound(SoundEvents.ENTITY_SPIDER_DEATH.value(), 1.0f, 1.5f);
             } catch (Exception ignored) {}
             
             boolean diesAfter;

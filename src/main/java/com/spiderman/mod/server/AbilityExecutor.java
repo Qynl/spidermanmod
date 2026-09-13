@@ -114,7 +114,7 @@ public final class AbilityExecutor {
                 sw.spawnParticles(ParticleTypes.EXPLOSION, lineEnd.x, lineEnd.y, lineEnd.z, 1, 0.1, 0.1, 0.1, 0.0);
             } catch (Exception ignored) {}
             try {
-                world.playSound(null, lineEnd.x, lineEnd.y, lineEnd.z, SoundEvents.ENTITY_GENERIC_EXPLODE, SoundCategory.PLAYERS, 0.6f, 1.3f);
+                world.playSound(null, lineEnd.x, lineEnd.y, lineEnd.z, SoundEvents.ENTITY_GENERIC_EXPLODE.value(), SoundCategory.PLAYERS, 0.6f, 1.3f);
             } catch (Exception ignored) {}
         } else if (world instanceof ServerWorld sw) {
             try {
@@ -274,7 +274,7 @@ public final class AbilityExecutor {
         } catch (Exception ignored) {}
         try {
             player.playSound(ModSounds.WEB_ZIP, 1.0f, 1.3f);
-            player.playSound(SoundEvents.ENTITY_ENDERMAN_TELEPORT, 0.4f, 1.5f);
+            player.playSound(SoundEvents.ENTITY_ENDERMAN_TELEPORT.value(), 0.4f, 1.5f);
         } catch (Exception ignored) {}
 
         ServerNetworking.sendSwing(player, true, target.x, target.y, target.z, hand, 22);
@@ -350,7 +350,7 @@ public final class AbilityExecutor {
         ServerNetworking.sendSwing(player, true, target.getX(), target.getY() + 1.0, target.getZ(), hand, 50);
         try {
             player.playSound(ModSounds.WEB_ZIP, 1.0f, 0.8f);
-            player.playSound(SoundEvents.ENTITY_FISHING_BOBBER_RETRIEVE, 1.0f, 0.7f);
+            player.playSound(SoundEvents.ENTITY_FISHING_BOBBER_RETRIEVE.value(), 1.0f, 0.7f);
         } catch (Exception ignored) {}
         powers.setCooldown(AbilityIds.PULL, player.age);
         MasteryLogic.addMastery(player, 4);
@@ -391,7 +391,7 @@ public final class AbilityExecutor {
             try {
                 player.playSound(ModSounds.WEB_SHOT, 1.0f, 0.7f);
                 player.playSound(ModSounds.WEB_SPLAT, 1.0f, 0.8f);
-                player.playSound(SoundEvents.BLOCK_COBWEB_PLACE, 1.0f, 0.9f);
+                player.playSound(SoundEvents.BLOCK_COBWEB_PLACE.value(), 1.0f, 0.9f);
             } catch (Exception ignored) {}
             ServerNetworking.sendSwing(player, true, victim.getX(), victim.getY() + 1.0, victim.getZ(), hand, 30);
 
@@ -519,7 +519,7 @@ public final class AbilityExecutor {
             world.playSound(null, center.x, center.y, center.z,
                     (SoundEvent) SoundEvents.ENTITY_GENERIC_EXPLODE.value(), SoundCategory.PLAYERS, 1.0f, 1.2f);
             world.playSound(null, center.x, center.y, center.z, ModSounds.WEB_SPLAT, SoundCategory.PLAYERS, 1.2f, 0.6f);
-            world.playSound(null, center.x, center.y, center.z, SoundEvents.ENTITY_SPIDER_HURT, SoundCategory.PLAYERS, 0.8f, 0.5f);
+            world.playSound(null, center.x, center.y, center.z, SoundEvents.ENTITY_SPIDER_HURT.value(), SoundCategory.PLAYERS, 0.8f, 0.5f);
             player.playSound(ModSounds.WEB_SPLAT, 1.0f, 0.5f);
         } catch (Exception ignored) {}
 
@@ -585,8 +585,8 @@ public final class AbilityExecutor {
 
         try {
             player.playSound(ModSounds.WEB_SPLAT, 1.0f, 1.1f);
-            player.playSound(SoundEvents.BLOCK_WOOL_PLACE, 0.9f, 0.9f);
-            player.playSound(SoundEvents.BLOCK_COBWEB_PLACE, 1.0f, 1.2f);
+            player.playSound(SoundEvents.BLOCK_WOOL_PLACE.value(), 0.9f, 0.9f);
+            player.playSound(SoundEvents.BLOCK_COBWEB_PLACE.value(), 1.0f, 1.2f);
         } catch (Exception ignored) {}
 
         try {

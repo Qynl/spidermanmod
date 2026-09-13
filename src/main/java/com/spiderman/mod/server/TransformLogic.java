@@ -63,9 +63,9 @@ public final class TransformLogic {
                 }
                 
                 // Sounds
-                player.playSound(SoundEvents.ENTITY_SPIDER_HURT, 1.0f, 0.5f);
+                player.playSound(SoundEvents.ENTITY_SPIDER_HURT.value(), 1.0f, 0.5f);
                 player.getServerWorld().playSound(null, player.getX(), player.getY(), player.getZ(), 
-                    SoundEvents.ENTITY_SPIDER_DEATH, player.getSoundCategory(), 0.8f, 0.6f);
+                    SoundEvents.ENTITY_SPIDER_DEATH.value(), player.getSoundCategory(), 0.8f, 0.6f);
                 
             } catch (Exception e) {
                 SpiderManMod.LOGGER.warn("[spiderman] transform effects failed", e);
@@ -74,7 +74,7 @@ public final class TransformLogic {
         
         try {
             player.playSound(ModSounds.TRANSFORM, 1.0f, 1.0f);
-            player.playSound(SoundEvents.BLOCK_BEACON_POWER_SELECT, 0.8f, 1.5f);
+            player.playSound(SoundEvents.BLOCK_BEACON_POWER_SELECT.value(), 0.8f, 1.5f);
         } catch (Exception ignored) {}
         
         // Epic comic book messages
@@ -119,9 +119,9 @@ public final class TransformLogic {
                 // EPIC STAGE UP
                 try {
                     player.playSound(ModSounds.STAGE_UP, 1.2f, 1.0f);
-                    player.playSound(SoundEvents.ENTITY_PLAYER_LEVELUP, 1.0f, 1.2f);
-                    player.playSound(SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, 0.8f, 1.3f);
-                    player.playSound(SoundEvents.BLOCK_BEACON_ACTIVATE, 0.6f, 1.5f);
+                    player.playSound(SoundEvents.ENTITY_PLAYER_LEVELUP.value(), 1.0f, 1.2f);
+                    player.playSound(SoundEvents.UI_TOAST_CHALLENGE_COMPLETE.value(), 0.8f, 1.3f);
+                    player.playSound(SoundEvents.BLOCK_BEACON_ACTIVATE.value(), 0.6f, 1.5f);
                     
                     if (player.getWorld() instanceof ServerWorld sw) {
                         sw.spawnParticles(ParticleTypes.TOTEM_OF_UNDYING, player.getX(), player.getY() + 1, player.getZ(), 20, 0.5, 0.5, 0.5, 0.3);
