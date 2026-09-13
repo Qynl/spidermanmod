@@ -271,6 +271,56 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
             getNavigation().startMovingTo(guardCenter.getX() + 0.5, guardCenter.getY() + 1,
                     guardCenter.getZ() + 0.5, 0.95);
         }
+
+        // THE ASSAULT: a warband at a hostile town's walls sights the enemy,
+        // the defenders shout back, horns sound - and ladders go up.
+        if (!getWorld().isClient && guardCenter != null && !isRecruited()
+                && getWorld().getTime() % 40L == 17L
+                && getWorld() instanceof ServerWorld warWorld) {
+            com.rivalrealms.world.RealmState warState =
+                    com.rivalrealms.world.RealmState.get(warWorld);
+            var besieged = warState.findByCenter(guardCenter);
+            if (besieged != null && !besieged.abandoned()
+                    && !besieged.faction().equalsIgnoreCase(effectiveFaction())) {
+                double distance = getBlockPos().getSquaredDistance(guardCenter);
+                if (distance <= Math.pow(besieged.radius() + 10.0, 2)
+                        && distance > Math.pow(besieged.radius() * 0.4, 2)) {
+                    com.rivalrealms.sound.ModSounds.playProfiled(warWorld, getBlockPos(),
+                            "spyglass_sight", getUuid(), 0.95f, 1.0f);
+                    com.rivalrealms.sound.ModSounds.playVoice(warWorld, besieged.center(), "war_cry");
+                    com.rivalrealms.sound.ModSounds.playVoice(warWorld, besieged.center(), "wall_taunt");
+                    com.rivalrealms.world.LivingRealm.beginSiege(warWorld, besieged, effectiveFaction());
+                    // Find the wall face ahead and raise a ladder against it.
+                    double dx = guardCenter.getX() - getX();
+                    double dz = guardCenter.getZ() - getZ();
+                    net.minecraft.util.math.Direction toward = Math.abs(dx) > Math.abs(dz)
+                            ? (dx > 0 ? net.minecraft.util.math.Direction.EAST
+                                    : net.minecraft.util.math.Direction.WEST)
+                            : (dz > 0 ? net.minecraft.util.math.Direction.SOUTH
+                                    : net.minecraft.util.math.Direction.NORTH);
+                    net.minecraft.util.math.BlockPos rung = getBlockPos().offset(toward);
+                    if (!warWorld.getBlockState(rung).isAir()) {
+                        rung = getBlockPos();
+                    }
+                    boolean raised = false;
+                    for (int h = 0; h < 3; h++) {
+                        net.minecraft.util.math.BlockPos at = rung.up(h);
+                        if (warWorld.getBlockState(at).isAir()
+                                && !warWorld.getBlockState(at.offset(toward)).isAir()) {
+                            warWorld.setBlockState(at, net.minecraft.block.Blocks.LADDER
+                                    .getDefaultState()
+                                    .with(net.minecraft.state.property.HorizontalFacingBlock.FACING,
+                                            toward), 3);
+                            raised = true;
+                        }
+                    }
+                    if (raised) {
+                        com.rivalrealms.sound.ModSounds.playProfiled(warWorld, getBlockPos(),
+                                "ladder_up", getUuid(), 1.1f, 1.15f);
+                    }
+                }
+            }
+        }
     }
 
     /** Wounded survivors eat like players do: bread in hand, nibble sounds, a chunk of health back. */
@@ -817,6 +867,11 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
 
     public void setInheritedRole(SettlementRole role) {
         this.inheritedRole = role == null ? SettlementRole.NONE : role;
+    }
+
+    /** War moved this soldier's post: they now muster at a new flag. */
+    public void setPost(net.minecraft.util.math.BlockPos post) {
+        this.guardCenter = post;
     }
 
     public void setBond(UUID other, byte strength) {

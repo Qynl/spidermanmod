@@ -273,6 +273,8 @@ public final class LivingRealm {
                 : Archetype.byFaction(winner) == Archetype.OUTLAW ? BuildStyle.WESTERN
                 : BuildStyle.KNIGHT;
         com.rivalrealms.sound.ModSounds.playVoice(world, base.center(), "fallen_town");
+                com.rivalrealms.sound.ModSounds.playVoice(world, base.center(),
+                        world.random.nextBoolean() ? "after_battle" : "prisoners_spared");
         base.surrenderTo(newOwner, winner, style.id());
         DialogueEngine.noteEvent(world, base.center(),
                 "The " + loser + " fell here. The " + winner + " raised their banner over our homes.", "grief");

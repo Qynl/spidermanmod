@@ -472,5 +472,65 @@
   "sounds": [
    "rivalrealms:voice/ruins_warning"
   ]
+ },
+ "voice.war_muster": {
+  "subtitle": "subtitles.rivalrealms.voice.war_muster",
+  "sounds": [
+   "rivalrealms:voice/war_muster"
+  ]
+ },
+ "voice.oath_sworn": {
+  "subtitle": "subtitles.rivalrealms.voice.oath_sworn",
+  "sounds": [
+   "rivalrealms:voice/oath_sworn"
+  ]
+ },
+ "voice.march_out": {
+  "subtitle": "subtitles.rivalrealms.voice.march_out",
+  "sounds": [
+   "rivalrealms:voice/march_out"
+  ]
+ },
+ "voice.spyglass_sight": {
+  "subtitle": "subtitles.rivalrealms.voice.spyglass_sight",
+  "sounds": [
+   "rivalrealms:voice/spyglass_sight"
+  ]
+ },
+ "voice.scout_report": {
+  "subtitle": "subtitles.rivalrealms.voice.scout_report",
+  "sounds": [
+   "rivalrealms:voice/scout_report"
+  ]
+ },
+ "voice.wall_taunt": {
+  "subtitle": "subtitles.rivalrealms.voice.wall_taunt",
+  "sounds": [
+   "rivalrealms:voice/wall_taunt"
+  ]
+ },
+ "voice.ladder_up": {
+  "subtitle": "subtitles.rivalrealms.voice.ladder_up",
+  "sounds": [
+   "rivalrealms:voice/ladder_up"
+  ]
+ },
+ "voice.war_cry": {
+  "subtitle": "subtitles.rivalrealms.voice.war_cry",
+  "sounds": [
+   "rivalrealms:voice/war_cry"
+  ]
+ },
+ "voice.after_battle": {
+  "subtitle": "subtitles.rivalrealms.voice.after_battle",
+  "sounds": [
+   "rivalrealms:voice/after_battle"
+  ]
+ },
+ "voice.prisoners_spared": {
+  "subtitle": "subtitles.rivalrealms.voice.prisoners_spared",
+  "sounds": [
+   "rivalrealms:voice/prisoners_spared"
+  ]
  }
 }

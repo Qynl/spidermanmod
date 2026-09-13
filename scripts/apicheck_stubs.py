@@ -324,6 +324,7 @@ add('net.minecraft.block.Blocks', [], [
     'public static final net.minecraft.block.Block SCAFFOLDING;', 'public static final net.minecraft.block.Block COBBLESTONE_WALL;',
     'public static final net.minecraft.block.Block DIRT;',
     'public static final net.minecraft.block.Block LADDER;',
+    'public static final net.minecraft.block.Block OAK_WOOD;',
 ])
 add('net.minecraft.block.BlockState', ['net.minecraft.state.State'], [
     'public boolean isReplaceable();',
@@ -463,6 +464,7 @@ add('net.minecraft.item.Items', [], [
     'public static final net.minecraft.item.Item BONE;',
     'public static final net.minecraft.item.Item NETHERITE_CHESTPLATE;',
     'public static final net.minecraft.item.Item GOLDEN_CHESTPLATE;',
+    'public static final net.minecraft.item.Item SPYGLASS;',
 ])
 add('net.minecraft.item.BlockItem', ['net.minecraft.item.Item'], [
     'public BlockItem(net.minecraft.block.Block block, net.minecraft.item.Item.Settings settings);',

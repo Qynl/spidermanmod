@@ -59,6 +59,7 @@ public final class RealmEvents {
                 try {
                     LivingRealm.tick(world);
                     LivingRealm.stormWatch(world);
+                    WarbandEngine.tick(world);
                     tickVanillaVillages(world);
                 } catch (RuntimeException exception) {
                     RivalRealms.LOGGER.error("Living realm tick failed in {}",

@@ -102,6 +102,16 @@ public final class ModSounds {
     public static final SoundEvent HUNT_TALE = register("voice.hunt_tale");
     public static final SoundEvent FALLEN_TOWN = register("voice.fallen_town");
     public static final SoundEvent RUINS_WARNING = register("voice.ruins_warning");
+    public static final SoundEvent WAR_MUSTER = register("voice.war_muster");
+    public static final SoundEvent OATH_SWORN = register("voice.oath_sworn");
+    public static final SoundEvent MARCH_OUT = register("voice.march_out");
+    public static final SoundEvent SPYGLASS_SIGHT = register("voice.spyglass_sight");
+    public static final SoundEvent SCOUT_REPORT = register("voice.scout_report");
+    public static final SoundEvent WALL_TAUNT = register("voice.wall_taunt");
+    public static final SoundEvent LADDER_UP = register("voice.ladder_up");
+    public static final SoundEvent WAR_CRY = register("voice.war_cry");
+    public static final SoundEvent AFTER_BATTLE = register("voice.after_battle");
+    public static final SoundEvent PRISONERS_SPARED = register("voice.prisoners_spared");
 
     private static final Map<String, SoundEvent> VOICES = Map.ofEntries(
             Map.entry("siege_defense", SIEGE_DEFENSE),
@@ -182,7 +192,17 @@ public final class ModSounds {
             Map.entry("drunk_tavern", DRUNK_TAVERN),
             Map.entry("hunt_tale", HUNT_TALE),
             Map.entry("fallen_town", FALLEN_TOWN),
-            Map.entry("ruins_warning", RUINS_WARNING));
+            Map.entry("ruins_warning", RUINS_WARNING),
+            Map.entry("war_muster", WAR_MUSTER),
+            Map.entry("oath_sworn", OATH_SWORN),
+            Map.entry("march_out", MARCH_OUT),
+            Map.entry("spyglass_sight", SPYGLASS_SIGHT),
+            Map.entry("scout_report", SCOUT_REPORT),
+            Map.entry("wall_taunt", WALL_TAUNT),
+            Map.entry("ladder_up", LADDER_UP),
+            Map.entry("war_cry", WAR_CRY),
+            Map.entry("after_battle", AFTER_BATTLE),
+            Map.entry("prisoners_spared", PRISONERS_SPARED));
 
     private static SoundEvent register(String name) {
         return Registry.register(Registries.SOUND_EVENT, RivalRealms.id(name), SoundEvent.of(RivalRealms.id(name)));
@@ -215,7 +235,17 @@ public final class ModSounds {
             Map.entry("known_return", 600L), Map.entry("event_aftermath", 600L),
             Map.entry("grief_recount", 900L), Map.entry("triumph_recount", 900L),
             Map.entry("story_chronicle", 1200L), Map.entry("quarrel_a", 600L),
-            Map.entry("quarrel_b", 60L));
+            Map.entry("quarrel_b", 60L),
+            Map.entry("war_muster", 4800L),
+            Map.entry("oath_sworn", 4800L),
+            Map.entry("march_out", 4800L),
+            Map.entry("spyglass_sight", 1600L),
+            Map.entry("scout_report", 4800L),
+            Map.entry("wall_taunt", 2400L),
+            Map.entry("ladder_up", 600L),
+            Map.entry("war_cry", 1200L),
+            Map.entry("after_battle", 4800L),
+            Map.entry("prisoners_spared", 4800L));
 
     private static boolean audible(ServerWorld world, String key) {
         long gap = GLOBAL_GAP.getOrDefault(key, 40L);

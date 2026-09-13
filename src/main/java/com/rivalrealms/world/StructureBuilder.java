@@ -633,6 +633,8 @@ public final class StructureBuilder {
         int y = lowestCorner(world, base.getX() - radius - 1, base.getZ() - radius - 1,
                 2 * radius + 3, 2 * radius + 3);
         BlockPos origin = new BlockPos(base.getX(), y, base.getZ());
+        packUnder(world, origin.add(-radius - 1, 0, -radius - 1), 2 * radius + 3,
+                2 * radius + 3, y, wall);
         float radiusF = radius + 0.5f;
 
         for (int h = 0; h <= height; h++) {
@@ -857,6 +859,7 @@ public final class StructureBuilder {
                              Block wall, Block trim) {
         int y = lowestCorner(world, corner.getX(), corner.getZ(), sizeX, sizeZ);
         BlockPos origin = new BlockPos(corner.getX(), y, corner.getZ());
+        packUnder(world, origin, sizeX, sizeZ, y, wall);
         for (int h = 0; h <= height; h++) {
             for (int x = 0; x < sizeX; x++) {
                 for (int z = 0; z < sizeZ; z++) {
@@ -927,38 +930,50 @@ public final class StructureBuilder {
                         groundAt(world, corner.getX() + sizeX - 1, corner.getZ() + sizeZ - 1)));
         BlockPos origin = new BlockPos(corner.getX(), y, corner.getZ());
         int wallHeight = 4;
+        // Solid ground first: every footprint column packed flush down to
+        // real terrain, so no wall ever stands on air or a see-through gap.
+        packUnder(world, origin, sizeX, sizeZ, y, log);
+        // Timber-framed cottage: stone footing course, log corner posts and
+        // studs, plank infill, framed windows on every face.
         for (int h = 0; h <= wallHeight; h++) {
             for (int x = 0; x < sizeX; x++) {
                 for (int z = 0; z < sizeZ; z++) {
-                    boolean shell = x == 0 || z == 0 || x == sizeX - 1 || z == sizeZ - 1 || h == 0;
+                    boolean edge = x == 0 || z == 0 || x == sizeX - 1 || z == sizeZ - 1;
                     BlockPos pos = origin.add(x, h, z);
-                    if (!shell) {
-                        if (h == 0) {
-                            set(world, pos, roofAccent);
-                            foundation(world, pos.getX(), pos.getZ(), y - 1, log);
-                        } else {
-                            set(world, pos, Blocks.AIR);
-                        }
-                        continue;
-                    }
                     if (h == 0) {
                         set(world, pos, roofAccent);
-                        foundation(world, pos.getX(), pos.getZ(), y - 1, log);
-                    } else if (h == wallHeight) {
+                        continue;
+                    }
+                    if (!edge) {
+                        set(world, pos, Blocks.AIR);
+                        continue;
+                    }
+                    boolean cornerPost = (x == 0 || x == sizeX - 1) && (z == 0 || z == sizeZ - 1);
+                    boolean stud = ((z == 0 || z == sizeZ - 1) && x % 3 == 0)
+                            || ((x == 0 || x == sizeX - 1) && z % 3 == 0);
+                    boolean windowCol = ((x == 0 || x == sizeX - 1) ? z == sizeZ / 2
+                            : x == sizeX / 2) && !(z == sizeZ - 1 && x == sizeX / 2);
+                    boolean doorway = z == sizeZ - 1 && x == sizeX / 2;
+                    if (doorway && (h == 1 || h == 2)) {
+                        set(world, pos, Blocks.AIR);
+                    } else if (h == wallHeight || cornerPost || stud) {
                         set(world, pos, log);
+                    } else if (h == 3 && windowCol) {
+                        set(world, pos, log);
+                    } else if (h == 2 && windowCol) {
+                        set(world, pos, Blocks.GLASS_PANE);
                     } else {
                         set(world, pos, wall);
                     }
                 }
             }
-            if (h >= 2 && h <= 3) {
-                set(world, origin.add(0, h, sizeZ / 2), Blocks.GLASS_PANE);
-                set(world, origin.add(sizeX - 1, h, sizeZ / 2), Blocks.GLASS_PANE);
-            }
         }
-        // Doorway + porch gate.
-        set(world, origin.add(sizeX / 2, 1, sizeZ - 1), Blocks.AIR);
-        set(world, origin.add(sizeX / 2, 2, sizeZ - 1), Blocks.AIR);
+        // A proper entry: doorstep, posts and a shingled hood over the door.
+        set(world, origin.add(sizeX / 2, 0, sizeZ), stair);
+        set(world, origin.add(sizeX / 2, 1, sizeZ + 1), Blocks.OAK_FENCE);
+        set(world, origin.add(sizeX / 2, 2, sizeZ + 1), Blocks.OAK_FENCE);
+        set(world, origin.add(sizeX / 2, 3, sizeZ + 1), stair);
+        set(world, origin.add(sizeX / 2, 3, sizeZ - 1), log);
 
         // Pitched roof: one clean gable along the long axis - stair rows
         // climbing both long walls to a flat ridge cap.
@@ -1002,6 +1017,8 @@ public final class StructureBuilder {
         set(world, origin.add(sizeX - 2, floor, 1), Blocks.BOOKSHELF);
         set(world, origin.add(sizeX / 2, floor + 2, sizeZ / 2), Blocks.LANTERN);
         set(world, origin.add(1, floor, sizeZ - 2), Blocks.WHITE_CARPET);
+        set(world, origin.add(sizeX - 1, floor, 0), Blocks.OAK_WOOD);
+        set(world, origin.add(sizeX - 1, floor + 1, 0), Blocks.OAK_WOOD);
         stockChest(world, origin.add(sizeX - 2, floor, sizeZ - 2), new ItemStack(Items.BREAD, 3),
                 new ItemStack(Items.STICK, 4), new ItemStack(ModItems.ROYAL_COIN, 1));
     }
@@ -1046,6 +1063,7 @@ public final class StructureBuilder {
                                   Block wall, Block log) {
         int y = lowestCorner(world, corner.getX(), corner.getZ(), sizeX, sizeZ);
         BlockPos origin = new BlockPos(corner.getX(), y, corner.getZ());
+        packUnder(world, origin, sizeX, sizeZ, y, wall);
         int height = 5;
         for (int h = 0; h <= height; h++) {
             for (int x = 0; x < sizeX; x++) {
@@ -1324,6 +1342,7 @@ public final class StructureBuilder {
         // frame, metal roof.
         int y = lowestCorner(world, corner.getX(), corner.getZ(), sizeX, sizeZ);
         BlockPos origin = new BlockPos(corner.getX(), y, corner.getZ());
+        packUnder(world, origin, sizeX, sizeZ, y, ModBlocks.AIRSHIP_METAL);
         for (int x = 0; x < sizeX; x++) {
             for (int z = 0; z < sizeZ; z++) {
                 boolean frame = x == 0 || z == 0 || x == sizeX - 1 || z == sizeZ - 1;
@@ -1441,6 +1460,7 @@ public final class StructureBuilder {
         Block log = Blocks.SPRUCE_LOG;
         int y = lowestCorner(world, corner.getX(), corner.getZ(), 6, 5);
         BlockPos origin = new BlockPos(corner.getX(), y, corner.getZ());
+        packUnder(world, origin, 6, 5, y, log);
 
         foundationRing(world, origin, 6, 5, wall);
         // plank walls with log corner posts, door gap facing the farm
@@ -1472,6 +1492,26 @@ public final class StructureBuilder {
         set(world, origin.add(4, 1, -1), Blocks.OAK_FENCE);
         set(world, origin.add(1, 2, -1), Blocks.SPRUCE_STAIRS);
         set(world, origin.add(4, 2, -1), Blocks.SPRUCE_STAIRS);
+    }
+
+    /**
+     * Solid ground under a footprint: fills every column between honest
+     * terrain and the floor line, unconditionally - no arches of air, no
+     * daylit undersides, ever.
+     */
+    private static void packUnder(ServerWorld world, BlockPos corner, int sizeX,
+                                  int sizeZ, int floorY, Block block) {
+        for (int x = 0; x < sizeX; x++) {
+            for (int z = 0; z < sizeZ; z++) {
+                int px = corner.getX() + x;
+                int pz = corner.getZ() + z;
+                int top = groundAt(world, px, pz);
+                int bottom = Math.max(floorY - 24, top);
+                for (int y = bottom; y < floorY; y++) {
+                    set(world, new BlockPos(px, y, pz), block);
+                }
+            }
+        }
     }
 
     private static void foundationRing(ServerWorld world, BlockPos corner, int sizeX, int sizeZ, Block fill_) {
