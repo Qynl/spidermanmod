@@ -27,7 +27,13 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
 
       - name: Build with Gradle
-        run: chmod +x gradlew && ./gradlew build --stacktrace
+        run: chmod +x gradlew && ./gradlew build --stacktrace --info 2>&1 | tee /tmp/gradle.log
+
+      - name: Show gradle log on failure
+        if: failure()
+        run: |
+          tail -n 2000 /tmp/gradle.log
+          echo "---END GRADLE LOG---"
 
       - name: Upload mod jar
         uses: actions/upload-artifact@v4
@@ -89,8 +95,14 @@ jobs:
         run: |
           chmod +x build-local/build.sh build-local/test.sh
           export JAVAC="$JAVA_HOME/bin/javac"
-          ./build-local/build.sh
-          ./build-local/test.sh
+          ./build-local/build.sh 2>&1 | tee /tmp/local.log
+          ./build-local/test.sh 2>&1 | tee -a /tmp/local.log
+
+      - name: Show local log on failure
+        if: failure()
+        run: |
+          tail -n 2000 /tmp/local.log
+          echo "---END LOCAL LOG---"
 
       - name: Upload offline jar
         uses: actions/upload-artifact@v4
