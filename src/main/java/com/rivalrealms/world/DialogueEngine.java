@@ -36,7 +36,7 @@ public final class DialogueEngine {
 
     /** Delayed second halves of NPC-to-NPC chats. */
     private record Scheduled(ServerWorld world, BlockPos pos, String key, UUID speaker,
-                             float pitchMul, float volume) {
+                             float pitchMul, float volume, long at) {
     }
 
     private static final List<Scheduled> QUEUE = new ArrayList<>();
@@ -97,7 +97,7 @@ public final class DialogueEngine {
         }
 
         // 3. Recognition: an old face returning after days away.
-        Long lastMet = listener.lastMet();
+        Long lastMet = listener.lastMet(listener.getUuid());
         if (lastMet != null && world.getTime() - lastMet >= 36000L && world.random.nextInt(2) == 0) {
             return Moment.of("known_return");
         }
@@ -127,7 +127,8 @@ public final class DialogueEngine {
     public static void queueChat(SurvivorEntity first, SurvivorEntity second, ServerWorld world) {
         BlockPos at = first.getBlockPos();
         ModSounds.playProfiled(world, at, "npc_chat_a", first.getUuid(), 1.0f, 1.0f);
-        QUEUE.add(new Scheduled(world, second.getBlockPos(), "npc_chat_b", second.getUuid(), 1.0f, 1.0f));
+        QUEUE.add(new Scheduled(world, second.getBlockPos(), "npc_chat_b", second.getUuid(),
+                1.0f, 1.0f, System.currentTimeMillis() / 100L + 25L));
         // The overhearing text: the latest realm news, garbled the way news is.
         var entries = RealmState.get(world).chronicle();
         String news = entries.isEmpty() ? "the roads have been quiet"
