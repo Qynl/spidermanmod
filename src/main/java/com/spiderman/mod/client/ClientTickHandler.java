@@ -13,16 +13,40 @@ import com.spiderman.mod.state.ClientPowers;
 /**
  * Client tick: key polling, ability requests and the powers-mirror clock.
  * <p>
- * Wheel handling is hold-to-open:
- * - Hold G => opens wheel if not already open
+ * Wheel handling is hold-to-open (fixed flicker):
+ * - Hold G => opens wheel if not already open (raw GLFW check, works while screen open)
  * - While holding, mouse moves selects sector (handled in WheelScreen.render)
  * - Release G => equips hovered sector and closes wheel
- * This matches real Spider-Man games.
+ * - wasPressed queue is drained every tick to prevent queued reopen causing flicker
  */
 public final class ClientTickHandler {
     private static int handFlip;
 
     private ClientTickHandler() {
+    }
+
+    /** Raw physical check if wheel key is still down, even when a Screen is open. */
+    public static boolean isWheelDown() {
+        try {
+            MinecraftClient mc = MinecraftClient.getInstance();
+            if (mc == null || mc.getWindow() == null) return false;
+            // Use bound key code, so rebinding works
+            var bound = Keybinds.wheel.getBoundKey();
+            if (bound != null && bound.getCategory() == net.minecraft.client.util.InputUtil.Type.KEYSYM) {
+                int code = bound.getCode();
+                // -1 means unbound
+                if (code < 0) return false;
+                return net.minecraft.client.util.InputUtil.isKeyPressed(mc.getWindow().getHandle(), code);
+            }
+            // Fallback to KeyBinding's own isPressed
+            return Keybinds.wheel.isPressed();
+        } catch (Exception e) {
+            try {
+                return Keybinds.wheel.isPressed();
+            } catch (Exception e2) {
+                return false;
+            }
+        }
     }
 
     public static void onEndTick(MinecraftClient client) {
@@ -32,38 +56,27 @@ public final class ClientTickHandler {
             return;
         }
 
-        // --- Radial wheel: hold G logic ---
+        // --- Radial wheel: hold G logic (flicker-free) ---
         if (ClientPowers.has) {
-            boolean wheelHeld = false;
-            try {
-                wheelHeld = Keybinds.wheel.isPressed();
-            } catch (Exception ignored) {
-                // Fallback: if isPressed not available, use wasPressed logic
-                wheelHeld = false;
-            }
+            boolean held = isWheelDown();
 
-            if (wheelHeld) {
+            if (held) {
                 if (client.currentScreen == null) {
                     client.setScreen(new WheelScreen());
                 }
-                // If screen is already WheelScreen, keep it open — hovered is updated in render
             } else {
-                // G released: if wheel is open, confirm selection and close
                 if (client.currentScreen instanceof WheelScreen wheel) {
                     wheel.confirmAndClose();
-                } else {
-                    // Fallback for old press-to-open behavior: also handle wasPressed for edge cases
-                    while (Keybinds.wheel.wasPressed()) {
-                        if (client.currentScreen == null) {
-                            client.setScreen(new WheelScreen());
-                        }
-                    }
                 }
             }
-        } else {
-            // No powers: still consume wasPressed to prevent stuck
+            // Drain the wasPressed queue every tick – prevents the old queued press
+            // from reopening the wheel immediately after release (the flicker bug)
             while (Keybinds.wheel.wasPressed()) {
-                // No-op
+                // consumed
+            }
+        } else {
+            while (Keybinds.wheel.wasPressed()) {
+                // No-op, prevent stuck
             }
         }
 

@@ -34,9 +34,22 @@ public class WheelScreen extends Screen {
     };
 
     private int hovered = -1;
+    private int ticksOpen = 0;
 
     public WheelScreen() {
         super(Text.literal("Web Abilities"));
+    }
+
+    @Override
+    public void tick() {
+        super.tick();
+        ticksOpen++;
+        // Grace period prevents instant close/flicker when key hasn't settled
+        if (ticksOpen > 4) {
+            if (!ClientTickHandler.isWheelDown()) {
+                confirmAndClose();
+            }
+        }
     }
 
     @Override
