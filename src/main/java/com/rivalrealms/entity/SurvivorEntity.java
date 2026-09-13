@@ -173,6 +173,11 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
         if (getWorld().isClient) {
             return;
         }
+        // Living-AI upgrades: shooters keep their range, guards answer their
+        // neighbours' fights, civilians drift home when the light goes.
+        combatSpacingTick();
+        guardAssistTick();
+        eveningRoutineTick();
 
         // Crew seated on a sailing ship are cargo, not pathfinders; their ship
         // owns the movement until they are ejected.
@@ -503,11 +508,63 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
         }
         if (getWorld().getTime() % 20L == 0) {
             Vec3d away = getPos().subtract(fleeFrom).normalize().multiply(14.0);
+            if (guardCenter != null) {
+                // Run from the danger, but bias toward home and its guards.
+                Vec3d home = Vec3d.ofCenter(guardCenter).subtract(getPos()).normalize().multiply(8.0);
+                away = away.add(home).multiply(0.5);
+            }
             BlockPos fleeTarget = BlockPos.ofFloored(getX() + away.x, getY(), getZ() + away.z);
             getNavigation().startMovingTo(fleeTarget.getX(), getY(), fleeTarget.getZ(), 1.25);
         }
         if (!fleeing()) {
             fleeFrom = null;
+        }
+    }
+
+    /** Ranged folk keep their distance: back off close threats, close on far ones. */
+    private void combatSpacingTick() {
+        if (!isRanged() || tickCount % 20 != 7 || getVehicle() != null) {
+            return;
+        }
+        LivingEntity mark = getTarget();
+        if (mark == null || !mark.isAlive()) {
+            return;
+        }
+        double dist = squaredDistanceTo(mark);
+        if (dist < 25.0) {
+            Vec3d away = getPos().subtract(mark.getPos()).normalize().multiply(6.0);
+            getNavigation().startMovingTo(getX() + away.x, getY(), getZ() + away.z, 1.05);
+        } else if (dist > 121.0) {
+            getNavigation().startMovingTo(mark.getX(), mark.getY(), mark.getZ(), 1.0);
+        }
+    }
+
+    /** Guards answer their neighbours' fights: one settler in trouble brings the watch. */
+    private void guardAssistTick() {
+        if (!guarding || tickCount % 40 != 13 || getTarget() != null) {
+            return;
+        }
+        for (SurvivorEntity ally : getWorld().getEntitiesByClass(SurvivorEntity.class,
+                getBoundingBox().expand(16.0), other -> other != this && other.isAlive())) {
+            LivingEntity trouble = ally.getTarget();
+            if (trouble != null && trouble.isAlive() && !(trouble instanceof SurvivorEntity)) {
+                setTarget(trouble);
+                return;
+            }
+        }
+    }
+
+    /** Civilians drift home when the light goes: walls before wild beasts. */
+    private void eveningRoutineTick() {
+        if (guarding || isRecruited() || guardCenter == null || tickCount % 60 != 29) {
+            return;
+        }
+        if (!getWorld().isNight() || getVehicle() != null) {
+            return;
+        }
+        if (getBlockPos().getSquaredDistance(guardCenter) > 49.0) {
+            getNavigation().startMovingTo(guardCenter.getX() + 0.5, guardCenter.getY(),
+                    guardCenter.getZ() + 0.5, 0.85);
         }
     }
 

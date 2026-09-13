@@ -59,6 +59,7 @@ public final class StructureBuilder {
 
     public static void build(ServerWorld world, BlockPos origin, BuildStyle style) {
         forceLoad(world, origin, 40);
+        beginTrace();
         BlockPos base = origin.add(4, 0, 4);
         switch (style) {
             case KNIGHT -> buildKnightFortress(world, base);
@@ -69,6 +70,7 @@ public final class StructureBuilder {
             case HEARTHFOLK -> buildHearthHamlet(world, base);
             case CUSTOM -> buildCommonExpansion(world, base, 1);
         }
+        endTrace(world);
         world.playSound(null, base.getX() + 0.5, base.getY(), base.getZ() + 0.5, SoundEvents.BLOCK_ANVIL_LAND, SoundCategory.BLOCKS, 0.65f, 1.15f);
     }
 
@@ -78,6 +80,7 @@ public final class StructureBuilder {
      * around the original set piece rather than merely changing a number.
      */
     public static void expand(ServerWorld world, BlockPos center, BuildStyle style, int level) {
+        beginTrace();
         switch (style) {
             case KNIGHT -> expandKnight(world, center, level);
             case PIRATE -> expandPirate(world, center, level);
@@ -86,11 +89,13 @@ public final class StructureBuilder {
             case MARAUDER, HEARTHFOLK -> buildCommonExpansion(world, center, level);
             case CUSTOM -> buildCommonExpansion(world, center, level);
         }
+        endTrace(world);
         world.playSound(null, center.getX() + 0.5, center.getY(), center.getZ() + 0.5, SoundEvents.BLOCK_ANVIL_LAND, SoundCategory.BLOCKS, 0.45f, 1.35f);
     }
 
     public static void buildScattered(ServerWorld world, BlockPos center, BuildStyle style, SettlementVariant variant) {
         forceLoad(world, center, 40);
+        beginTrace();
         switch (variant) {
             case FORTRESS -> buildScatteredFortress(world, center);
             case CITADEL -> buildCitadel(world, center);
@@ -111,6 +116,7 @@ public final class StructureBuilder {
             case ANOMALY -> buildScatteredAnomaly(world, center);
             case WATCHTOWER -> buildWatchtower(world, center);
         }
+        endTrace(world);
         world.playSound(null, center.getX() + 0.5, center.getY(), center.getZ() + 0.5, SoundEvents.BLOCK_ANVIL_LAND, SoundCategory.BLOCKS, 0.55f, 0.9f);
     }
 
@@ -3672,11 +3678,63 @@ public final class StructureBuilder {
 
     // ------------------------------------------------------------ plumbing
 
+    // ------------------------------------------------- no-float guarantee
+
+    /** Every block placed during a traced build, so supports can be stamped. */
+    private static final java.util.List<BlockPos> BUILD_TRACE = new java.util.ArrayList<>();
+    /** Above zero while a top-level build runs; set() records placements. */
+    private static int traceDepth = 0;
+
+    private static void beginTrace() {
+        traceDepth++;
+    }
+
+    private static void endTrace(ServerWorld world) {
+        traceDepth = Math.max(0, traceDepth - 1);
+        if (traceDepth == 0) {
+            settleFoundations(world);
+        }
+    }
+
+    /**
+     * The no-float guarantee: for every column the build touched, if the
+     * lowest placed block hangs over air, stamp a plinth down to honest
+     * ground. Water columns are left to their piers and stilts.
+     */
+    private static void settleFoundations(ServerWorld world) {
+        java.util.Map<Long, Integer> lowest = new java.util.HashMap<>();
+        for (BlockPos pos : BUILD_TRACE) {
+            lowest.merge(pos.asLong(), pos.getY(), Math::min);
+        }
+        for (java.util.Map.Entry<Long, Integer> entry : lowest.entrySet()) {
+            BlockPos pos = BlockPos.fromLong(entry.getKey());
+            if (pos.getY() <= world.getBottomY() + 2) {
+                continue;
+            }
+            BlockState at = world.getBlockState(pos);
+            if (at.isAir() || at.getCollisionShape(world, pos).isEmpty()) {
+                continue;
+            }
+            BlockPos below = pos.down();
+            if (!world.getBlockState(below).isAir() || !world.getFluidState(below).isEmpty()) {
+                continue;
+            }
+            Block plinth = at.getBlock() == Blocks.HAY_BLOCK
+                    || at.getBlock() == Blocks.WHITE_WOOL || at.getBlock() == Blocks.RED_WOOL
+                    ? Blocks.DIRT : Blocks.COBBLESTONE;
+            foundation(world, below.getX(), below.getY(), below.getY(), plinth);
+        }
+        BUILD_TRACE.clear();
+    }
+
     private static void set(ServerWorld world, BlockPos pos, Block block) {
         if (pos.getY() <= world.getBottomY() || pos.getY() >= world.getTopY()) {
             return;
         }
         world.setBlockState(pos, block.getDefaultState(), 3);
+        if (traceDepth > 0 && !block.isAir()) {
+            BUILD_TRACE.add(pos.toImmutable());
+        }
     }
 
     private static void set(ServerWorld world, BlockPos pos, BlockState state) {
@@ -3684,6 +3742,9 @@ public final class StructureBuilder {
             return;
         }
         world.setBlockState(pos, state, 3);
+        if (traceDepth > 0 && !state.isAir()) {
+            BUILD_TRACE.add(pos.toImmutable());
+        }
     }
 
     private static void fill(ServerWorld world, BlockPos corner, int sizeX, int height, int sizeZ, Block block) {

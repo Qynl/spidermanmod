@@ -47,7 +47,20 @@ public final class WorldSettlementGenerator {
             return;
         }
         BlockPos center = chooseSurface(world, requested);
-        if (center == null || state.hasGeneratedSite(center)) {
+        if (center == null) {
+            return;
+        }
+        if (state.hasGeneratedSite(center)) {
+            // Marked earlier but never claimed: its queued build was lost to a
+            // restart. Re-queue so the site heals instead of staying a flag.
+            if (!state.canClaimBase(center)) {
+                return;
+            }
+            SettlementPlan healPlan = planFor(biomePath(world, center), hash);
+            if (healPlan == null || !terrainAllows(world, center, healPlan.style())) {
+                return;
+            }
+            RealmEvents.queueSiteBuild(world, center, healPlan.style(), healPlan.variant(), true);
             return;
         }
         if (!state.canClaimBase(center)) {
@@ -70,18 +83,7 @@ public final class WorldSettlementGenerator {
         // Rare treasure shrines ignore biome borders: old gods had no borders.
         if (hash % 11L == 0L) {
             state.markGeneratedSite(center);
-            UUID shrineOwner = UUID.nameUUIDFromBytes((RivalRealms.MOD_ID + ":generated:" + world.getSeed()
-                    + ":" + center.asLong()).getBytes(StandardCharsets.UTF_8));
-            try {
-                StructureBuilder.buildScattered(world, center, BuildStyle.CUSTOM, SettlementVariant.TEMPLE);
-                String shrineName = BuildStyle.CUSTOM.displayName() + " · "
-                        + SettlementVariant.TEMPLE.name().toLowerCase(Locale.ROOT);
-                state.claimGeneratedBase(center, shrineOwner, BuildStyle.CUSTOM, shrineName);
-                RealmEvents.populateSettlement(world, center, BuildStyle.CUSTOM, SettlementVariant.TEMPLE);
-                RivalRealms.LOGGER.info("Generated {} at {}", shrineName, center);
-            } catch (RuntimeException exception) {
-                RivalRealms.LOGGER.error("Failed to generate Rival Realms site at {}", center, exception);
-            }
+            RealmEvents.queueSiteBuild(world, center, BuildStyle.CUSTOM, SettlementVariant.TEMPLE, true);
             return;
         }
         String biome = biomePath(world, center);
@@ -95,17 +97,12 @@ public final class WorldSettlementGenerator {
         state.markGeneratedSite(center);
         UUID owner = UUID.nameUUIDFromBytes((RivalRealms.MOD_ID + ":generated:" + world.getSeed()
                 + ":" + center.asLong()).getBytes(StandardCharsets.UTF_8));
-        try {
-            StructureBuilder.buildScattered(world, center, plan.style(), plan.variant());
-            String name = plan.style().displayName() + " · " + plan.variant().name().toLowerCase(Locale.ROOT);
-            state.claimGeneratedBase(center, owner, plan.style(), name);
-            // The settlement starts inhabited: guard on the walls, farmers in
-            // the fields. The slow cadence still grows it from here.
-            RealmEvents.populateSettlement(world, center, plan.style(), plan.variant());
-            RivalRealms.LOGGER.info("Generated {} at {} in {}", name, center, biome);
-        } catch (RuntimeException exception) {
-            RivalRealms.LOGGER.error("Failed to generate Rival Realms site at {}", center, exception);
-        }
+        // The build waits for the next server tick: block writes during a
+        // chunk-load callback race the loading pipeline, and half the town
+        // probes empty neighbor chunks - the floating-structures bug.
+        RealmEvents.queueSiteBuild(world, center, plan.style(), plan.variant(), true);
+        RivalRealms.LOGGER.info("Queued {} at {} in {}",
+                plan.variant().name().toLowerCase(Locale.ROOT), center, biome);
     }
 
     /** Hidden sites claim quietly; hermits live alone. */
@@ -113,18 +110,10 @@ public final class WorldSettlementGenerator {
                                     SettlementVariant variant) {
         UUID owner = UUID.nameUUIDFromBytes((RivalRealms.MOD_ID + ":generated:" + world.getSeed()
                 + ":" + center.asLong()).getBytes(StandardCharsets.UTF_8));
-        try {
-            StructureBuilder.buildScattered(world, center, BuildStyle.CUSTOM, variant);
-            String name = (variant == SettlementVariant.HERMITAGE ? "Hermitage" : "Strange Place")
-                    + " · " + center.getX() + ", " + center.getZ();
-            state.claimGeneratedBase(center, owner, BuildStyle.CUSTOM, name);
-            if (variant == SettlementVariant.HERMITAGE) {
-                RealmEvents.populateSettlement(world, center, BuildStyle.CUSTOM, variant);
-            }
-            RivalRealms.LOGGER.info("Generated {} at {}", name, center);
-        } catch (RuntimeException exception) {
-            RivalRealms.LOGGER.error("Failed to generate Rival Realms site at {}", center, exception);
-        }
+        String name = (variant == SettlementVariant.HERMITAGE ? "Hermitage" : "Strange Place")
+                + " · " + center.getX() + ", " + center.getZ();
+        RealmEvents.queueSiteBuild(world, center, BuildStyle.CUSTOM, variant, owner, name,
+                variant == SettlementVariant.HERMITAGE);
     }
 
     private static SettlementPlan planFor(String biome, long hash) {

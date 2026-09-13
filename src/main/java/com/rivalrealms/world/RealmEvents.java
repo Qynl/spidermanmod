@@ -27,6 +27,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.nio.charset.StandardCharsets;
+import java.util.Locale;
 
 /** Handles low-frequency living-world encounters, jobs, expansion, and raids. */
 public final class RealmEvents {
@@ -70,6 +72,14 @@ public final class RealmEvents {
                     tickHobbies(world);
                 } catch (RuntimeException exception) {
                     RivalRealms.LOGGER.error("Rival Realms hobby tick failed in {}",
+                            world.getRegistryKey().getValue(), exception);
+                }
+            }
+            if (world.getTime() % 100L == 20L) {
+                try {
+                    drainPendingSites(world);
+                } catch (RuntimeException exception) {
+                    RivalRealms.LOGGER.error("Rival Realms pending-site drain failed in {}",
                             world.getRegistryKey().getValue(), exception);
                 }
             }
@@ -878,6 +888,67 @@ public final class RealmEvents {
             survivor.refreshPositionAndAngles(center.add(i * 2 - 2, 0, i % 2 * 2), world.random.nextFloat() * 360.0f, 0.0f);
             survivor.setArchetype(culture);
             world.spawnEntity(survivor);
+        }
+    }
+
+    // --------------------------------------------------- queued world builds
+
+    /** A settlement site found during chunk load, waiting for a safe tick. */
+    public record PendingSite(BlockPos center, BuildStyle style, SettlementVariant variant,
+                              UUID owner, String name, boolean populate) {
+    }
+
+    private static final Map<net.minecraft.registry.RegistryKey<World>, List<PendingSite>> PENDING_SITES =
+            new HashMap<>();
+
+    /** Chunk load found a site: queue the real build for the next server tick. */
+    public static void queueSiteBuild(ServerWorld world, BlockPos center, BuildStyle style,
+                                      SettlementVariant variant, boolean populate) {
+        String name = style.displayName() + " · " + variant.name().toLowerCase(Locale.ROOT);
+        UUID owner = UUID.nameUUIDFromBytes((RivalRealms.MOD_ID + ":generated:" + world.getSeed()
+                + ":" + center.asLong()).getBytes(StandardCharsets.UTF_8));
+        queueSiteBuild(world, center, style, variant, owner, name, populate);
+    }
+
+    public static void queueSiteBuild(ServerWorld world, BlockPos center, BuildStyle style,
+                                      SettlementVariant variant, UUID owner, String name,
+                                      boolean populate) {
+        List<PendingSite> list = PENDING_SITES.computeIfAbsent(world.getRegistryKey(),
+                key -> new ArrayList<>());
+        for (PendingSite queued : list) {
+            if (queued.center().getSquaredDistance(center) < 4.0) {
+                return;
+            }
+        }
+        list.add(new PendingSite(center, style, variant, owner, name, populate));
+    }
+
+    /**
+     * Builds everything queued by chunk load - now the world is quiet, every
+     * neighbor chunk can be force-loaded, and no ground probe races the
+     * loading pipeline. This is the /rebuild path, so settlements come out
+     * whole instead of half-floating.
+     */
+    private static void drainPendingSites(ServerWorld world) {
+        List<PendingSite> list = PENDING_SITES.get(world.getRegistryKey());
+        if (list == null || list.isEmpty()) {
+            return;
+        }
+        List<PendingSite> remaining = new ArrayList<>(list);
+        list.clear();
+        for (PendingSite site : remaining) {
+            try {
+                StructureBuilder.buildScattered(world, site.center(), site.style(), site.variant());
+                RealmState.get(world).claimGeneratedBase(site.center(), site.owner(),
+                        site.style(), site.name());
+                if (site.populate()) {
+                    populateSettlement(world, site.center(), site.style(), site.variant());
+                }
+                RivalRealms.LOGGER.info("Generated {} at {}", site.name(), site.center());
+            } catch (RuntimeException exception) {
+                RivalRealms.LOGGER.error("Failed to generate Rival Realms site at {}",
+                        site.center(), exception);
+            }
         }
     }
 
