@@ -6,7 +6,6 @@ import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.ActionResult;
-import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -23,10 +22,10 @@ public class NoticeBoardBlock extends Block {
 
     @Override
     protected ActionResult onUse(BlockState state, World world, BlockPos pos,
-                                 PlayerEntity player, Hand hand, BlockHitResult hit) {
+                                 PlayerEntity player, BlockHitResult hit) {
         if (world instanceof ServerWorld serverWorld) {
             ContractEngine.tryTurnIn(serverWorld, (net.minecraft.server.network.ServerPlayerEntity) player,
-                    pos, player.getStackInHand(hand));
+                    pos, player.getStackInHand(net.minecraft.util.Hand.MAIN_HAND));
         }
         return ActionResult.SUCCESS;
     }
