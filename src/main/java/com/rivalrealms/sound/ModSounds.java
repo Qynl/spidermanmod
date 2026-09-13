@@ -9,6 +9,7 @@ import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.math.BlockPos;
 
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * The realm's voice catalog: performed lines for the moments that matter —
