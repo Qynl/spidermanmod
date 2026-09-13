@@ -97,7 +97,7 @@ public final class DialogueEngine {
         }
 
         // 3. Recognition: an old face returning after days away.
-        Long lastMet = listener.lastMet(listener.getUuid());
+        Long lastMet = npc.lastMet(listener.getUuid());
         if (lastMet != null && world.getTime() - lastMet >= 36000L && world.random.nextInt(2) == 0) {
             return Moment.of("known_return");
         }
