@@ -1,6 +1,7 @@
 package com.rivalrealms.world;
 
 import com.rivalrealms.entity.SurvivorEntity;
+import com.rivalrealms.sound.ModSounds;
 import net.minecraft.block.Blocks;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
@@ -66,7 +67,7 @@ public final class ConstructionEngine {
                     .random(world.random));
             if (base.contains(spot) && world.getBlockState(spot).isOf(Blocks.DIRT)
                     && world.getBlockState(spot.up()).isAir()) {
-                world.setBlockState(spot, Blocks.FARMLAND);
+                world.setBlockState(spot, Blocks.FARMLAND.getDefaultState());
                 world.setBlockState(spot.up(), Blocks.WHEAT.getDefaultState()
                         .with(net.minecraft.block.CropBlock.AGE, 1));
                 ModSounds.playProfiled(world, spot, "work_shout",
@@ -127,8 +128,8 @@ public final class ConstructionEngine {
             for (int dz = 0; dz < 5 && laid < 3; dz++) {
                 BlockPos at = cursor.add(dx, 0, dz);
                 if (world.getBlockState(at).isAir()) {
-                    world.setBlockState(at, (progress / 4) % 2 == 0
-                            ? Blocks.OAK_PLANKS : Blocks.OAK_LOG);
+                    world.setBlockState(at, ((progress / 4) % 2 == 0
+                            ? Blocks.OAK_PLANKS : Blocks.OAK_LOG).getDefaultState());
                     laid++;
                 }
             }
