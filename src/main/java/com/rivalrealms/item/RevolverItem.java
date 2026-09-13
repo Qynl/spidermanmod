@@ -111,6 +111,7 @@ public class RevolverItem extends Item {
             double fanned = (cylinder - shots) * (cylinder > 1 ? 0.012 : 0.0);
             fireShot(world, user, stack, hand, start, direction, fanned);
             fireFeedback(world, user, start, direction, null);
+            user.swingHand(hand);
 
             user.getItemCooldownManager().set(this, cooldown);
             // Visible, physical recoil with a touch of yaw wander.

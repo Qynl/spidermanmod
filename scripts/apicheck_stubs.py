@@ -562,6 +562,7 @@ add('net.minecraft.entity.Entity.PositionUpdater', [], [], iface=True)
 add('net.minecraft.entity.EntityType', [], [
     'public T create(net.minecraft.world.World world);',
     'public static final net.minecraft.entity.EntityType<net.minecraft.entity.vehicle.BoatEntity> BOAT;',
+    'public static final net.minecraft.entity.EntityType<net.minecraft.entity.passive.DonkeyEntity> DONKEY;',
 ])
 add('net.minecraft.entity.EntityType.Builder', [], [
     'public static <T extends net.minecraft.entity.Entity> net.minecraft.entity.EntityType.Builder<T> create(net.minecraft.entity.EntityType.EntityFactory<T> factory, net.minecraft.entity.SpawnGroup spawnGroup);',

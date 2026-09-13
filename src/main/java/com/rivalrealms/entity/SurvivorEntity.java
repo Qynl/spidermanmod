@@ -1627,6 +1627,8 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
      */
     private void fireGunshot(LivingEntity target, Archetype archetype) {
         ServerWorld serverWorld = (ServerWorld) getWorld();
+        // The whole shot reads because the arm kicks with the report.
+        swingHand(Hand.MAIN_HAND);
         ArrowEntity bullet = new ArrowEntity(getWorld(), this, new ItemStack(Items.ARROW), null);
         double muzzleY = getY() + getHeight() * 0.55;
         bullet.setPosition(getX(), muzzleY, getZ());
@@ -1647,6 +1649,9 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
                 getX() + dx * 0.08, muzzleY, getZ() + dz * 0.08, 5, 0.12, 0.08, 0.12, 0.01);
         serverWorld.spawnParticles(ParticleTypes.FLAME,
                 getX() + dx * 0.08, muzzleY, getZ() + dz * 0.08, 2, 0.05, 0.03, 0.05, 0.01);
+        // A curl of powder smoke that hangs where they fired.
+        serverWorld.spawnParticles(ParticleTypes.CLOUD,
+                getX() + dx * 0.08, muzzleY + 0.2, getZ() + dz * 0.08, 3, 0.15, 0.1, 0.15, 0.02);
         // A short tracer so the shot reads across a street.
         for (double d = 1.0; d < Math.min(horizontal, 8.0); d += 1.6) {
             serverWorld.spawnParticles(ParticleTypes.CRIT,
@@ -1658,6 +1663,7 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
     /** Sky captains keep the classic crossbow bolt, loosed from chest height. */
     private void fireBolt(LivingEntity target, Archetype archetype) {
         ServerWorld serverWorld = (ServerWorld) getWorld();
+        swingHand(Hand.MAIN_HAND);
         ArrowEntity bolt = new ArrowEntity(getWorld(), this, new ItemStack(Items.ARROW), null);
         double muzzleY = getY() + getHeight() * 0.55;
         bolt.setPosition(getX(), muzzleY, getZ());
@@ -1671,6 +1677,8 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
         getWorld().spawnEntity(bolt);
         serverWorld.playSound(null, getX(), getY(), getZ(), SoundEvents.ITEM_CROSSBOW_SHOOT,
                 SoundCategory.NEUTRAL, 0.9f, 1.0f);
+        serverWorld.spawnParticles(ParticleTypes.POOF,
+                getX() + dx * 0.08, muzzleY, getZ() + dz * 0.08, 2, 0.08, 0.05, 0.08, 0.01);
     }
 
     @Override

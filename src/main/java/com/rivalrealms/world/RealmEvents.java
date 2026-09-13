@@ -23,7 +23,9 @@ import net.minecraft.world.Heightmap;
 import net.minecraft.world.World;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /** Handles low-frequency living-world encounters, jobs, expansion, and raids. */
@@ -52,6 +54,30 @@ public final class RealmEvents {
                     tickMaritimeEncounters(world);
                 } catch (RuntimeException exception) {
                     RivalRealms.LOGGER.error("Rival Realms maritime encounter tick failed in {}",
+                            world.getRegistryKey().getValue(), exception);
+                }
+            }
+            if (world.getTime() % 24000L == 4000L) {
+                try {
+                    spawnMerchantCaravan(world);
+                } catch (RuntimeException exception) {
+                    RivalRealms.LOGGER.error("Rival Realms caravan spawn failed in {}",
+                            world.getRegistryKey().getValue(), exception);
+                }
+            }
+            if (world.getTime() % 1200L == 600L) {
+                try {
+                    tickHobbies(world);
+                } catch (RuntimeException exception) {
+                    RivalRealms.LOGGER.error("Rival Realms hobby tick failed in {}",
+                            world.getRegistryKey().getValue(), exception);
+                }
+            }
+            if (world.getTime() % 100L == 40L) {
+                try {
+                    tickCaravans(world);
+                } catch (RuntimeException exception) {
+                    RivalRealms.LOGGER.error("Rival Realms caravan tick failed in {}",
                             world.getRegistryKey().getValue(), exception);
                 }
             }
@@ -852,6 +878,163 @@ public final class RealmEvents {
             survivor.refreshPositionAndAngles(center.add(i * 2 - 2, 0, i % 2 * 2), world.random.nextFloat() * 360.0f, 0.0f);
             survivor.setArchetype(culture);
             world.spawnEntity(survivor);
+        }
+    }
+
+    // -------------------------------------------------------- road caravans
+
+    /** One merchant caravan walking the road between two settlements. */
+    private static final class Caravan {
+        final List<BlockPos> waypoints = new ArrayList<>();
+        final List<UUID> members = new ArrayList<>();
+        UUID merchant;
+        int leg;
+        long deadline;
+    }
+
+    private static final Map<net.minecraft.registry.RegistryKey<World>, Caravan> CARAVANS =
+            new HashMap<>();
+
+    private static final UUID MERCHANT_GUILD =
+            UUID.nameUUIDFromBytes("rivalrealms-merchant-guild".getBytes());
+
+    /** Once a day the guild sends a merchant, two swords and a mule down the road. */
+    private static void spawnMerchantCaravan(ServerWorld world) {
+        net.minecraft.registry.RegistryKey<World> key = world.getRegistryKey();
+        if (CARAVANS.containsKey(key)) {
+            return;
+        }
+        RealmState state = RealmState.get(world);
+        List<RealmState.BaseRecord> bases = state.bases();
+        if (bases.size() < 2) {
+            return;
+        }
+        RealmState.BaseRecord from = bases.get(world.random.nextInt(bases.size()));
+        RealmState.BaseRecord to = bases.get(world.random.nextInt(bases.size()));
+        if (from == to) {
+            return;
+        }
+        BlockPos a = from.center();
+        BlockPos b = to.center();
+        Caravan caravan = new Caravan();
+        int legs = Math.max(1, (int) Math.sqrt(a.getSquaredDistance(b)) / 40);
+        for (int i = 1; i <= legs; i++) {
+            int x = a.getX() + (b.getX() - a.getX()) * i / legs;
+            int z = a.getZ() + (b.getZ() - a.getZ()) * i / legs;
+            caravan.waypoints.add(world.getTopPosition(Heightmap.Type.WORLD_SURFACE,
+                    new BlockPos(x, world.getBottomY(), z)));
+        }
+        SurvivorEntity merchant = spawnSettler(world, a, MERCHANT_GUILD, "Crownlands",
+                SettlementRole.TRADER, false);
+        if (merchant == null) {
+            return;
+        }
+        caravan.merchant = merchant.getUuid();
+        caravan.members.add(merchant.getUuid());
+        for (int i = 0; i < 2; i++) {
+            SurvivorEntity guard = spawnSettler(world, a, MERCHANT_GUILD, "Crownlands",
+                    SettlementRole.GUARD, true);
+            if (guard != null) {
+                caravan.members.add(guard.getUuid());
+            }
+        }
+        Entity packMule = net.minecraft.entity.EntityType.DONKEY.create(world);
+        if (packMule != null) {
+            packMule.refreshPositionAndAngles(a.getX() + 0.5, a.getY() + 1, a.getZ() + 0.5, 0.0f, 0.0f);
+            world.spawnEntity(packMule);
+            caravan.members.add(packMule.getUuid());
+        }
+        caravan.deadline = world.getTime() + 9000L;
+        CARAVANS.put(key, caravan);
+        state.chronicle(world.getTime(), "A merchant caravan set out from the market at "
+                + a.getX() + ", " + a.getZ() + " for the far stalls at "
+                + b.getX() + ", " + b.getZ() + ".");
+    }
+
+    /** Steers the caravan leg by leg; dissolves it when it arrives or fails. */
+    private static void tickCaravans(ServerWorld world) {
+        Caravan caravan = CARAVANS.get(world.getRegistryKey());
+        if (caravan == null) {
+            return;
+        }
+        List<Entity> alive = new ArrayList<>();
+        SurvivorEntity merchant = null;
+        for (UUID id : caravan.members) {
+            Entity entity = world.getEntity(id);
+            if (entity != null && entity.isAlive()) {
+                alive.add(entity);
+                if (entity.getUuid().equals(caravan.merchant)) {
+                    merchant = (SurvivorEntity) entity;
+                }
+            }
+        }
+        if (alive.isEmpty()) {
+            CARAVANS.remove(world.getRegistryKey());
+            return;
+        }
+        // Lost its merchant or the road: guards walk home, the mule is freed.
+        if (merchant == null || world.getTime() > caravan.deadline) {
+            for (Entity entity : alive) {
+                if (!(entity instanceof SurvivorEntity)) {
+                    entity.discard();
+                }
+            }
+            CARAVANS.remove(world.getRegistryKey());
+            return;
+        }
+        BlockPos target = caravan.waypoints.get(Math.min(caravan.leg, caravan.waypoints.size() - 1));
+        if (merchant.squaredDistanceTo(target.getX(), target.getY(), target.getZ()) < 100.0) {
+            caravan.leg++;
+            if (caravan.leg >= caravan.waypoints.size()) {
+                RealmState.get(world).chronicle(world.getTime(),
+                        "The merchant caravan reached the far market, guards and mule intact.");
+                for (Entity entity : alive) {
+                    if (!(entity instanceof SurvivorEntity)) {
+                        entity.discard();
+                    }
+                }
+                CARAVANS.remove(world.getRegistryKey());
+                return;
+            }
+            target = caravan.waypoints.get(caravan.leg);
+        }
+        for (Entity entity : alive) {
+            if (entity instanceof net.minecraft.entity.mob.MobEntity mob) {
+                mob.getNavigation().startMovingTo(target.getX() + 0.5, target.getY(),
+                        target.getZ() + 0.5, 0.95);
+            }
+        }
+    }
+
+    /**
+     * Quiet off-duty life: now and then a settler strolls to the village
+     * green - the well, the maypole, the pond - to practice, play and
+     * breathe. Music notes and the odd fished-out catch make it readable.
+     */
+    private static void tickHobbies(ServerWorld world) {
+        RealmState state = RealmState.get(world);
+        List<RealmState.BaseRecord> bases = state.bases();
+        if (bases.isEmpty()) {
+            return;
+        }
+        RealmState.BaseRecord base = bases.get(world.random.nextInt(bases.size()));
+        BlockPos center = base.center();
+        List<net.minecraft.entity.mob.MobEntity> folk = world.getEntitiesByClass(
+                net.minecraft.entity.mob.MobEntity.class,
+                new Box(center.add(-24, -8, -24), center.add(24, 16, 24)),
+                entity -> entity instanceof SurvivorEntity);
+        if (folk.isEmpty()) {
+            return;
+        }
+        net.minecraft.entity.mob.MobEntity idler = folk.get(world.random.nextInt(folk.size()));
+        BlockPos green = center.add(world.random.nextInt(17) - 8, 0, world.random.nextInt(17) - 8);
+        idler.getNavigation().startMovingTo(green.getX() + 0.5, green.getY(),
+                green.getZ() + 0.5, 0.8);
+        world.spawnParticles(net.minecraft.particle.ParticleTypes.NOTE,
+                idler.getX(), idler.getY() + 2.2, idler.getZ(), 3, 0.3, 0.2, 0.3, 0.5);
+        if (world.random.nextInt(4) == 0) {
+            world.spawnParticles(net.minecraft.particle.ParticleTypes.HAPPY_VILLAGER,
+                    idler.getX(), idler.getY() + 1.5, idler.getZ(), 4, 0.4, 0.4, 0.4, 0.01);
         }
     }
 }

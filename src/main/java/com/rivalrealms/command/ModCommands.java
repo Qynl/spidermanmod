@@ -244,11 +244,15 @@ public final class ModCommands {
             source.sendFeedback(() -> Text.literal("The chronicle is still blank. The realm has not made history yet."), false);
             return 0;
         }
-        source.sendFeedback(() -> Text.literal("==== THE REALM CHRONICLE ====").formatted(net.minecraft.util.Formatting.GOLD), false);
+        long today = world.getTime() / 24000L;
+        source.sendFeedback(() -> Text.literal("==== THE REALM CHRONICLE - YEAR "
+                + (today / 365 + 1) + ", DAY " + (today % 365 + 1) + " ====")
+                .formatted(net.minecraft.util.Formatting.GOLD), false);
         int from = Math.max(0, entries.size() - 10);
         for (int i = from; i < entries.size(); i++) {
             RealmState.ChronicleEntry entry = entries.get(i);
-            final String line = "Day " + entry.day() + ": " + entry.text();
+            final String line = "Year " + (entry.day() / 365 + 1) + ", Day "
+                    + (entry.day() % 365 + 1) + ": " + entry.text();
             source.sendFeedback(() -> Text.literal(line)
                     .formatted(entry.major() ? net.minecraft.util.Formatting.GOLD : net.minecraft.util.Formatting.GRAY), false);
         }
