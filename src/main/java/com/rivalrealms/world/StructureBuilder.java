@@ -211,6 +211,8 @@ public final class StructureBuilder {
         gardenPatch(world, base.add(-16, 0, -8));
         // The smithy and its coal-dark yard.
         forge(world, base.add(-2, 0, 10));
+        // The bakery's oven breathes smoke over the square.
+        bakeOven(world, base.add(-8, 0, 9));
         spawnGuard(world, base, y, style);
     }
 
@@ -231,6 +233,8 @@ public final class StructureBuilder {
         grandQuayCrane(world, base.add(-13, 0, -3));
         // A fishing family's stilt hut, legs in the tide.
         fishingStilt(world, base.add(16, 0, 3));
+        // The pride of the harbor rides at anchor.
+        galleon(world, base.add(14, 0, 14));
         // The light that brings the ships home.
         lighthouse(world, base.add(-18, 0, -16));
         // The waterfront arcade: stone arches, timber loft, long dark
@@ -1853,6 +1857,126 @@ public final class StructureBuilder {
                 new ItemStack(ModItems.ROYAL_COIN, 3));
     }
 
+    /** A trading galleon at anchor: striped hull, two masts, full sails. */
+    private static void galleon(ServerWorld world, BlockPos base) {
+        int waterY = waterSurfaceAt(world, base);
+        int y = waterY > 0 ? waterY : groundAt(world, base.getX(), base.getZ());
+        BlockPos origin = new BlockPos(base.getX(), y, base.getZ());
+        // The hull: 18 rows, tapering to the bow and stern, both rising.
+        for (int i = 0; i < 18; i++) {
+            int half;
+            if (i == 0 || i == 17) {
+                half = 0;
+            } else if (i == 1 || i == 16) {
+                half = 1;
+            } else if (i == 2 || i == 3 || i == 14 || i == 15) {
+                half = 1;
+            } else {
+                half = 2;
+            }
+            int shear = i < 3 ? 3 - i : (i > 14 ? i - 14 : 0);
+            for (int z = -half; z <= half; z++) {
+                // Keel and striped wales: dark, then light, then planks.
+                set(world, origin.add(i, 0, z), ModBlocks.SHIP_PLANKS);
+                set(world, origin.add(i, 1, z), Blocks.SPRUCE_LOG);
+                set(world, origin.add(i, 2, z), ModBlocks.SHIP_PLANKS);
+                set(world, origin.add(i, 3 + shear, z), Blocks.SPRUCE_PLANKS);
+                if (half < 2) {
+                    // Filled-in bow and stern faces.
+                    set(world, origin.add(i, 3 + shear + 1, z), Blocks.SPRUCE_PLANKS);
+                }
+            }
+        }
+        // Bulwarks and the deck furniture.
+        for (int i = 2; i <= 15; i++) {
+            set(world, origin.add(i, 4, -2), Blocks.SPRUCE_LOG);
+            set(world, origin.add(i, 4, 2), Blocks.SPRUCE_LOG);
+            if (i % 6 == 2) {
+                set(world, origin.add(i, 5, -2), Blocks.LANTERN);
+            }
+        }
+        // The stern castle: raised deck, rail, the officer's lantern.
+        for (int i = 15; i <= 17; i++) {
+            for (int z = -1; z <= 1; z++) {
+                set(world, origin.add(i, 5 + (i > 15 ? 1 : 0), z), Blocks.SPRUCE_PLANKS);
+            }
+        }
+        set(world, origin.add(16, 7, -1), Blocks.OAK_FENCE);
+        set(world, origin.add(16, 7, 1), Blocks.OAK_FENCE);
+        set(world, origin.add(16, 8, 0), ModBlocks.REALM_BANNER);
+        // Two masts with yard arms, white canvas, dark caps and pennants.
+        int[][] masts = {{5, 10}, {12, 8}};
+        for (int[] mast : masts) {
+            int x = mast[0];
+            int top = mast[1];
+            for (int h = 1; h <= top; h++) {
+                set(world, origin.add(x, 4 + h, 0), h >= top - 1
+                        ? Blocks.SPRUCE_LOG : Blocks.OAK_FENCE);
+            }
+            for (int yard = top - 2; yard >= 4; yard -= 3) {
+                for (int z = -2; z <= 2; z++) {
+                    set(world, origin.add(x, 4 + yard, z), Blocks.OAK_FENCE);
+                    if (Math.abs(z) < 2) {
+                        set(world, origin.add(x, 4 + yard - 1, z), Blocks.WHITE_WOOL);
+                    }
+                }
+            }
+            set(world, origin.add(x, 4 + top + 1, 0), Blocks.SPRUCE_SLAB);
+            set(world, origin.add(x, 4 + top + 2, 0), Blocks.WHITE_WOOL);
+        }
+        // Rigging: glass panes slanting from the mastheads to the rails.
+        for (int k = 0; k < 4; k++) {
+            set(world, origin.add(5 - k, 11 - k, -1), Blocks.WHITE_STAINED_GLASS_PANE);
+            set(world, origin.add(12 - k, 9 - k, 1), Blocks.WHITE_STAINED_GLASS_PANE);
+        }
+        // The bowsprit reaches forward and up from the bow.
+        set(world, origin.add(18, 5, 0), Blocks.SPRUCE_LOG);
+        set(world, origin.add(19, 6, 0), Blocks.SPRUCE_LOG);
+        set(world, origin.add(20, 7, 0), Blocks.SPRUCE_SLAB);
+        set(world, origin.add(18, 7, 0), Blocks.WHITE_WOOL);
+        // Cargo on deck: water for the crossing, powder for the rails.
+        set(world, origin.add(8, 5, 1), Blocks.BARREL);
+        set(world, origin.add(9, 5, 1), Blocks.BARREL);
+        set(world, origin.add(8, 5, -1), ModBlocks.SUPPLY_CRATE);
+        set(world, origin.add(14, 5, 0), Blocks.CAULDRON);
+        // The anchor chain runs over the bow.
+        set(world, origin.add(1, 3, 0), Blocks.CHAIN);
+        set(world, origin.add(0, 2, 0), Blocks.CHAIN);
+    }
+
+    /** The village bakery's outdoor bread oven: brick dome, smoke, wood pile. */
+    private static void bakeOven(ServerWorld world, BlockPos base) {
+        int y = groundAt(world, base.getX() + 1, base.getZ() + 1);
+        BlockPos origin = new BlockPos(base.getX(), y, base.getZ());
+        // The dome: brick ring, a mouth with a fire glowing inside, a cap.
+        for (int dx = 0; dx <= 2; dx++) {
+            for (int dz = 0; dz <= 2; dz++) {
+                boolean rim = dx == 0 || dz == 0 || dx == 2 || dz == 2;
+                set(world, origin.add(dx, 1, dz), rim ? Blocks.BRICKS : Blocks.AIR);
+            }
+        }
+        set(world, origin.add(1, 1, 2), Blocks.AIR);
+        set(world, origin.add(1, 1, 1), Blocks.CAMPFIRE);
+        for (int dx = 0; dx <= 2; dx++) {
+            for (int dz = 0; dz <= 2; dz++) {
+                set(world, origin.add(dx, 2, dz), Blocks.BRICKS);
+            }
+        }
+        set(world, origin.add(1, 3, 0), Blocks.BRICKS);
+        set(world, origin.add(1, 3, 1), Blocks.BRICKS);
+        set(world, origin.add(1, 3, 2), Blocks.BRICKS);
+        set(world, origin.add(1, 4, 1), Blocks.STONE_BRICK_SLAB);
+        // The wood pile and the cooling shelf by the mouth.
+        set(world, origin.add(3, 1, 1), Blocks.OAK_WOOD);
+        set(world, origin.add(3, 2, 1), Blocks.OAK_WOOD);
+        set(world, origin.add(3, 1, 2), Blocks.SPRUCE_SLAB);
+        set(world, origin.add(4, 1, 2), Blocks.BARREL);
+        // Fresh bread under the awning pole.
+        set(world, origin.add(0, 1, 3), Blocks.OAK_FENCE);
+        set(world, origin.add(0, 2, 3), Blocks.OAK_FENCE);
+        set(world, origin.add(0, 3, 3), ModBlocks.REALM_BANNER);
+    }
+
     /** A fire basket on a stone post - courtyard and gate light. */
     private static void brazier(ServerWorld world, BlockPos base) {
         int y = groundAt(world, base.getX(), base.getZ());
@@ -2287,24 +2411,30 @@ public final class StructureBuilder {
 
     private static void marketStall(ServerWorld world, BlockPos base, Block canopy, Block log) {
         int y = groundAt(world, base.getX() + 1, base.getZ() + 1);
-        for (int dx = 0; dx <= 1; dx++) {
-            for (int dz = 0; dz <= 1; dz++) {
-                if (dx == 0 || dx == 1) {
-                    set(world, base.add(dx, y + 1, dz * 2), log);
-                    set(world, base.add(dx, y + 2, dz * 2), log);
-                }
+        // The counter: a solid plank table on fence legs, goods laid out.
+        for (int dx = 0; dx <= 2; dx++) {
+            for (int dz = 0; dz <= 3; dz++) {
+                boolean rim = dx == 0 || dz == 0 || dx == 2 || dz == 3;
+                set(world, base.add(dx, y + 1, dz), rim ? Blocks.SPRUCE_PLANKS
+                        : Blocks.SPRUCE_SLAB);
             }
         }
-        for (int dx = 0; dx <= 1; dx++) {
-            for (int dz = 0; dz <= 2; dz++) {
-                set(world, base.add(dx, y + 3, dz), canopy);
-            }
-        }
-        set(world, base.add(0, y + 1, 1), Blocks.OAK_STAIRS.getDefaultState()
-                .with(HorizontalFacingBlock.FACING, Direction.EAST));
-        set(world, base.add(1, y + 1, 1), Blocks.CHEST);
-        stockChest(world, base.add(1, y + 1, 1), new ItemStack(Items.BREAD, 5),
+        set(world, base.add(0, y + 2, 1), Blocks.HAY_BLOCK);
+        set(world, base.add(2, y + 2, 1), ModBlocks.SUPPLY_CRATE);
+        set(world, base.add(0, y + 2, 3), Blocks.BARREL);
+        stockChest(world, base.add(2, y + 2, 3), new ItemStack(Items.BREAD, 5),
                 new ItemStack(ModItems.ROYAL_JEWELRY, 1), new ItemStack(ModItems.ROYAL_COIN, 2));
+        // Tall corner posts under a thick striped canopy.
+        for (int[] post : new int[][]{{0, 0}, {2, 0}, {0, 3}, {2, 3}}) {
+            set(world, base.add(post[0], y + 2, post[1]), log);
+            set(world, base.add(post[0], y + 3, post[1]), log);
+        }
+        for (int dx = 0; dx <= 2; dx++) {
+            for (int dz = 0; dz <= 3; dz++) {
+                set(world, base.add(dx, y + 4, dz), (dx + dz) % 2 == 0 ? canopy
+                        : Blocks.WHITE_WOOL);
+            }
+        }
     }
 
     private static void storageYard(ServerWorld world, BlockPos base, Block floor) {
@@ -2770,6 +2900,8 @@ public final class StructureBuilder {
 
         lampPost(world, base.add(-6, 0, -1));
         lampPost(world, base.add(6, 0, -1));
+        // The hamlet's bread comes out of this little dome oven.
+        bakeOven(world, base.add(-6, 0, -5));
         set(world, base.add(0, y + 1, 10), ModBlocks.REALM_BANNER);
         fill(world, base.add(-1, y, -6), 3, 1, 17, ModBlocks.ROAD_STONE);
         set(world, base.add(-2, y + 1, 9), ModBlocks.HEARTH_LANTERN);
