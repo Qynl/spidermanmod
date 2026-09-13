@@ -8,7 +8,6 @@ on:
 
 permissions:
   contents: write
-  issues: write
 
 jobs:
   build:
@@ -28,26 +27,7 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
 
       - name: Build with Gradle
-        run: |
-          chmod +x gradlew
-          ./gradlew build --stacktrace 2>&1 | tee /tmp/gradle.log
-          exit ${PIPESTATUS[0]}
-
-      - name: Report build failure
-        if: failure() && github.ref == 'refs/heads/arena/01a09235-spidermanmod'
-        run: |
-          tail -n 600 /tmp/gradle.log > /tmp/fail.txt
-          cat /tmp/fail.txt
-          gh issue create --title "gradle failed $GITHUB_RUN_ID" --body-file /tmp/fail.txt || true
-          git config user.name "arena-agent"
-          git config user.email "arena-agent@users.noreply.github.com"
-          cp /tmp/gradle.log ./gradle-failure.log || true
-          git add -f gradle-failure.log || true
-          git commit -m "gradle failure $GITHUB_RUN_ID [skip ci]" || true
-          git push origin HEAD:arena/01a09235-spidermanmod || true
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: chmod +x gradlew && ./gradlew build --stacktrace
 
       - name: Upload mod jar
         uses: actions/upload-artifact@v4
@@ -64,7 +44,6 @@ jobs:
           git config user.name "arena-agent"
           git config user.email "arena-agent@users.noreply.github.com"
           ls -lh build/libs/
-          # Find jar with classes (skip sources jar)
           MAIN_JAR=""
           for f in build/libs/*.jar; do
             if echo "$f" | grep -q sources; then continue; fi
@@ -93,8 +72,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  # Validates the offline toolchain (build-local/): stub generation, named
-  # compile, Yarn -> Intermediary remap, refmap, jar checks, unit tests.
   local-build:
     runs-on: ubuntu-latest
     steps:
@@ -112,17 +89,8 @@ jobs:
         run: |
           chmod +x build-local/build.sh build-local/test.sh
           export JAVAC="$JAVA_HOME/bin/javac"
-          ./build-local/build.sh 2>&1 | tee /tmp/local-build.log
-          ./build-local/test.sh 2>&1 | tee -a /tmp/local-build.log
-
-      - name: Report local-build failure
-        if: failure() && github.ref == 'refs/heads/arena/01a09235-spidermanmod'
-        run: |
-          tail -n 800 /tmp/local-build.log > /tmp/local-fail.txt
-          cat /tmp/local-fail.txt
-          gh issue create --title "local-build failed $GITHUB_RUN_ID" --body-file /tmp/local-fail.txt || true
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ./build-local/build.sh
+          ./build-local/test.sh
 
       - name: Upload offline jar
         uses: actions/upload-artifact@v4
