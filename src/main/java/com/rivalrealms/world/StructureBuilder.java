@@ -108,6 +108,7 @@ public final class StructureBuilder {
             case TEMPLE -> buildScatteredTemple(world, center);
             case HERMITAGE -> buildScatteredHermitage(world, center);
             case ANOMALY -> buildScatteredAnomaly(world, center);
+            case WATCHTOWER -> buildWatchtower(world, center);
         }
         world.playSound(null, center.getX() + 0.5, center.getY(), center.getZ() + 0.5, SoundEvents.BLOCK_ANVIL_LAND, SoundCategory.BLOCKS, 0.55f, 0.9f);
     }
@@ -286,6 +287,8 @@ public final class StructureBuilder {
         set(world, base.add(5, y + 3, 2), Blocks.WHITE_WOOL);
         lampPost(world, base.add(-4, 0, 3));
         lampPost(world, base.add(4, 0, 3));
+        // The mountain gives up its coal at this adit.
+        mineAdit(world, base.add(14, 0, 8));
         mooredAirship(world, base.add(0, 0, -2));
         spawnGuard(world, base, y, BuildStyle.SKY);
     }
@@ -307,7 +310,9 @@ public final class StructureBuilder {
         set(world, base.add(8, y + 1, -2), Blocks.OAK_FENCE);
         set(world, base.add(6, y + 1, -4), Blocks.BARREL);
         farmPlot(world, base.add(3, 0, 3), 6, 5);
-        farmhouse(world, base.add(-7, 0, 9));
+        // The lumber corner: stacks, sawhorse, foreman's shed.
+        lumberCamp(world, base.add(-9, 0, 9));
+        farmhouse(world, base.add(-7, 0, 13));
         scarecrow(world, base.add(7, 0, 5));
         set(world, base.add(0, y + 1, 0), ModBlocks.REALM_BANNER);
         set(world, base.add(-1, y + 1, 0), ModBlocks.WAR_TABLE);
@@ -1977,6 +1982,198 @@ public final class StructureBuilder {
         set(world, origin.add(0, 3, 3), ModBlocks.REALM_BANNER);
     }
 
+    /** The watchtower: a stone drum, a timber belfry, and a keeper's annex. */
+    private static void buildWatchtower(ServerWorld world, BlockPos base) {
+        int y = plateau(world, base, 15, 15, Blocks.GRASS_BLOCK);
+        BlockPos drum = base.add(-3, 0, -3);
+        packUnder(world, drum, 7, 7, y, Blocks.COBBLESTONE);
+        // Mixed stone drum with moss working in, quoins at the corners.
+        for (int h = 1; h <= 7; h++) {
+            for (int x = 0; x <= 6; x++) {
+                for (int z = 0; z <= 6; z++) {
+                    boolean edge = x == 0 || z == 0 || x == 6 || z == 6;
+                    BlockPos at = drum.add(x, h, z);
+                    if (!edge) {
+                        set(world, at, h == 7 ? Blocks.SPRUCE_PLANKS : Blocks.AIR);
+                        continue;
+                    }
+                    boolean quoin = (x < 2 || x > 4) && (z < 2 || z > 4);
+                    boolean mossy = (x + z + h) % 5 == 0;
+                    set(world, at, quoin ? Blocks.STONE_BRICKS
+                            : mossy ? Blocks.MOSSY_COBBLESTONE : Blocks.COBBLESTONE);
+                }
+            }
+            if (h == 1 || h == 2) {
+                set(world, drum.add(3, h, 6), Blocks.AIR);
+            }
+            if (h == 3) {
+                set(world, drum.add(3, h, 6), Blocks.SPRUCE_SLAB);
+            }
+            if (h == 5 || h == 6) {
+                set(world, drum.add(3, h, 0), ModBlocks.ARROW_SLIT);
+            }
+        }
+        // Door, torches, and the belfry: timber-framed with arched openings.
+        set(world, drum.add(3, 1, 7), Blocks.SPRUCE_SLAB);
+        set(world, drum.add(2, 1, 7), Blocks.OAK_FENCE);
+        set(world, drum.add(4, 1, 7), Blocks.OAK_FENCE);
+        set(world, drum.add(2, 2, 7), Blocks.TORCH);
+        set(world, drum.add(4, 2, 7), Blocks.TORCH);
+        for (int h = 8; h <= 10; h++) {
+            for (int x = 0; x <= 6; x++) {
+                for (int z = 0; z <= 6; z++) {
+                    boolean edge = x == 0 || z == 0 || x == 6 || z == 6;
+                    BlockPos at = drum.add(x, h, z);
+                    boolean post = (x % 3 == 0) && (z % 3 == 0);
+                    boolean arch = (x == 3 || z == 3) && h >= 9;
+                    if (!edge) {
+                        set(world, at, h == 10 ? Blocks.SPRUCE_PLANKS : Blocks.AIR);
+                    } else if (arch && !post) {
+                        set(world, at, h == 10 ? Blocks.SPRUCE_LOG : Blocks.AIR);
+                    } else if (h == 8 || post) {
+                        set(world, at, Blocks.SPRUCE_LOG);
+                    } else {
+                        set(world, at, Blocks.SPRUCE_PLANKS);
+                    }
+                }
+            }
+        }
+        // Corbels, then the dark pyramid and its finial.
+        for (int x = 0; x <= 6; x++) {
+            for (int z = 0; z <= 6; z++) {
+                boolean edge = x == 0 || z == 0 || x == 6 || z == 6;
+                if (edge) {
+                    set(world, drum.add(x, 11, z), Blocks.SPRUCE_SLAB);
+                }
+            }
+        }
+        for (int ring = 0; ring < 3; ring++) {
+            int lo = ring;
+            int hi = 6 - ring;
+            for (int x = lo; x <= hi; x++) {
+                for (int z = lo; z <= hi; z++) {
+                    boolean edge = x == lo || z == lo || x == hi || z == hi;
+                    if (edge) {
+                        set(world, drum.add(x, 12 + ring, z), Blocks.DARK_OAK_STAIRS);
+                    }
+                }
+            }
+        }
+        set(world, drum.add(3, 15, 3), Blocks.SPRUCE_SLAB);
+        set(world, drum.add(3, 16, 3), Blocks.OAK_FENCE);
+        set(world, drum.add(3, 17, 3), ModBlocks.REALM_BANNER);
+        // The keeper's annex: a little cottage with a smoking chimney.
+        BlockPos annex = drum.add(8, 0, 2);
+        house(world, annex, 5, 5, Blocks.SPRUCE_PLANKS, Blocks.SPRUCE_LOG,
+                Blocks.SPRUCE_STAIRS, Blocks.SPRUCE_PLANKS);
+        int chimneyBase = groundAt(world, annex.getX() + 1, annex.getZ() + 1);
+        for (int h = 1; h <= 8; h++) {
+            set(world, annex.add(1, h, 1), Blocks.BRICKS);
+        }
+        set(world, annex.add(1, 7, 1), Blocks.CAMPFIRE);
+        // The warning lantern hangs from a jetty out the tower's side.
+        set(world, drum.add(-1, 5, 3), Blocks.SPRUCE_LOG);
+        set(world, drum.add(-2, 5, 3), Blocks.CHAIN);
+        set(world, drum.add(-2, 4, 3), Blocks.LANTERN);
+        // Watch gear: firewood, signal horn crate, water barrel.
+        set(world, base.add(4, y + 1, 4), Blocks.OAK_WOOD);
+        set(world, base.add(4, y + 2, 4), Blocks.OAK_WOOD);
+        stockChest(world, base.add(-4, y + 1, 5), new ItemStack(Items.BREAD, 3),
+                new ItemStack(Items.ARROW, 10), new ItemStack(ModItems.ROYAL_COIN, 1));
+        set(world, base.add(5, y + 1, 0), Blocks.BARREL);
+        spawnGuard(world, base, y, BuildStyle.KNIGHT);
+    }
+
+    /** A timber-framed mine adit bored into the hillside beside it. */
+    private static void mineAdit(ServerWorld world, BlockPos base) {
+        int y = groundAt(world, base.getX(), base.getZ());
+        BlockPos mouth = new BlockPos(base.getX(), y, base.getZ());
+        // Face the dig toward whichever horizon rises highest.
+        int[] best = {4, 0};
+        int bestTop = groundAt(world, mouth.getX() + 4, mouth.getZ());
+        for (int[] dir : new int[][]{{-4, 0}, {0, 4}, {0, -4}}) {
+            int top = groundAt(world, mouth.getX() + dir[0], mouth.getZ() + dir[1]);
+            if (top > bestTop) {
+                bestTop = top;
+                best = dir;
+            }
+        }
+        int dx = Integer.signum(best[0]);
+        int dz = Integer.signum(best[1]);
+        // The portal: posts, spreading cap, slab cap-sill, a torch.
+        for (int z = -1; z <= 1; z++) {
+            if (Math.abs(z) == 1) {
+                for (int h = 1; h <= 3; h++) {
+                    set(world, mouth.add(0, h, z), Blocks.OAK_LOG);
+                }
+            }
+        }
+        for (int z = -2; z <= 2; z++) {
+            set(world, mouth.add(0, 4, z), z == 0 ? Blocks.OAK_WOOD : Blocks.OAK_LOG);
+        }
+        set(world, mouth.add(0, 5, -2), Blocks.SPRUCE_SLAB);
+        set(world, mouth.add(0, 5, 2), Blocks.SPRUCE_SLAB);
+        set(world, mouth.add(0, 2, 1), Blocks.TORCH);
+        // The dig itself: carve only where the hill stands above the mouth.
+        for (int step = 1; step <= 5; step++) {
+            for (int z = -1; z <= 1; z++) {
+                for (int h = 1; h <= 2; h++) {
+                    BlockPos at = mouth.add(dx * step, h, dz * step);
+                    if (groundAt(world, at.getX(), at.getZ()) >= y + h) {
+                        set(world, at, Blocks.AIR);
+                        if (step == 2 && z == 0 && h == 1) {
+                            set(world, at, Blocks.TORCH);
+                        }
+                        if (step == 4 && z == 0 && h == 1) {
+                            set(world, at, Blocks.COAL_ORE);
+                        }
+                    }
+                }
+            }
+        }
+        // The pit yard: cart, ore sacks, spare timber.
+        stockChest(world, mouth.add(-dx * 2, 1, -dz * 2 + (dz == 0 ? 2 : 0)),
+                new ItemStack(Items.COAL, 9), new ItemStack(Items.IRON_INGOT, 4),
+                new ItemStack(ModItems.ROYAL_COIN, 1));
+        set(world, mouth.add(dx * -2, 1, dz * -2), Blocks.BARREL);
+        set(world, mouth.add(dx * -3, 1, dz * -3), Blocks.OAK_WOOD);
+        set(world, mouth.add(dx * -3, 2, dz * -3), Blocks.OAK_WOOD);
+        set(world, mouth.add(dx * -3, 1, dz * -3 + 1), Blocks.OAK_FENCE);
+    }
+
+    /** The lumber camp: bark-log stacks, a sawhorse, the foreman's shed. */
+    private static void lumberCamp(ServerWorld world, BlockPos base) {
+        int y = groundAt(world, base.getX() + 2, base.getZ() + 2);
+        // The great stack: rising bark rows with a ladder up the face.
+        for (int row = 0; row < 6; row++) {
+            for (int h = 0; h <= row / 2; h++) {
+                set(world, base.add(row, y + 1 + h, 0), Blocks.OAK_WOOD);
+            }
+        }
+        set(world, base.add(1, y + 1, 1), Blocks.LADDER);
+        set(world, base.add(1, y + 2, 1), Blocks.LADDER);
+        // The sawhorse: fence legs, a slab top, the log being worked.
+        for (int[] leg : new int[][]{{0, 0}, {3, 0}}) {
+            set(world, base.add(leg[0], y + 1, leg[1] + 3), Blocks.OAK_FENCE);
+        }
+        set(world, base.add(0, y + 2, 3), Blocks.SPRUCE_SLAB);
+        set(world, base.add(1, y + 2, 3), Blocks.SPRUCE_SLAB);
+        set(world, base.add(2, y + 2, 3), Blocks.SPRUCE_SLAB);
+        set(world, base.add(1, y + 3, 3), Blocks.OAK_WOOD);
+        // The foreman's shed and the axe yard.
+        house(world, base.add(-6, 0, -3), 5, 5, Blocks.SPRUCE_PLANKS, Blocks.SPRUCE_LOG,
+                Blocks.SPRUCE_STAIRS, Blocks.SPRUCE_PLANKS);
+        campfire(world, base.add(-3, 0, 3));
+        stockChest(world, base.add(-6, groundAt(world, base.getX() - 6, base.getZ() - 3) + 2, -3),
+                new ItemStack(Items.STICK, 12), new ItemStack(Items.BREAD, 3),
+                new ItemStack(ModItems.ROYAL_COIN, 1));
+        set(world, base.add(6, y + 1, 3), ModBlocks.SUPPLY_CRATE);
+        // A fresh stump with the ring of chips.
+        set(world, base.add(3, y + 1, -3), Blocks.OAK_LOG);
+        set(world, base.add(2, y + 1, -4), Blocks.MOSS_CARPET);
+        set(world, base.add(4, y + 1, -4), Blocks.MOSS_CARPET);
+    }
+
     /** A fire basket on a stone post - courtyard and gate light. */
     private static void brazier(ServerWorld world, BlockPos base) {
         int y = groundAt(world, base.getX(), base.getZ());
@@ -2902,6 +3099,8 @@ public final class StructureBuilder {
         lampPost(world, base.add(6, 0, -1));
         // The hamlet's bread comes out of this little dome oven.
         bakeOven(world, base.add(-6, 0, -5));
+        // The hamlet's timber comes from this little camp.
+        lumberCamp(world, base.add(-13, 0, 3));
         set(world, base.add(0, y + 1, 10), ModBlocks.REALM_BANNER);
         fill(world, base.add(-1, y, -6), 3, 1, 17, ModBlocks.ROAD_STONE);
         set(world, base.add(-2, y + 1, 9), ModBlocks.HEARTH_LANTERN);

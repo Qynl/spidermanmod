@@ -159,6 +159,7 @@ public final class WorldSettlementGenerator {
             case 4 -> new SettlementPlan(BuildStyle.KNIGHT, SettlementVariant.MILL);
             case 5 -> new SettlementPlan(BuildStyle.KNIGHT, SettlementVariant.RUIN);
             case 6 -> new SettlementPlan(BuildStyle.KNIGHT, SettlementVariant.GRAVEYARD);
+            case 7 -> new SettlementPlan(BuildStyle.KNIGHT, SettlementVariant.WATCHTOWER);
             case 8 -> new SettlementPlan(BuildStyle.HEARTHFOLK, SettlementVariant.FARMSTEAD);
             case 9 -> new SettlementPlan(BuildStyle.MARAUDER, SettlementVariant.OUTPOST);
             default -> new SettlementPlan(BuildStyle.KNIGHT, SettlementVariant.FARMSTEAD);

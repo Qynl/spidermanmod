@@ -310,6 +310,7 @@ public final class RealmEvents {
             case HARBOR, SHIPYARD -> new SettlementRole[]{SettlementRole.SAILOR, SettlementRole.FARMER};
             case SKYPORT, AIRSHIP_YARD -> new SettlementRole[]{SettlementRole.NAVIGATOR, SettlementRole.FARMER};
             case RUIN, GRAVEYARD -> new SettlementRole[]{SettlementRole.GUARD};
+            case WATCHTOWER -> new SettlementRole[]{SettlementRole.GUARD, SettlementRole.SCOUT};
             default -> new SettlementRole[]{SettlementRole.FARMER, SettlementRole.BUILDER};
         };
         for (SettlementRole role : starters) {
