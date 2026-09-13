@@ -205,6 +205,9 @@ public final class StructureBuilder {
         stockChest(world, base.add(2, y + 1, 2), new ItemStack(Items.BREAD, 8),
                 new ItemStack(Items.IRON_NUGGET, 8), new ItemStack(ModItems.RECRUITMENT_CONTRACT),
                 new ItemStack(ModItems.ROYAL_COIN, 2));
+        // The gate stands where the road enters the town.
+        townGate(world, base.add(0, 0, -14));
+        waysideShrine(world, base.add(4, 0, -9));
         // The richer quarter: a two-storey townhouse and a chapel.
         townhouse(world, base.add(9, 0, -7), 7, 7);
         chapel(world, base.add(-16, 0, 10));
@@ -236,6 +239,8 @@ public final class StructureBuilder {
         fishingStilt(world, base.add(16, 0, 3));
         // The pride of the harbor rides at anchor.
         galleon(world, base.add(14, 0, 14));
+        // The cove pier: bonfire, guns and shade where the crews gather.
+        covePier(world, base.add(4, 0, 12));
         // The light that brings the ships home.
         lighthouse(world, base.add(-18, 0, -16));
         // The waterfront arcade: stone arches, timber loft, long dark
@@ -2174,6 +2179,180 @@ public final class StructureBuilder {
         set(world, base.add(4, y + 1, -4), Blocks.MOSS_CARPET);
     }
 
+    /** The cove pier: a timber deck on piling legs, bonfire and guns at the end. */
+    private static void covePier(ServerWorld world, BlockPos base) {
+        int waterY = waterSurfaceAt(world, base);
+        int y = waterY > 0 ? waterY : groundAt(world, base.getX() + 2, base.getZ() + 2);
+        // The walk: 4 wide, 12 long, decked on log legs into the tide.
+        for (int i = 0; i < 12; i++) {
+            for (int z = 0; z <= 3; z++) {
+                BlockPos plank = base.add(i, y, z);
+                set(world, plank, ModBlocks.SHIP_PLANKS);
+                if (i % 3 == 0 && (z == 0 || z == 3)) {
+                    BlockPos leg = plank;
+                    for (int down = 0; down < 6; down++) {
+                        BlockPos below = leg.down();
+                        if (!world.getFluidState(below).isEmpty()
+                                || world.getBlockState(below).isAir()) {
+                            set(world, below, Blocks.SPRUCE_LOG);
+                        } else {
+                            break;
+                        }
+                    }
+                }
+            }
+            if (i % 4 == 2) {
+                set(world, base.add(i, y + 1, 0), Blocks.OAK_FENCE);
+                set(world, base.add(i, y + 1, 3), Blocks.OAK_FENCE);
+            }
+        }
+        // The end platform: 7 by 7, railed, where the crew gathers.
+        for (int i = 12; i <= 18; i++) {
+            for (int z = -2; z <= 5; z++) {
+                set(world, base.add(i, y, z), i == 12 || z == -2 || z == 5
+                        ? Blocks.SPRUCE_LOG : ModBlocks.SHIP_PLANKS);
+            }
+        }
+        for (int i = 12; i <= 18; i++) {
+            for (int z = -2; z <= 5; z++) {
+                if ((i == 12 || z == -2 || z == 5) && (i + z) % 2 == 0) {
+                    set(world, base.add(i, y + 1, z), Blocks.OAK_FENCE);
+                }
+            }
+        }
+        // The bonfire in its own cask at the far end.
+        set(world, base.add(15, y + 1, 1), Blocks.OAK_FENCE);
+        set(world, base.add(15, y + 1, 2), Blocks.OAK_FENCE);
+        set(world, base.add(16, y + 1, 1), Blocks.OAK_FENCE);
+        set(world, base.add(16, y + 1, 2), Blocks.OAK_FENCE);
+        set(world, base.add(15, y + 2, 1), Blocks.CAMPFIRE);
+        set(world, base.add(14, y + 1, 1), Blocks.BARREL);
+        set(world, base.add(14, y + 1, 3), Blocks.BARREL);
+        // The guns: the realm's own cannons along the seaward rail.
+        for (int gun = 0; gun < 3; gun++) {
+            set(world, base.add(13 + gun * 2, y + 1, 5),
+                    com.rivalrealms.block.ModBlocks.CANNON);
+        }
+        // A furled sail slung between two posts gives the crew shade.
+        set(world, base.add(13, y + 3, -2), Blocks.OAK_FENCE);
+        set(world, base.add(17, y + 3, -2), Blocks.OAK_FENCE);
+        set(world, base.add(14, y + 4, -2), Blocks.WHITE_WOOL);
+        set(world, base.add(15, y + 4, -2), Blocks.WHITE_WOOL);
+        set(world, base.add(16, y + 4, -2), Blocks.WHITE_WOOL);
+        set(world, base.add(17, y + 4, -2), Blocks.WHITE_WOOL);
+        stockChest(world, base.add(12, y + 1, 1), new ItemStack(Items.GOLD_NUGGET, 7),
+                new ItemStack(ModItems.ROYAL_COIN, 3), new ItemStack(Items.COOKED_COD, 5));
+        set(world, base.add(18, y + 1, 0), Blocks.LANTERN);
+    }
+
+    /** The town gate: a white drum with brick inlay, terracotta pyramid, belfry. */
+    private static void townGate(ServerWorld world, BlockPos center) {
+        int y = lowestCorner(world, center.getX() - 3, center.getZ() - 3, 7, 7);
+        BlockPos drum = new BlockPos(center.getX() - 3, y, center.getZ() - 3);
+        packUnder(world, drum, 7, 7, y, Blocks.COBBLESTONE);
+        for (int h = 1; h <= 7; h++) {
+            for (int x = 0; x <= 6; x++) {
+                for (int z = 0; z <= 6; z++) {
+                    boolean edge = x == 0 || z == 0 || x == 6 || z == 6;
+                    BlockPos at = drum.add(x, h, z);
+                    boolean inArch = z >= 2 && z <= 4 && x >= 2 && x <= 4;
+                    if (!edge && !inArch) {
+                        set(world, at, Blocks.AIR);
+                        continue;
+                    }
+                    if (inArch && h <= 4) {
+                        set(world, at, Blocks.AIR);
+                        continue;
+                    }
+                    boolean quoin = (x < 2 || x > 4) && (z < 2 || z > 4);
+                    boolean brickPatch = (x * 7 + z * 3 + h * 5) % 11 == 0;
+                    set(world, at, h == 7 ? Blocks.SPRUCE_PLANKS
+                            : quoin ? Blocks.STONE_BRICKS
+                            : brickPatch ? Blocks.BRICKS : Blocks.POLISHED_ANDESITE);
+                }
+            }
+            // The passage: an arch up to a timber lintel, doors open.
+            if (h == 4) {
+                set(world, drum.add(3, h, 2), Blocks.SPRUCE_SLAB);
+                set(world, drum.add(3, h, 4), Blocks.SPRUCE_SLAB);
+            }
+            if (h == 2 || h == 3) {
+                set(world, drum.add(1, h, 3), Blocks.OAK_FENCE);
+                set(world, drum.add(5, h, 3), Blocks.OAK_FENCE);
+            }
+            if (h == 5 || h == 6) {
+                set(world, drum.add(3, h, 0), Blocks.GLASS_PANE);
+                set(world, drum.add(3, h, 6), Blocks.GLASS_PANE);
+            }
+        }
+        // The corbelled walk and the belfry: timber frame, white infill.
+        for (int x = 0; x <= 6; x++) {
+            for (int z = 0; z <= 6; z++) {
+                boolean edge = x == 0 || z == 0 || x == 6 || z == 6;
+                if (edge) {
+                    set(world, drum.add(x, 8, z), Blocks.SPRUCE_SLAB);
+                }
+            }
+        }
+        for (int h = 9; h <= 10; h++) {
+            for (int x = 0; x <= 6; x++) {
+                for (int z = 0; z <= 6; z++) {
+                    boolean edge = x == 0 || z == 0 || x == 6 || z == 6;
+                    BlockPos at = drum.add(x, h, z);
+                    boolean post = x % 3 == 0 && z % 3 == 0;
+                    boolean arch = (x == 3 || z == 3) && h == 10;
+                    if (!edge) {
+                        set(world, at, h == 10 ? Blocks.SPRUCE_PLANKS : Blocks.AIR);
+                    } else if (post || !arch) {
+                        set(world, at, post ? Blocks.SPRUCE_LOG : Blocks.POLISHED_ANDESITE);
+                    } else {
+                        set(world, at, Blocks.AIR);
+                    }
+                }
+            }
+        }
+        // The great terracotta pyramid, four falling rings.
+        for (int ring = 0; ring < 4; ring++) {
+            int lo = ring;
+            int hi = 6 - ring;
+            for (int x = lo; x <= hi; x++) {
+                for (int z = lo; z <= hi; z++) {
+                    boolean edge = x == lo || z == lo || x == hi || z == hi;
+                    if (edge) {
+                        set(world, drum.add(x, 11 + ring, z), Blocks.ORANGE_TERRACOTTA);
+                    }
+                }
+            }
+        }
+        set(world, drum.add(3, 15, 3), Blocks.ORANGE_TERRACOTTA);
+        set(world, drum.add(3, 16, 3), Blocks.OAK_FENCE);
+        set(world, drum.add(3, 17, 3), ModBlocks.REALM_BANNER);
+        // The gate keeper's nook and the welcome light.
+        set(world, drum.add(1, 1, 1), Blocks.BARREL);
+        stockChest(world, drum.add(5, 1, 1), new ItemStack(ModItems.ROYAL_COIN, 2),
+                new ItemStack(Items.BREAD, 2));
+        set(world, drum.add(3, 2, 1), Blocks.LANTERN);
+        set(world, drum.add(0, 2, 6), Blocks.LANTERN);
+    }
+
+    /** A wayside shrine: a hooded niche with flowers, where the road passes. */
+    private static void waysideShrine(ServerWorld world, BlockPos base) {
+        int y = groundAt(world, base.getX(), base.getZ());
+        BlockPos pos = new BlockPos(base.getX(), y, base.getZ());
+        // The pillar and its hooded top.
+        set(world, pos.add(0, 1, 0), Blocks.STONE_BRICKS);
+        set(world, pos.add(0, 2, 0), Blocks.STONE_BRICKS);
+        set(world, pos.add(-1, 3, 0), Blocks.STONE_BRICK_SLAB);
+        set(world, pos.add(0, 3, 0), Blocks.STONE_BRICK_SLAB);
+        set(world, pos.add(1, 3, 0), Blocks.STONE_BRICK_SLAB);
+        set(world, pos.add(0, 4, 0), Blocks.STONE_BRICK_SLAB);
+        // The icon, the offering flowers, the traveller's candle.
+        set(world, pos.add(0, 2, -1), ModBlocks.REALM_BANNER);
+        set(world, pos.add(0, 1, -1), Blocks.AZALEA);
+        set(world, pos.add(0, 1, 1), Blocks.CANDLE);
+        set(world, pos.add(1, 1, 0), Blocks.MOSS_CARPET);
+    }
+
     /** A fire basket on a stone post - courtyard and gate light. */
     private static void brazier(ServerWorld world, BlockPos base) {
         int y = groundAt(world, base.getX(), base.getZ());
@@ -3087,6 +3266,7 @@ public final class StructureBuilder {
         vegPlot(world, base.add(5, 0, 1), 7, 6);
         well(world, base.add(0, 0, -2));
         set(world, base.add(3, y + 1, -2), ModBlocks.NOTICE_BOARD);
+        waysideShrine(world, base.add(-4, 0, -3));
         scarecrow(world, base.add(-8, 0, 5));
         haystack(world, base.add(3, 0, -5));
         // The village green: a maypole, benches, and room to dance.
@@ -3099,6 +3279,7 @@ public final class StructureBuilder {
         lampPost(world, base.add(6, 0, -1));
         // The hamlet's bread comes out of this little dome oven.
         bakeOven(world, base.add(-6, 0, -5));
+        waysideShrine(world, base.add(4, 0, 1));
         // The hamlet's timber comes from this little camp.
         lumberCamp(world, base.add(-13, 0, 3));
         set(world, base.add(0, y + 1, 10), ModBlocks.REALM_BANNER);
