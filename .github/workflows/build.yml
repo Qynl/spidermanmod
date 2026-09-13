@@ -112,8 +112,17 @@ jobs:
         run: |
           chmod +x build-local/build.sh build-local/test.sh
           export JAVAC="$JAVA_HOME/bin/javac"
-          ./build-local/build.sh
-          ./build-local/test.sh
+          ./build-local/build.sh 2>&1 | tee /tmp/local-build.log
+          ./build-local/test.sh 2>&1 | tee -a /tmp/local-build.log
+
+      - name: Report local-build failure
+        if: failure() && github.ref == 'refs/heads/arena/01a09235-spidermanmod'
+        run: |
+          tail -n 800 /tmp/local-build.log > /tmp/local-fail.txt
+          cat /tmp/local-fail.txt
+          gh issue create --title "local-build failed $GITHUB_RUN_ID" --body-file /tmp/local-fail.txt || true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload offline jar
         uses: actions/upload-artifact@v4
