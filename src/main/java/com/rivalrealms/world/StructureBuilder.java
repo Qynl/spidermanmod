@@ -80,6 +80,7 @@ public final class StructureBuilder {
      * around the original set piece rather than merely changing a number.
      */
     public static void expand(ServerWorld world, BlockPos center, BuildStyle style, int level) {
+        forceLoad(world, center, 40);
         beginTrace();
         switch (style) {
             case KNIGHT -> expandKnight(world, center, level);
@@ -827,11 +828,28 @@ public final class StructureBuilder {
     }
 
     private static int groundAt(ServerWorld world, int x, int z) {
+        // Pull the chunk to FULL before trusting its heightmap: a chunk still
+        // mid-generation reports a garbage surface, and a building set on that
+        // garbage floats. When the chunk is already whole this is a no-op.
+        world.getChunk(x >> 4, z >> 4, ChunkStatus.FULL, true);
         BlockPos top = world.getTopPosition(Heightmap.Type.WORLD_SURFACE, new BlockPos(x, world.getBottomY(), z));
-        int y = top.getY() - 1;
+        int y = Math.min(top.getY() - 1, world.getTopY() - 2);
         int bottom = world.getBottomY() + 1;
-        int ceiling = world.getTopY() - 1;
-        return Math.max(bottom, Math.min(ceiling, y));
+        // Verify the report: the named surface block must actually be there.
+        // A heightmap that lied gets walked down to the first honest ground.
+        BlockPos probe = new BlockPos(x, y, z);
+        while (y > bottom && world.getBlockState(probe).isAir()) {
+            y--;
+            probe = probe.down();
+        }
+        if (y <= bottom) {
+            probe = new BlockPos(x, bottom, z);
+            while (y < world.getTopY() - 2 && world.getBlockState(probe).isAir()) {
+                y++;
+                probe = probe.up();
+            }
+        }
+        return Math.max(bottom, y);
     }
 
     /** Stamps packed fill downward until solid ground (or the depth limit). */
@@ -3715,14 +3733,22 @@ public final class StructureBuilder {
             if (at.isAir() || at.getCollisionShape(world, pos).isEmpty()) {
                 continue;
             }
-            BlockPos below = pos.down();
-            if (!world.getBlockState(below).isAir() || !world.getFluidState(below).isEmpty()) {
-                continue;
-            }
             Block plinth = at.getBlock() == Blocks.HAY_BLOCK
                     || at.getBlock() == Blocks.WHITE_WOOL || at.getBlock() == Blocks.RED_WOOL
                     ? Blocks.DIRT : Blocks.COBBLESTONE;
-            foundation(world, below.getX(), below.getY(), below.getY(), plinth);
+            // No depth cap: a build whose probe lied gets carried all the way
+            // down to honest ground, however far that is. The first solid
+            // block or water stops the fill, so piers and stilts keep their
+            // legs in the tide.
+            BlockPos below = pos.down();
+            while (below.getY() > world.getBottomY() + 1) {
+                BlockState state = world.getBlockState(below);
+                if (!state.isAir() || !world.getFluidState(below).isEmpty()) {
+                    break;
+                }
+                set(world, below, plinth);
+                below = below.down();
+            }
         }
         BUILD_TRACE.clear();
     }
