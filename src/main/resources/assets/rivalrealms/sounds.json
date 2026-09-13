@@ -1,0 +1,62 @@
+{
+  "voice.siege_defense": {
+    "subtitle": "subtitles.rivalrealms.voice.siege_defense",
+    "sounds": [
+      "rivalrealms:voice/siege_defense"
+    ]
+  },
+  "voice.siege_victory": {
+    "subtitle": "subtitles.rivalrealms.voice.siege_victory",
+    "sounds": [
+      "rivalrealms:voice/siege_victory"
+    ]
+  },
+  "voice.civilian_flee": {
+    "subtitle": "subtitles.rivalrealms.voice.civilian_flee",
+    "sounds": [
+      "rivalrealms:voice/civilian_flee"
+    ]
+  },
+  "voice.greeting_friendly": {
+    "subtitle": "subtitles.rivalrealms.voice.greeting_friendly",
+    "sounds": [
+      "rivalrealms:voice/greeting_friendly"
+    ]
+  },
+  "voice.greeting_hostile": {
+    "subtitle": "subtitles.rivalrealms.voice.greeting_hostile",
+    "sounds": [
+      "rivalrealms:voice/greeting_hostile"
+    ]
+  },
+  "voice.rumor_player": {
+    "subtitle": "subtitles.rivalrealms.voice.rumor_player",
+    "sounds": [
+      "rivalrealms:voice/rumor_player"
+    ]
+  },
+  "voice.merchant_trade": {
+    "subtitle": "subtitles.rivalrealms.voice.merchant_trade",
+    "sounds": [
+      "rivalrealms:voice/merchant_trade"
+    ]
+  },
+  "voice.death_last_words": {
+    "subtitle": "subtitles.rivalrealms.voice.death_last_words",
+    "sounds": [
+      "rivalrealms:voice/death_last_words"
+    ]
+  },
+  "voice.celebration": {
+    "subtitle": "subtitles.rivalrealms.voice.celebration",
+    "sounds": [
+      "rivalrealms:voice/celebration"
+    ]
+  },
+  "voice.lost_child": {
+    "subtitle": "subtitles.rivalrealms.voice.lost_child",
+    "sounds": [
+      "rivalrealms:voice/lost_child"
+    ]
+  }
+}

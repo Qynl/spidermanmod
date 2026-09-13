@@ -50,6 +50,14 @@ def check_asset_references() -> None:
             asset = value.split(":", 1)[1]
             if key in {"parent", "model"}:
                 candidate = RESOURCES / "assets" / MOD_ID / "models" / f"{asset}.json"
+            elif key == "sounds" or asset.startswith("voice/"):
+                # Sound references live under sounds/, not textures/.
+                candidate = RESOURCES / "assets" / MOD_ID / "sounds" / asset
+                if not (candidate.with_suffix(".ogg").exists()
+                        or candidate.with_suffix(".wav").exists()
+                        or candidate.exists()):
+                    missing.append(str(candidate.with_suffix(".ogg").relative_to(ROOT)))
+                return
             else:
                 candidate = RESOURCES / "assets" / MOD_ID / "textures" / f"{asset}.png"
             if not candidate.exists():

@@ -53,5 +53,15 @@
   "block.rivalrealms.road_stone": "Road Stone",
   "block.rivalrealms.arrow_slit": "Arrow Slit Wall",
   "item.rivalrealms.camp_kit": "Camp Kit",
-  "item.rivalrealms.treasure_map": "Treasure Map"
+  "item.rivalrealms.treasure_map": "Treasure Map",
+  "subtitles.rivalrealms.voice.siege_defense": "The watch cries: to arms!",
+  "subtitles.rivalrealms.voice.siege_victory": "Horns sound in victory",
+  "subtitles.rivalrealms.voice.civilian_flee": "Civilians cry: run!",
+  "subtitles.rivalrealms.voice.greeting_friendly": "A warm greeting",
+  "subtitles.rivalrealms.voice.greeting_hostile": "A cold warning",
+  "subtitles.rivalrealms.voice.rumor_player": "Someone whispers about you",
+  "subtitles.rivalrealms.voice.merchant_trade": "Merchant calls out his wares",
+  "subtitles.rivalrealms.voice.death_last_words": "Last words",
+  "subtitles.rivalrealms.voice.celebration": "The feast grows loud",
+  "subtitles.rivalrealms.voice.lost_child": "A child sniffs"
 }
