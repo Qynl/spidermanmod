@@ -711,6 +711,16 @@ public final class StructureBuilder {
         packUnder(world, origin.add(-radius - 1, 0, -radius - 1), 2 * radius + 3,
                 2 * radius + 3, y, wall);
         float radiusF = radius + 0.5f;
+        // A battered footing ring one pace wider, so the tower sits like it
+        // was built by masons who knew their business.
+        for (int dx = -radius - 2; dx <= radius + 2; dx++) {
+            for (int dz = -radius - 2; dz <= radius + 2; dz++) {
+                double d = Math.sqrt(dx * dx + dz * dz);
+                if (d <= radius + 1.5 && d > radius + 0.5) {
+                    set(world, origin.add(dx, 0, dz), wall);
+                }
+            }
+        }
 
         for (int h = 0; h <= height; h++) {
             for (int dx = -radius - 1; dx <= radius + 1; dx++) {
@@ -730,6 +740,24 @@ public final class StructureBuilder {
                         set(world, pos, Blocks.AIR);
                     }
                 }
+            }
+            // A trim string course runs round the tower at two thirds.
+            if (h == (height * 2) / 3) {
+                for (int dx = -radius - 1; dx <= radius + 1; dx++) {
+                    for (int dz = -radius - 1; dz <= radius + 1; dz++) {
+                        double dist = Math.sqrt(dx * dx + dz * dz);
+                        if (dist <= radiusF && dist > radiusF - 1.15) {
+                            set(world, origin.add(dx, h, dz), trim);
+                        }
+                    }
+                }
+            }
+            // The door: an arched opening and a step, facing south.
+            if (h == 1 || h == 2) {
+                set(world, origin.add(0, h, radius), Blocks.AIR);
+            }
+            if (h == 3) {
+                set(world, origin.add(0, h, radius), trim);
             }
             // Arrow slits on the cardinal faces at mid height.
             if (h == height / 2 || h == height / 2 + 1) {
@@ -756,6 +784,20 @@ public final class StructureBuilder {
                 }
             }
             set(world, origin.add(0, height + radius + 2, 0), Blocks.SPRUCE_SLAB);
+        } else {
+            // Machicolations: an overhanging stair ring below the merlons,
+            // and the captain's banner over the door.
+            for (int dx = -radius - 1; dx <= radius + 1; dx++) {
+                for (int dz = -radius - 1; dz <= radius + 1; dz++) {
+                    double dist = Math.sqrt(dx * dx + dz * dz);
+                    if (dist <= radiusF + 0.3 && dist > radiusF - 0.6) {
+                        set(world, origin.add(dx, height, dz), Blocks.SPRUCE_STAIRS
+                                .getDefaultState().with(HorizontalFacingBlock.FACING,
+                                        facingFor(dx, dz)));
+                    }
+                }
+            }
+            set(world, origin.add(0, height + 1, radius), ModBlocks.REALM_BANNER);
         }
 
         // Tower interior: lantern, bedroll corner, stocked crate.
@@ -786,10 +828,26 @@ public final class StructureBuilder {
         for (int x = 0; x < sizeX; x++) {
             wallColumn(world, corner.add(x, 0, 0), y, height, wall, trim);
             wallColumn(world, corner.add(x, 0, sizeZ - 1), y, height, wall, trim);
+            if (x % 4 == 2 && x > 1 && x < sizeX - 2) {
+                set(world, corner.add(x, y + height - 2, 0), Blocks.AIR);
+                set(world, corner.add(x, y + height - 2, sizeZ - 1), Blocks.AIR);
+            }
         }
         for (int z = 0; z < sizeZ; z++) {
             wallColumn(world, corner.add(0, 0, z), y, height, wall, trim);
             wallColumn(world, corner.add(sizeX - 1, 0, z), y, height, wall, trim);
+            if (z % 4 == 2 && z > 1 && z < sizeZ - 2) {
+                // Loopholes: true arrow slits punched clean through the walk.
+                set(world, corner.add(0, y + height - 2, z), Blocks.AIR);
+                set(world, corner.add(sizeX - 1, y + height - 2, z), Blocks.AIR);
+            }
+            if (z == 0 || z == sizeZ - 1) {
+                // Bartizans lean out at the corners.
+                for (int h = height + 1; h <= height + 3; h++) {
+                    set(world, corner.add(0, y + h, z), h == height + 3 ? trim : wall);
+                    set(world, corner.add(sizeX - 1, y + h, z), h == height + 3 ? trim : wall);
+                }
+            }
         }
         crenellate(world, corner.add(0, y + height, 0), sizeX, 1, trim);
         crenellate(world, corner.add(0, y + height, sizeZ - 1), sizeX, 1, trim);
@@ -967,9 +1025,31 @@ public final class StructureBuilder {
                 set(world, origin.add(sizeX / 2, h, sizeZ - 1), Blocks.AIR);
             }
         }
-        // Crenellated parapet.
+        // Crenellated parapet with a turret rising at each corner.
         crenellate(world, origin.add(0, height + 1, 0), sizeX, 1, trim);
         crenellate(world, origin.add(0, height + 1, sizeZ - 1), sizeX, 1, trim);
+        int[][] turretCorners = {{0, 0}, {sizeX - 1, 0}, {0, sizeZ - 1}, {sizeX - 1, sizeZ - 1}};
+        for (int[] c : turretCorners) {
+            for (int h = height + 1; h <= height + 3; h++) {
+                set(world, origin.add(c[0], h, c[1]), h == height + 3 ? trim : wall);
+            }
+            set(world, origin.add(c[0], height + 4, c[1]), Blocks.SPRUCE_STAIRS);
+        }
+        // A grand stair climbs to the great door, banners flanking it.
+        for (int step = 1; step <= 2; step++) {
+            int stepY = y + step - 1;
+            set(world, origin.add(sizeX / 2 - 1, stepY, sizeZ - 1 + (3 - step)),
+                    Blocks.STONE_BRICK_STAIRS.getDefaultState()
+                            .with(HorizontalFacingBlock.FACING, Direction.SOUTH));
+            set(world, origin.add(sizeX / 2, stepY, sizeZ - 1 + (3 - step)),
+                    Blocks.STONE_BRICK_STAIRS.getDefaultState()
+                            .with(HorizontalFacingBlock.FACING, Direction.SOUTH));
+            set(world, origin.add(sizeX / 2 + 1, stepY, sizeZ - 1 + (3 - step)),
+                    Blocks.STONE_BRICK_STAIRS.getDefaultState()
+                            .with(HorizontalFacingBlock.FACING, Direction.SOUTH));
+        }
+        set(world, origin.add(sizeX / 2 - 2, y + 3, sizeZ), ModBlocks.REALM_BANNER);
+        set(world, origin.add(sizeX / 2 + 2, y + 3, sizeZ), ModBlocks.REALM_BANNER);
 
         // Furnish: throne dais, long table, chandelier, armory corner.
         int floor = y + 1;
@@ -1049,6 +1129,24 @@ public final class StructureBuilder {
         set(world, origin.add(sizeX / 2, 2, sizeZ + 1), Blocks.OAK_FENCE);
         set(world, origin.add(sizeX / 2, 3, sizeZ + 1), stair);
         set(world, origin.add(sizeX / 2, 3, sizeZ - 1), log);
+        // Flower boxes under the front windows, hoods over the side ones.
+        set(world, origin.add(sizeX / 2 - 2, 1, sizeZ), Blocks.AZALEA);
+        set(world, origin.add(sizeX / 2 + 2, 1, sizeZ), Blocks.MOSS_CARPET);
+        set(world, origin.add(-1, 4, sizeZ / 2), stair);
+        set(world, origin.add(sizeX, 4, sizeZ / 2), stair);
+        // The lived-in yard: lamp by the door, wood and goods against the
+        // wall, a little fenced flower plot out front.
+        set(world, origin.add(sizeX / 2 - 2, 1, sizeZ + 1), Blocks.OAK_FENCE);
+        set(world, origin.add(sizeX / 2 - 2, 2, sizeZ + 1), Blocks.LANTERN);
+        set(world, origin.add(sizeX / 2 + 2, 1, sizeZ + 1), Blocks.BARREL);
+        set(world, origin.add(sizeX / 2 + 3, 1, sizeZ + 1), ModBlocks.SUPPLY_CRATE);
+        for (int dx = 0; dx <= 1; dx++) {
+            for (int dz = 2; dz <= 3; dz++) {
+                boolean rim = dx == 1 || dz == 3;
+                set(world, origin.add(sizeX / 2 + dx, 1, sizeZ + dz),
+                        rim ? Blocks.OAK_FENCE : Blocks.AZALEA);
+            }
+        }
 
         // Pitched roof: one clean gable along the long axis - stair rows
         // climbing both long walls to a flat ridge cap.

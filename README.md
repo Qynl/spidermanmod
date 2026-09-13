@@ -205,6 +205,7 @@ Claimed settlements recruit guards and workers up to their level. Jobs (guard, b
 
 - **Settlements you can watch grow**: builders raise real cottages at the town edge, course by course, until a family moves in; farmers till new rows at the field margins every visit — a town is never finished
 
+- **Masonry you can read from horseback**: towers with battered footing rings, arched doors, trim string courses and machicolations under the merlons; keeps with corner turrets, a grand stair and flanking banners; curtain walls with true arrow-slit loopholes and corner bartizans; cottages with flower boxes, window hoods, lamps by the door and a fenced flower plot out front
 - **Structures stand on solid ground**: every building packs its footprint flush down to real terrain (no arches of air, no floating edges — ever), and cottages are properly built: stone footing, timber framing, shuttered windows, a porch over the recessed door, a brick chimney, a hearth and a woodpile
 - **`/rivalrealms rebuild`**: stand beside any settlement and raise it anew with the latest builder - the fix for places your world generated under older, clumsier drafts (residents step aside and return, recruited companions stay loyal, your chronicle remembers the reconstruction)
 - **Sky towns are grounded: skyfolk build one cohesive dirt terrace — workshops, houses, a farm strip and a single mooring mast with chained lines, the airship riding at the masthead; no floating slabs, and new sites are rejected unless the whole ground is solid and level
