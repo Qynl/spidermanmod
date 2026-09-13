@@ -8,6 +8,7 @@ on:
 
 permissions:
   contents: write
+  issues: write
 
 jobs:
   build:
@@ -35,10 +36,21 @@ jobs:
       - name: Report build failure (create issue with log)
         if: failure() && github.ref == 'refs/heads/arena/01a09235-spidermanmod'
         run: |
-          tail -n 300 /tmp/gradle.log > /tmp/fail.txt
-          echo "---" >> /tmp/fail.txt
+          echo "=== gradle log tail ===" > /tmp/fail.txt
+          tail -n 500 /tmp/gradle.log >> /tmp/fail.txt 2>&1 || true
+          echo "--- build dir ---" >> /tmp/fail.txt
           ls -lh build/ >> /tmp/fail.txt 2>&1 || true
-          gh issue create --title "gradle build failed $GITHUB_RUN_ID" --body-file /tmp/fail.txt || true
+          echo "--- trying issue create ---" >> /tmp/fail.txt
+          cat /tmp/fail.txt
+          gh issue create --title "gradle build failed $GITHUB_RUN_ID $GITHUB_SHA" --body-file /tmp/fail.txt || echo "issue create failed" >> /tmp/fail.txt
+          # Also commit log to branch as fallback (so we can git show it)
+          git config user.name "arena-agent"
+          git config user.email "arena-agent@users.noreply.github.com"
+          cp /tmp/gradle.log ./gradle-failure.log || true
+          cp /tmp/fail.txt ./gradle-failure-tail.log || true
+          git add -f gradle-failure.log gradle-failure-tail.log || true
+          git commit -m "gradle failure log $GITHUB_RUN_ID [skip ci]" || true
+          git push origin HEAD:arena/01a09235-spidermanmod || true
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
