@@ -1,5 +1,6 @@
 package com.rivalrealms.block;
 
+import com.mojang.serialization.MapCodec;
 import com.rivalrealms.world.ContractEngine;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
