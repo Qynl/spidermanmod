@@ -140,6 +140,11 @@ public enum Archetype {
         return new ItemStack(rangedWeapon);
     }
 
+    /** A bare first name, used for family-named folk. */
+    public String firstName(Random random) {
+        return names[random.nextInt(names.length)];
+    }
+
     /** Culture-flavoured full display name, e.g. "Salt-Marie the Tide-Cursed · Pirate". */
     public String randomName(Random random) {
         String base = names[random.nextInt(names.length)];

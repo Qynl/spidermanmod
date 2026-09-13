@@ -203,6 +203,7 @@ add('net.minecraft.sound.SoundCategory', [], [
     'public static final net.minecraft.sound.SoundCategory BLOCKS;',
     'public static final net.minecraft.sound.SoundCategory NEUTRAL;',
     'public static final net.minecraft.sound.SoundCategory PLAYERS;',
+    'public static final net.minecraft.sound.SoundCategory HOSTILE;',
 ])
 add('net.minecraft.sound.SoundEvent', [], [])
 add('net.minecraft.sound.SoundEvents', [], [
@@ -225,6 +226,9 @@ add('net.minecraft.sound.SoundEvents', [], [
     'public static final net.minecraft.sound.SoundEvent BLOCK_PISTON_EXTEND;', 'public static final net.minecraft.sound.SoundEvent ITEM_HOE_TILL;', 'public static final net.minecraft.sound.SoundEvent BLOCK_ANVIL_USE;', 'public static final net.minecraft.sound.SoundEvent ENTITY_RAVAGER_ROAR;', 'public static final net.minecraft.sound.SoundEvent ENTITY_RAVAGER_ATTACK;', 'public static final net.minecraft.sound.SoundEvent BLOCK_METAL_PLACE;',
     'public static final net.minecraft.sound.SoundEvent ENTITY_GENERIC_SPLASH;',
     'public static final net.minecraft.sound.SoundEvent BLOCK_FIRE_EXTINGUISH;',
+    'public static final net.minecraft.sound.SoundEvent ENTITY_VILLAGER_NO;',
+    'public static final net.minecraft.sound.SoundEvent ENTITY_WITHER_SPAWN;',
+    'public static final net.minecraft.sound.SoundEvent ITEM_FLINTANDSTEEL_USE;',
 ])
 
 # ---- registry
@@ -370,11 +374,21 @@ add('net.minecraft.nbt.NbtCompound', [], [
     'public void put(String key, net.minecraft.nbt.NbtElement value);',
     'public boolean contains(String key);', 'public boolean contains(String key, int type);',
     'public net.minecraft.nbt.NbtList getList(String key, int type);',
+    'public java.util.Set<String> getKeys();',
+    'public byte getByte(String key, byte fallback);',
 ])
 add('net.minecraft.nbt.NbtList', [], [
     'public int size();',
     'public net.minecraft.nbt.NbtCompound getCompound(int index);',
     'public void add(net.minecraft.nbt.NbtElement element);',
+])
+add('net.minecraft.component.ComponentType', [], [])
+add('net.minecraft.component.type.NbtComponent', [], [
+    'public static net.minecraft.component.type.NbtComponent of(net.minecraft.nbt.NbtCompound nbt);',
+    'public net.minecraft.nbt.NbtCompound copyNbt();',
+])
+add('net.minecraft.component.DataComponentTypes', [], [
+    'public static final net.minecraft.component.ComponentType<net.minecraft.component.type.NbtComponent> CUSTOM_DATA;',
 ])
 add('net.minecraft.nbt.NbtElement', [], [
     'public static final int STRING_TYPE;',
@@ -397,6 +411,9 @@ add('net.minecraft.item.ItemStack', [], [
     'public net.minecraft.item.Item getItem();',
     'public boolean isOf(net.minecraft.item.Item item);',
     'public void damage(int amount, net.minecraft.entity.LivingEntity entity, net.minecraft.entity.EquipmentSlot slot);',
+    'public <T> T get(net.minecraft.component.ComponentType<T> type);',
+    'public <T> T set(net.minecraft.component.ComponentType<T> type, T value);',
+    'public net.minecraft.item.ItemStack copy();',
 ])
 add('net.minecraft.item.Items', [], [
     'public static final net.minecraft.item.Item AIR;',

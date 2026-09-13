@@ -47,7 +47,9 @@ import net.minecraft.village.TradeOfferList;
 import net.minecraft.village.TradedItem;
 import net.minecraft.world.World;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -104,6 +106,16 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
     private int suspicion;
     private int forgeTimer;
     private long nextPatrol;
+    private String familyName = "";
+    private boolean child;
+    private int childAge;
+    private SettlementRole inheritedRole = SettlementRole.NONE;
+    private final Map<UUID, Byte> bonds = new HashMap<>();
+    private UUID rumorAbout;
+    private int rumorKind;
+    private int rumorStrength;
+    private int aimTicks;
+    private long nextRumorShare;
 
     public SurvivorEntity(EntityType<? extends SurvivorEntity> entityType, World world) {
         super(entityType, world);
@@ -161,9 +173,18 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
             return;
         }
 
+        if (child) {
+            childTick();
+            return;
+        }
+
         eatTick();
         farmTick();
         suspicionTick();
+        aimTick();
+        if (getWorld().getTime() % 100L == 0L) {
+            rumorTick();
+        }
 
         if (recruited) {
             if (owner == null) {
@@ -382,8 +403,11 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
             temperamentChosen = true;
         }
         if (!hasCustomName()) {
-            // The name plate colour tells sharp-eyed players who is trouble.
-            setCustomName(Text.literal(getArchetype().randomName(random)).formatted(temperament.color()));
+            // Family folk carry surnames; drifters keep their culture epithets.
+            String display = familyName.isEmpty()
+                    ? getArchetype().randomName(random)
+                    : getArchetype().firstName(random) + " " + familyName;
+            setCustomName(Text.literal(display).formatted(temperament.color()));
         }
     }
 
@@ -446,10 +470,18 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
                         || this.squaredDistanceTo(candidate) > 24.0 * 24.0) {
                     continue;
                 }
-                if (com.rivalrealms.world.RealmState.get(repWorld)
-                        .getReputation(candidate.getUuid(), effectiveFaction()) <= -40) {
+                RealmState realms = com.rivalrealms.world.RealmState.get(repWorld);
+                if (realms.getReputation(candidate.getUuid(), effectiveFaction()) <= -40) {
                     setTarget(candidate);
                     return;
+                }
+                // A single settlement can hate you even when the faction tolerates you.
+                if (guardCenter != null) {
+                    var home = realms.findByCenter(guardCenter);
+                    if (home != null && home.localReputation(candidate.getUuid()) <= -35) {
+                        setTarget(candidate);
+                        return;
+                    }
                 }
             }
         }
@@ -643,6 +675,185 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
         return guardOwnerUuid;
     }
 
+    public BlockPos guardCenter() {
+        return guardCenter;
+    }
+
+    // ------------------------------------------------------- family & bonds
+
+    /** Joins a family line; {@code parent} (if present) becomes kin. */
+    public void setFamily(String family, SurvivorEntity parent) {
+        this.familyName = family == null ? "" : family;
+        if (parent != null) {
+            setBond(parent.getUuid(), (byte) 2);
+            parent.setBond(getUuid(), (byte) 2);
+        }
+    }
+
+    public String familyName() {
+        return familyName;
+    }
+
+    public String firstName(net.minecraft.util.math.random.Random rng) {
+        return getArchetype().firstName(rng);
+    }
+
+    public boolean isChild() {
+        return child;
+    }
+
+    public void setChild(boolean child) {
+        this.child = child;
+        var speed = getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED);
+        if (speed != null) {
+            speed.setBaseValue(child ? 0.22 : 0.33);
+        }
+    }
+
+    public void setInheritedRole(SettlementRole role) {
+        this.inheritedRole = role == null ? SettlementRole.NONE : role;
+    }
+
+    public void setBond(UUID other, byte strength) {
+        if (other != null && !other.equals(getUuid())) {
+            bonds.put(other, strength);
+        }
+    }
+
+    public int bondStrength(UUID other) {
+        return other == null ? 0 : bonds.getOrDefault(other, (byte) 0);
+    }
+
+    /**
+     * The child grows up: takes its parent's trade at the home settlement,
+     * drops the "Young" prefix and starts pulling full weight.
+     */
+    private void growUp() {
+        child = false;
+        setChild(false);
+        String oldName = hasCustomName() ? getName().getString() : "Young";
+        String grown = oldName.startsWith("Young ") ? oldName.substring("Young ".length()) : oldName;
+        setCustomName(Text.literal(grown + (familyName.isEmpty() ? "" : " " + familyName)
+                + (inheritedRole == SettlementRole.NONE ? "" : " · " + inheritedRole.displayName())));
+        if (guardCenter != null) {
+            SettlementRole role = inheritedRole == SettlementRole.NONE
+                    ? (random.nextBoolean() ? SettlementRole.FARMER : SettlementRole.BUILDER)
+                    : inheritedRole;
+            assignWorker(guardCenter, guardOwnerUuid, effectiveFaction(), role);
+            if (getWorld() instanceof ServerWorld serverWorld) {
+                RealmState realms = RealmState.get(serverWorld);
+                var base = realms.findByCenter(guardCenter);
+                if (base != null) {
+                    realms.chronicle(getWorld().getTime(), grown + " " + familyName
+                            + " came of age in " + base.name() + " and took up the "
+                            + role.displayName().toLowerCase(java.util.Locale.ROOT) + "'s trade.", false);
+                }
+            }
+        }
+        inheritedRole = SettlementRole.NONE;
+    }
+
+    /** Children shadow the adults, never fight, and grow up after ~30 minutes. */
+    private void childTick() {
+        setTarget(null);
+        childAge++;
+        if (childAge >= 36000) {
+            growUp();
+            return;
+        }
+        if (childAge % 40 == 0) {
+            for (net.minecraft.entity.Entity adult : getWorld().getOtherEntities(this,
+                    getBoundingBox().expand(12.0), e -> e instanceof SurvivorEntity other
+                            && other.isAlive() && !other.isChild())) {
+                getNavigation().startMovingTo(adult, 1.0);
+                break;
+            }
+        }
+    }
+
+    // ------------------------------------------------------- rumors
+
+    /**
+     * A witness carries news. Rumours travel mouth to mouth and only become
+     * reputation when they reach someone tied to a settlement.
+     */
+    public void seedRumor(UUID about, int kind, int strength) {
+        this.rumorAbout = about;
+        this.rumorKind = kind;
+        this.rumorStrength = strength;
+        this.nextRumorShare = getWorld().getTime() + 60L;
+    }
+
+    private void rumorTick() {
+        long now = getWorld().getTime();
+        if (rumorStrength <= 0 || rumorAbout == null || now < nextRumorShare) {
+            return;
+        }
+        nextRumorShare = now + 100L;
+        for (net.minecraft.entity.Entity listener : getWorld().getOtherEntities(this,
+                getBoundingBox().expand(6.0), e -> e instanceof SurvivorEntity other
+                        && other.isAlive() && other.rumorAbout != rumorAbout)) {
+            SurvivorEntity other = (SurvivorEntity) listener;
+            other.rumorAbout = rumorAbout;
+            other.rumorKind = rumorKind;
+            other.rumorStrength = rumorStrength - 1;
+            if (other.guardCenter != null) {
+                // The news reached a settlement: it becomes local record.
+                if (getWorld() instanceof ServerWorld serverWorld) {
+                    RealmState realms = RealmState.get(serverWorld);
+                    var base = realms.findByCenter(other.guardCenter);
+                    if (base != null) {
+                        base.adjustLocalReputation(rumorAbout, -(rumorStrength + 2));
+                        PlayerEntity subject = getWorld().getPlayerByUuid(rumorAbout);
+                        if (subject != null && subject.squaredDistanceTo(this) < 32.0 * 32.0) {
+                            String crime = switch (rumorKind) {
+                                case 1 -> "theft";
+                                case 2 -> "murder";
+                                default -> "threats";
+                            };
+                            subject.sendMessage(Text.literal("Word of your " + crime
+                                    + " reaches " + base.name() + ".").formatted(Formatting.GOLD), true);
+                        }
+                    }
+                }
+                rumorStrength = 0;
+                rumorAbout = null;
+            } else {
+                rumorStrength = Math.max(0, rumorStrength - 1);
+                rumorAbout = null;
+            }
+            break;
+        }
+        if (getWorld().getTime() % 1200L == 0L && rumorStrength > 0) {
+            rumorStrength--;
+        }
+    }
+
+    // ------------------------------------------------------- player-like aim
+
+    /**
+     * Ranged survivors aim like players: they track the target, hold fire
+     * without a clear line of sight, and their accuracy tightens the longer
+     * they keep the target in their sights.
+     */
+    private void aimTick() {
+        LivingEntity target = getTarget();
+        if (!isRanged() || target == null || !target.isAlive()
+                || squaredDistanceTo(target) > 24.0 * 24.0) {
+            aimTicks = Math.max(0, aimTicks - 2);
+            return;
+        }
+        if (age % 2 == 0 && canSee(target)) {
+            aimTicks++;
+        } else if (age % 2 == 0) {
+            aimTicks = Math.max(0, aimTicks - 3);
+        }
+    }
+
+    private int aimRequirement() {
+        return getArchetype() == Archetype.OUTLAW || getArchetype() == Archetype.PIRATE ? 12 : 8;
+    }
+
     public boolean isRecruited() {
         return recruited && ownerUuid != null;
     }
@@ -776,6 +987,31 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
      * dedicated servers exactly like trading with a wanderer.
      */
     private void openTrades(PlayerEntity player) {
+        // Local reputation decides how the door opens: hostile towns refuse,
+        // friendly ones sweeten the deal.
+        RealmState realms = guardCenter == null ? null : RealmState.get((ServerWorld) getWorld());
+        var base = realms == null ? null : realms.findByCenter(guardCenter);
+        if (base != null) {
+            int local = base.localReputation(player.getUuid());
+            if (local <= -25) {
+                getWorld().playSound(null, getX(), getY(), getZ(), SoundEvents.ENTITY_VILLAGER_NO,
+                        SoundCategory.NEUTRAL, 0.9f, 1.0f);
+                player.sendMessage(Text.literal(getName().getString()
+                        + ": \"We don't trade with your kind. Not after what you did.\""), true);
+                return;
+            }
+            SimpleMerchant merchant = new SimpleMerchant(player);
+            merchant.setCustomer(player);
+            rollTrades(merchant.getOffers());
+            if (local >= 15) {
+                merchant.getOffers().add(new TradeOffer(new TradedItem(Items.EMERALD, 3), Optional.empty(),
+                        new ItemStack(com.rivalrealms.item.ModItems.ROYAL_COIN, 1), 6, 4, 0.05f));
+            }
+            merchant.sendOffers(player, getDisplayName(), 0);
+            getWorld().playSound(null, getX(), getY(), getZ(), SoundEvents.ENTITY_VILLAGER_YES,
+                    SoundCategory.NEUTRAL, 0.9f, 1.0f);
+            return;
+        }
         SimpleMerchant merchant = new SimpleMerchant(player);
         merchant.setCustomer(player);
         rollTrades(merchant.getOffers());
@@ -844,6 +1080,39 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
 
     @Override
     public void onDeath(DamageSource source) {
+        if (!getWorld().isClient && getWorld() instanceof ServerWorld deathWorld) {
+            String killerName = source.getAttacker() == null
+                    ? "misfortune" : source.getAttacker().getName().getString();
+            // Named settlers are written into the world chronicle when they fall.
+            if (guardCenter != null && hasCustomName()) {
+                RealmState realms = RealmState.get(deathWorld);
+                var base = realms.findByCenter(guardCenter);
+                if (base != null) {
+                    boolean major = settlementRole == SettlementRole.GUARD
+                            || settlementRole == SettlementRole.WARLORD
+                            || settlementRole == SettlementRole.CAPTAIN;
+                    realms.chronicle(getWorld().getTime(), getName().getString() + " of " + base.name()
+                            + " was slain by " + killerName + ".", major);
+                }
+            }
+            // Kin and friends mourn - and remember. Family grudges outlive the
+            // moment, and the news spreads mouth to mouth from the body.
+            for (net.minecraft.entity.Entity candidate : deathWorld.getOtherEntities(this,
+                    getBoundingBox().expand(20.0), e -> e instanceof SurvivorEntity mourner
+                            && mourner.isAlive() && mourner.bondStrength(getUuid()) > 0)) {
+                SurvivorEntity mourner = (SurvivorEntity) candidate;
+                if (source.getAttacker() instanceof ServerPlayerEntity killer) {
+                    mourner.holdGrudge(killer, mourner.bondStrength(getUuid()) >= 2 ? 144000L : 72000L);
+                    mourner.seedRumor(killer.getUuid(), 2, mourner.bondStrength(getUuid()) >= 2 ? 4 : 2);
+                    if (mourner.temperament != Temperament.CHILL && mourner.bondStrength(getUuid()) >= 2) {
+                        mourner.setTarget(killer);
+                    }
+                } else if (source.getAttacker() instanceof LivingEntity killerNpc
+                        && mourner.temperament != Temperament.CHILL) {
+                    mourner.setTarget(killerNpc);
+                }
+            }
+        }
         if (!getWorld().isClient && source.getAttacker() instanceof ServerPlayerEntity killer) {
             boolean wasDefending = getTarget() == killer;
             int delta = wasDefending ? -5 : -15;
@@ -908,12 +1177,33 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
         if (!isRanged() || !target.isAlive() || getWorld().isClient) {
             return;
         }
+        // Real shooters do not snap-fire: they track, settle, then squeeze.
+        if (aimTicks < aimRequirement()) {
+            return;
+        }
         Archetype archetype = getArchetype();
         if (archetype == Archetype.OUTLAW || archetype == Archetype.PIRATE) {
             fireGunshot(target, archetype);
         } else {
             fireBolt(target, archetype);
         }
+        // A shot partly resets the aim, like recoil settling.
+        aimTicks = Math.max(aimRequirement() / 2, aimTicks - 6);
+    }
+
+    /**
+     * Leads a moving target the way a player would: aim where the target
+     * WILL be when the shot lands, with error that shrinks as aim settles.
+     */
+    private Vec3d leadTarget(LivingEntity target, double projectileSpeed) {
+        double dist = Math.sqrt(squaredDistanceTo(target));
+        int flight = (int) Math.max(1, dist / projectileSpeed);
+        Vec3d v = target.getVelocity();
+        double err = (1.0 - Math.min(1.0, aimTicks / 24.0)) * 1.1 + 0.12;
+        return new Vec3d(
+                target.getX() + v.x * flight * 0.9 + (random.nextDouble() - 0.5) * err,
+                target.getY() + target.getHeight() * 0.5 + v.y * flight * 0.9 + (random.nextDouble() - 0.5) * err * 0.6,
+                target.getZ() + v.z * flight * 0.9 + (random.nextDouble() - 0.5) * err);
     }
 
     /**
@@ -926,11 +1216,12 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
         ArrowEntity bullet = new ArrowEntity(getWorld(), this, new ItemStack(Items.ARROW), null);
         double muzzleY = getY() + getHeight() * 0.55;
         bullet.setPosition(getX(), muzzleY, getZ());
-        double dx = target.getX() - getX();
-        double dy = target.getY() + target.getStandingEyeHeight() * 0.5 - muzzleY;
-        double dz = target.getZ() - getZ();
+        Vec3d aim = leadTarget(target, 3.0);
+        double dx = aim.x - getX();
+        double dy = aim.y - muzzleY;
+        double dz = aim.z - getZ();
         double horizontal = Math.sqrt(dx * dx + dz * dz);
-        bullet.setVelocity(dx, dy + horizontal * 0.10, dz, 2.1f, 4.0f);
+        bullet.setVelocity(dx, dy + horizontal * 0.04, dz, 3.0f, 1.2f);
         bullet.setDamage((float) archetype.rangedDamage());
         getWorld().spawnEntity(bullet);
 
@@ -942,6 +1233,12 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
                 getX() + dx * 0.08, muzzleY, getZ() + dz * 0.08, 5, 0.12, 0.08, 0.12, 0.01);
         serverWorld.spawnParticles(ParticleTypes.FLAME,
                 getX() + dx * 0.08, muzzleY, getZ() + dz * 0.08, 2, 0.05, 0.03, 0.05, 0.01);
+        // A short tracer so the shot reads across a street.
+        for (double d = 1.0; d < Math.min(horizontal, 8.0); d += 1.6) {
+            serverWorld.spawnParticles(ParticleTypes.CRIT,
+                    getX() + dx / horizontal * d, muzzleY + dy / Math.max(1.0, horizontal) * d,
+                    getZ() + dz / horizontal * d, 1, 0.0, 0.0, 0.0, 0.0);
+        }
     }
 
     /** Sky captains keep the classic crossbow bolt, loosed from chest height. */
@@ -950,11 +1247,12 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
         ArrowEntity bolt = new ArrowEntity(getWorld(), this, new ItemStack(Items.ARROW), null);
         double muzzleY = getY() + getHeight() * 0.55;
         bolt.setPosition(getX(), muzzleY, getZ());
-        double dx = target.getX() - getX();
-        double dy = target.getY() + target.getStandingEyeHeight() * 0.5 - muzzleY;
-        double dz = target.getZ() - getZ();
+        Vec3d aim = leadTarget(target, 1.9);
+        double dx = aim.x - getX();
+        double dy = aim.y - muzzleY;
+        double dz = aim.z - getZ();
         double horizontal = Math.sqrt(dx * dx + dz * dz);
-        bolt.setVelocity(dx, dy + horizontal * 0.16, dz, 1.6f, 10.0f);
+        bolt.setVelocity(dx, dy + horizontal * 0.07, dz, 1.9f, 4.0f);
         bolt.setDamage((float) archetype.rangedDamage());
         getWorld().spawnEntity(bolt);
         serverWorld.playSound(null, getX(), getY(), getZ(), SoundEvents.ITEM_CROSSBOW_SHOOT,
@@ -990,6 +1288,24 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
         if (guardFaction != null) {
             nbt.putString("GuardFaction", guardFaction);
         }
+        nbt.putString("Family", familyName);
+        nbt.putBoolean("Child", child);
+        nbt.putInt("ChildAge", childAge);
+        nbt.putString("InheritedRole", inheritedRole.id());
+        nbt.putBoolean("AimWarm", aimTicks > 0);
+        nbt.putInt("AimTicks", aimTicks);
+        if (rumorAbout != null) {
+            nbt.putUuid("RumorAbout", rumorAbout);
+            nbt.putInt("RumorKind", rumorKind);
+            nbt.putInt("RumorStrength", rumorStrength);
+        }
+        if (!bonds.isEmpty()) {
+            NbtCompound savedBonds = new NbtCompound();
+            for (Map.Entry<UUID, Byte> bond : bonds.entrySet()) {
+                savedBonds.putByte(bond.getKey().toString(), bond.getValue());
+            }
+            nbt.put("Bonds", savedBonds);
+        }
     }
 
     @Override
@@ -1016,6 +1332,26 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
         // Equipment itself is saved by the vanilla Mob NBT (HandItems/ArmorItems);
         // only re-roll the loadout for survivors that never had one.
         loadoutApplied = nbt.getBoolean("LoadoutApplied");
+        familyName = nbt.getString("Family");
+        child = nbt.getBoolean("Child");
+        childAge = Math.max(0, nbt.getInt("ChildAge"));
+        inheritedRole = SettlementRole.byId(nbt.getString("InheritedRole"));
+        aimTicks = Math.max(0, nbt.getInt("AimTicks"));
+        rumorAbout = nbt.containsUuid("RumorAbout") ? nbt.getUuid("RumorAbout") : null;
+        rumorKind = Math.max(0, nbt.getInt("RumorKind"));
+        rumorStrength = Math.max(0, nbt.getInt("RumorStrength"));
+        bonds.clear();
+        NbtCompound savedBonds = nbt.getCompound("Bonds");
+        for (String key : savedBonds.getKeys()) {
+            try {
+                bonds.put(UUID.fromString(key), savedBonds.getByte(key, (byte) 0));
+            } catch (IllegalArgumentException ignored) {
+                // One corrupt bond must not sink the social graph.
+            }
+        }
+        if (child) {
+            setChild(true);
+        }
     }
 
     // ------------------------------------------------------------------ farming
@@ -1140,12 +1476,14 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
      */
     private void witnessAttack(PlayerEntity attacker) {
         holdGrudge(attacker, 72000L); // an hour of in-game time
+        seedRumor(attacker.getUuid(), 3, 2);
         for (net.minecraft.entity.Entity witness : getWorld().getOtherEntities(this,
                 getBoundingBox().expand(14.0), e -> e instanceof SurvivorEntity ally
                         && ally.isAlive() && !ally.isRecruited()
                         && ally.effectiveFaction().equals(effectiveFaction()))) {
             SurvivorEntity ally = (SurvivorEntity) witness;
             ally.holdGrudge(attacker, 72000L);
+            ally.seedRumor(attacker.getUuid(), 3, 2);
             if (ally.temperament != Temperament.CHILL) {
                 ally.setTarget(attacker);
             }

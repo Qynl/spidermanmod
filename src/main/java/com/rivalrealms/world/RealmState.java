@@ -33,10 +33,14 @@ public final class RealmState extends PersistentState {
     private static final PersistentState.Type<RealmState> TYPE = new PersistentState.Type<>(
             RealmState::new, RealmState::fromNbt, DataFixTypes.LEVEL);
 
+    private static final int MAX_CHRONICLE = 200;
+
     private final List<BaseRecord> bases = new ArrayList<>();
     private final Map<String, Integer> relations = new HashMap<>();
     private final Map<String, Integer> reputations = new HashMap<>();
     private final Set<Long> generatedSites = new HashSet<>();
+    private final Map<String, Integer> wealth = new HashMap<>();
+    private final List<ChronicleEntry> chronicle = new ArrayList<>();
 
     public static RealmState get(ServerWorld world) {
         return world.getPersistentStateManager().getOrCreate(TYPE, ID);
@@ -62,6 +66,9 @@ public final class RealmState extends PersistentState {
                     Math.min(999, Math.max(0, base.getInt("Materials"))),
                     Math.min(999, Math.max(0, base.getInt("Work"))),
                     Math.max(0L, base.getLong("LastExpansion"))));
+            BaseRecord saved = state.bases.get(state.bases.size() - 1);
+            saved.abandoned = base.getBoolean("Abandoned");
+            saved.famineCycles = Math.max(0, base.getInt("Famine"));
         }
 
         long[] savedSites = nbt.getLongArray("GeneratedSites");
@@ -82,6 +89,33 @@ public final class RealmState extends PersistentState {
             if (reputation.containsUuid("Player")) {
                 state.reputations.put(reputationKey(reputation.getUuid("Player"), reputation.getString("Faction")),
                         clampRelation(reputation.getInt("Value")));
+            }
+        }
+
+        NbtList savedWealth = nbt.getList("Wealth", NbtElement.COMPOUND_TYPE);
+        for (int i = 0; i < savedWealth.size(); i++) {
+            NbtCompound entry = savedWealth.getCompound(i);
+            state.wealth.put(normalize(entry.getString("Faction")),
+                    Math.max(0, Math.min(100, entry.getInt("Value"))));
+        }
+
+        NbtList savedChronicle = nbt.getList("Chronicle", NbtElement.COMPOUND_TYPE);
+        for (int i = 0; i < Math.min(savedChronicle.size(), MAX_CHRONICLE); i++) {
+            NbtCompound entry = savedChronicle.getCompound(i);
+            state.chronicle.add(new ChronicleEntry(entry.getLong("Day"), entry.getString("Text"),
+                    entry.getBoolean("Major")));
+        }
+
+        NbtList savedBonds = nbt.getList("LocalRep", NbtElement.COMPOUND_TYPE);
+        for (int i = 0; i < savedBonds.size(); i++) {
+            NbtCompound entry = savedBonds.getCompound(i);
+            try {
+                BaseRecord base = state.findByCenter(entry.getLong("Center"));
+                if (base != null && entry.containsUuid("Player")) {
+                    base.localReputation.put(entry.getUuid("Player"), clampRelation(entry.getInt("Value")));
+                }
+            } catch (IllegalArgumentException ignored) {
+                // One corrupt entry must not sink the ledger.
             }
         }
         return state;
@@ -206,6 +240,18 @@ public final class RealmState extends PersistentState {
         markDirty();
     }
 
+    /** A living town eats. Nothing in, nothing stored. */
+    public void consumeFood(BaseRecord base, int amount) {
+        base.food = Math.max(0, base.food - Math.max(0, amount));
+        markDirty();
+    }
+
+    public void drain(BaseRecord base, int food, int materials) {
+        base.food = Math.max(0, base.food - Math.max(0, food));
+        base.materials = Math.max(0, base.materials - Math.max(0, materials));
+        markDirty();
+    }
+
     public boolean beginExpansion(BaseRecord base, int foodCost, int materialCost, long worldTime) {
         if (base.level >= 5 || base.food < foodCost || base.materials < materialCost
                 || (base.lastExpansion > 0L && worldTime - base.lastExpansion < 12000L)) {
@@ -236,6 +282,8 @@ public final class RealmState extends PersistentState {
             entry.putInt("Materials", base.materials);
             entry.putInt("Work", base.workProgress);
             entry.putLong("LastExpansion", base.lastExpansion);
+            entry.putBoolean("Abandoned", base.abandoned);
+            entry.putInt("Famine", base.famineCycles);
             savedBases.add(entry);
         }
         nbt.put("Bases", savedBases);
@@ -280,6 +328,37 @@ public final class RealmState extends PersistentState {
             }
         }
         nbt.put("Reputations", savedReputations);
+
+        NbtList savedWealth = new NbtList();
+        for (Map.Entry<String, Integer> entry : wealth.entrySet()) {
+            NbtCompound entryNbt = new NbtCompound();
+            entryNbt.putString("Faction", entry.getKey());
+            entryNbt.putInt("Value", entry.getValue());
+            savedWealth.add(entryNbt);
+        }
+        nbt.put("Wealth", savedWealth);
+
+        NbtList savedChronicle = new NbtList();
+        for (ChronicleEntry entry : chronicle) {
+            NbtCompound entryNbt = new NbtCompound();
+            entryNbt.putLong("Day", entry.day());
+            entryNbt.putString("Text", entry.text());
+            entryNbt.putBoolean("Major", entry.major());
+            savedChronicle.add(entryNbt);
+        }
+        nbt.put("Chronicle", savedChronicle);
+
+        NbtList savedLocal = new NbtList();
+        for (BaseRecord base : bases) {
+            for (Map.Entry<UUID, Integer> entry : base.localReputation.entrySet()) {
+                NbtCompound entryNbt = new NbtCompound();
+                entryNbt.putLong("Center", base.centerLong);
+                entryNbt.putUuid("Player", entry.getKey());
+                entryNbt.putInt("Value", entry.getValue());
+                savedLocal.add(entryNbt);
+            }
+        }
+        nbt.put("LocalRep", savedLocal);
         return nbt;
     }
 
@@ -328,12 +407,54 @@ public final class RealmState extends PersistentState {
         };
     }
 
+    public ChronicleEntry chronicle(long worldTime, String text, boolean major) {
+        ChronicleEntry entry = new ChronicleEntry(worldTime / 24000L + 1L, safeText(text, ""), major);
+        chronicle.add(entry);
+        while (chronicle.size() > MAX_CHRONICLE) {
+            chronicle.remove(0);
+        }
+        markDirty();
+        return entry;
+    }
+
+    public List<ChronicleEntry> chronicle() {
+        return Collections.unmodifiableList(chronicle);
+    }
+
+    /** Faction treasury, 0 (ragged) to 100 (golden age). Drives gear and patrols. */
+    public int wealth(String faction) {
+        return wealth.getOrDefault(normalize(faction), 45);
+    }
+
+    public void adjustWealth(String faction, int amount) {
+        String key = normalize(faction);
+        wealth.put(key, Math.max(0, Math.min(100, wealth.getOrDefault(key, 45) + amount)));
+        markDirty();
+    }
+
+    public BaseRecord findByCenter(BlockPos center) {
+        long key = center.asLong();
+        for (BaseRecord base : bases) {
+            if (base.centerLong == key) {
+                return base;
+            }
+        }
+        return null;
+    }
+
+    public record ChronicleEntry(long day, String text, boolean major) {
+    }
+
     public static final class BaseRecord {
         private final long centerLong;
-        private final UUID owner;
-        private final String faction;
-        private final String styleId;
+        private UUID owner;
+        private String faction;
+        private String styleId;
         private final String name;
+        private boolean abandoned;
+        /** Player-local standing with THIS settlement, separate from faction-wide reputation. */
+        private final Map<UUID, Integer> localReputation = new HashMap<>();
+        private int famineCycles;
         private int level;
         private long lastRaid;
         private int food;
@@ -363,6 +484,39 @@ public final class RealmState extends PersistentState {
 
         public UUID owner() {
             return owner;
+        }
+
+        /** A settlement that falls in war now serves a new banner. */
+        public void surrenderTo(UUID newOwner, String newFaction, String newStyle) {
+            this.owner = newOwner;
+            this.faction = safeText(newFaction, faction);
+            this.styleId = safeText(newStyle, styleId);
+            this.lastRaid = 0L;
+            this.famineCycles = 0;
+        }
+
+        public boolean abandoned() {
+            return abandoned;
+        }
+
+        public void setAbandoned(boolean abandoned) {
+            this.abandoned = abandoned;
+        }
+
+        public int localReputation(UUID player) {
+            return localReputation.getOrDefault(player, 0);
+        }
+
+        public void adjustLocalReputation(UUID player, int amount) {
+            localReputation.put(player, clampRelation(localReputation.getOrDefault(player, 0) + amount));
+        }
+
+        public int famineCycles() {
+            return famineCycles;
+        }
+
+        public void setFamineCycles(int famineCycles) {
+            this.famineCycles = famineCycles;
         }
 
         public String faction() {

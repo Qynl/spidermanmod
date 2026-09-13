@@ -123,7 +123,72 @@ public final class ModCommands {
                 .then(CommandManager.literal("convoy")
                         .executes(context -> spawnConvoy(context.getSource())))
                 .then(CommandManager.literal("info")
-                        .executes(context -> info(context.getSource()))));
+                        .executes(context -> info(context.getSource())))
+                .then(CommandManager.literal("chronicle")
+                        .executes(context -> chronicle(context.getSource())))
+                .then(CommandManager.literal("standing")
+                        .executes(context -> standing(context.getSource()))));
+    }
+
+    /** The world's memory: the last events of the persistent chronicle. */
+    private static int chronicle(ServerCommandSource source) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
+        ServerPlayerEntity player = source.getPlayer();
+        ServerWorld world = player.getServerWorld();
+        RealmState state = RealmState.get(world);
+        var entries = state.chronicle();
+        if (entries.isEmpty()) {
+            source.sendFeedback(() -> Text.literal("The chronicle is still blank. The realm has not made history yet."), false);
+            return 0;
+        }
+        source.sendFeedback(() -> Text.literal("==== THE REALM CHRONICLE ====").formatted(net.minecraft.util.Formatting.GOLD), false);
+        int from = Math.max(0, entries.size() - 10);
+        for (int i = from; i < entries.size(); i++) {
+            RealmState.ChronicleEntry entry = entries.get(i);
+            final String line = "Day " + entry.day() + ": " + entry.text();
+            source.sendFeedback(() -> Text.literal(line)
+                    .formatted(entry.major() ? net.minecraft.util.Formatting.GOLD : net.minecraft.util.Formatting.GRAY), false);
+        }
+        return entries.size() - from;
+    }
+
+    /** Faction wealth and every standing the player holds, global and local. */
+    private static int standing(ServerCommandSource source) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
+        ServerPlayerEntity player = source.getPlayer();
+        ServerWorld world = player.getServerWorld();
+        RealmState state = RealmState.get(world);
+        source.sendFeedback(() -> Text.literal("==== FACTIONS ====").formatted(net.minecraft.util.Formatting.GOLD), false);
+        for (Archetype culture : Archetype.values()) {
+            String faction = culture.faction();
+            int rep = state.getReputation(player.getUuid(), faction);
+            int wealth = state.wealth(faction);
+            final String line = faction + " · wealth " + wealth + "/100 · your standing: "
+                    + statusWord(rep) + " (" + rep + ")";
+            source.sendFeedback(() -> Text.literal(line)
+                    .formatted(rep <= -40 ? net.minecraft.util.Formatting.RED
+                            : rep >= 30 ? net.minecraft.util.Formatting.GREEN
+                            : net.minecraft.util.Formatting.GRAY), false);
+        }
+        // Local standing in the settlement you stand in.
+        for (RealmState.BaseRecord base : state.bases()) {
+            if (base.contains(player.getBlockPos())) {
+                int local = base.localReputation(player.getUuid());
+                final String line = "Local · " + base.name() + ": " + statusWord(local) + " (" + local + ")";
+                source.sendFeedback(() -> Text.literal(line)
+                        .formatted(net.minecraft.util.Formatting.AQUA), false);
+                break;
+            }
+        }
+        return 1;
+    }
+
+    private static String statusWord(int value) {
+        if (value >= 60) return "Hero";
+        if (value >= 30) return "Trusted";
+        if (value >= 15) return "Friendly";
+        if (value > -15) return "Neutral";
+        if (value > -30) return "Distrusted";
+        if (value > -40) return "Unwelcome";
+        return "Hunted";
     }
 
     private static int spawn(ServerCommandSource source, String cultureId, int count) throws com.mojang.brigadier.exceptions.CommandSyntaxException {

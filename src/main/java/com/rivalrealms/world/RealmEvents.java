@@ -55,6 +55,14 @@ public final class RealmEvents {
                             world.getRegistryKey().getValue(), exception);
                 }
             }
+            if (world.getTime() % 600L == 0) {
+                try {
+                    LivingRealm.tick(world);
+                } catch (RuntimeException exception) {
+                    RivalRealms.LOGGER.error("Living realm tick failed in {}",
+                            world.getRegistryKey().getValue(), exception);
+                }
+            }
         }
 
         for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
@@ -158,8 +166,11 @@ public final class RealmEvents {
      * Drop everything they carry.
      */
     private static void makeChampion(ServerWorld world, SurvivorEntity survivor) {
-        survivor.setCustomName(Text.literal("Champion · " + survivor.getArchetype().title())
-                .formatted(net.minecraft.util.Formatting.GOLD));
+        Text name = survivor.hasCustomName()
+                ? survivor.getName().copy().formatted(net.minecraft.util.Formatting.GOLD)
+                : Text.literal("Champion · " + survivor.getArchetype().title())
+                        .formatted(net.minecraft.util.Formatting.GOLD);
+        survivor.setCustomName(name);
         survivor.setCustomNameVisible(true);
         var health = survivor.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH);
         if (health != null) {
@@ -190,6 +201,7 @@ public final class RealmEvents {
         settler.refreshPositionAndAngles(spawn.getX() + 0.5, spawn.getY(), spawn.getZ() + 0.5,
                 world.random.nextFloat() * 360.0f, 0.0f);
         settler.setArchetype(Archetype.byFaction(faction));
+        settler.setFamily(LivingRealm.surname(faction, world.random), null);
         if (role == SettlementRole.RAIDER || role == SettlementRole.WARLORD) {
             settler.setCustomName(Text.literal(role.displayName() + " · "
                     + Archetype.byFaction(faction).title()));
@@ -249,7 +261,8 @@ public final class RealmEvents {
                 entity -> entity instanceof SurvivorEntity guard
                         && guard.isBaseGuard()
                         && base.faction().equalsIgnoreCase(guard.effectiveFaction()));
-        int desired = Math.min(5, 1 + base.level());
+        // Wealthy factions patrol harder: one extra guard on the walls.
+        int desired = Math.min(6, 1 + base.level() + (RealmState.get(world).wealth(base.faction()) >= 60 ? 1 : 0));
         if (defenders.size() >= desired || world.random.nextFloat() > 0.45f) {
             return;
         }
@@ -263,11 +276,13 @@ public final class RealmEvents {
                 center.add(world.random.nextInt(9) - 4, 0, world.random.nextInt(9) - 4));
         guard.refreshPositionAndAngles(spawn, world.random.nextFloat() * 360.0f, 0.0f);
         guard.setArchetype(culture);
+        guard.setFamily(LivingRealm.surname(base.faction(), world.random), null);
         guard.assignGuard(center, base.owner(), base.faction());
-        if (world.random.nextFloat() < 0.12f) {
+        if (world.random.nextFloat() < 0.12f + (RealmState.get(world).wealth(base.faction()) >= 75 ? 0.10f : 0f)) {
             makeChampion(world, guard);
         }
         world.spawnEntity(guard);
+        LivingRealm.applyWealthGear(world, guard, base.faction());
 
         ServerPlayerEntity owner = world.getServer().getPlayerManager().getPlayer(base.owner());
         if (owner != null && defenders.isEmpty()) {
@@ -299,8 +314,18 @@ public final class RealmEvents {
                 center.add(world.random.nextInt(13) - 6, 0, world.random.nextInt(13) - 6));
         worker.refreshPositionAndAngles(spawn, world.random.nextFloat() * 360.0f, 0.0f);
         worker.setArchetype(culture);
+        worker.setFamily(LivingRealm.surname(base.faction(), world.random), null);
         worker.assignWorker(center, base.owner(), base.faction(), role);
+        // New arrivals befriend a colleague: the social graph thickens.
+        for (Entity colleague : workers) {
+            if (colleague instanceof SurvivorEntity friend) {
+                worker.setBond(friend.getUuid(), (byte) 1);
+                friend.setBond(worker.getUuid(), (byte) 1);
+                break;
+            }
+        }
         world.spawnEntity(worker);
+        LivingRealm.applyWealthGear(world, worker, base.faction());
 
         ServerPlayerEntity owner = world.getServer().getPlayerManager().getPlayer(base.owner());
         if (owner != null) {

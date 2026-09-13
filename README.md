@@ -155,6 +155,24 @@ Claimed settlements recruit guards and workers up to their level. Jobs (guard, b
 
 ---
 
+## The living realm
+
+- **Factions run on wealth** (0–100): surplus food and caravans fill the treasury, raids and famine drain it. Wealthy factions field enchanted veterans and an extra patrol; bankrupt ones send people out in rags
+- **Settlements live and die**: they eat, grow when fed, shrink in famine, empty out and get abandoned — and a settlement that loses every defender in a war **changes banners** for real
+- **The chronicle** (`/rivalrealms chronicle`): every capture, famine, plague, birth, skirmish and slaying is written into persistent world history with in-game day numbers
+- **Generations**: fed towns raise children who shadow the adults, grow up (~30 min), take their parent's trade and carry the family surname
+- **Relationships**: settlers carry surnames, siblings and friends; kill someone and their kin hunt you longer, mourn, and spread the news
+- **Rumors travel**: witnesses whisper crime news mouth-to-mouth — and when it reaches a settlement, its **local standing** with you drops (separate from faction-wide reputation)
+- **Local reputation**: each settlement keeps its own score on you. Friendly towns add a gold deal to the trade menu; hostile ones refuse to trade at all and their guards hunt you (`/rivalrealms standing`)
+- **World events**: famine, plague (herbalists contain it), merchant booms, marauder uprisings, refugee arrivals and border skirmishes between hostile neighbours
+- **Roads**: caravans physically walk between known settlements — until a hostile camp parks astride the road and cuts the route (the chronicle notices)
+
+## Martial rework
+
+- **Guns**: the revolver is a real six-shooter now — per-shot cylinder persisted on the gun, spread that grows as you fan the hammer, brass casings, layered cracks, flint-click reloads (auto when empty, sneak-use to reload early). Flintlock: one piercing thunderclap, full ramrod reload. Blunderbuss: two drums, six tracered pellets a shell, recoil that shoves you
+- **NPC gunfights**: ranged survivors aim like players — they track, hold fire without line of sight, need settling time before the first shot, **lead moving targets**, and tighten up the longer you're in their sights
+- **Sword slashes**: the Royal Longsword draws a crescent on every landed hit with an extra shove, and Sovereign's Cleave rolls forward as a visible wave
+
 ## Build the realm
 
 - **Nine new hand-painted building blocks**, all craftable and all used by the world generator: Gilded Brick (gold-seamed masonry), Crown Pillar (fluted, gilded capital), War Council Table (campaign map under glass-free parchment), Weapon Rack (hangs sword, spear and axe — thin wall piece you can shoot past), Trophy Skulls, Hearth Lantern (warm full-brightness amber glow), Supply Crate (crown-branded), Road Stone (wheel-rut cobbles), Arrow Slit Wall (real see-through sight line for defenders)

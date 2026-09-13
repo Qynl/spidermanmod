@@ -1,66 +1,71 @@
 package com.rivalrealms.item;
 
-import net.minecraft.entity.EquipmentSlot;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.projectile.ArrowEntity;
-import net.minecraft.item.Item;
+import net.minecraft.entity.projectile.ProjectileUtil;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.Hand;
-import net.minecraft.util.TypedActionResult;
+import net.minecraft.util.hit.EntityHitResult;
+import net.minecraft.util.math.Box;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /**
- * The scattergun of the frontier: one pull, six short-range pellets in a
- * wide cone. Brutal up close, useless far away — and loud enough to wake
- * the whole valley.
+ * The scattergun of the frontier: two shells in the drums, each a cone of
+ * six short-range pellets with real tracers. Brutal in a doorway, useless
+ * across a street, and loud enough to wake the whole valley.
  */
-public class BlunderbussItem extends Item {
+public class BlunderbussItem extends RevolverItem {
+    private static final int PELLETS = 6;
+    private static final float PELLET_DAMAGE = 2.8f;
+
     public BlunderbussItem(Settings settings) {
-        super(settings);
+        super(settings, 3.0f, 8, 12.0f, 2, 55);
     }
 
     @Override
-    public TypedActionResult<ItemStack> use(World world, PlayerEntity user, Hand hand) {
-        ItemStack stack = user.getStackInHand(hand);
-        if (!world.isClient) {
-            ServerWorld serverWorld = (ServerWorld) world;
-            float yawRad = user.getYaw() * 0.017453292f;
-            float pitchRad = user.getPitch() * 0.017453292f;
-            double barrelX = -Math.sin(yawRad) * Math.cos(pitchRad);
-            double barrelY = -Math.sin(pitchRad);
-            double barrelZ = Math.cos(yawRad) * Math.cos(pitchRad);
-
-            for (int i = 0; i < 6; i++) {
-                ArrowEntity pellet = new ArrowEntity(world, user, new ItemStack(Items.ARROW), null);
-                pellet.refreshPositionAndAngles(
-                        user.getX() + barrelX, user.getEyeY() - 0.1, user.getZ() + barrelZ,
-                        user.getYaw(), user.getPitch());
-                double spreadX = barrelX * 1.25 + (world.random.nextDouble() - 0.5) * 0.7;
-                double spreadY = barrelY * 1.25 + (world.random.nextDouble() - 0.5) * 0.45;
-                double spreadZ = barrelZ * 1.25 + (world.random.nextDouble() - 0.5) * 0.7;
-                pellet.setVelocity(spreadX, spreadY, spreadZ, 1.25f, 0.0f);
-                pellet.setDamage(3.0f);
-                world.spawnEntity(pellet);
+    protected void fireShot(World world, PlayerEntity user, ItemStack stack, Hand hand,
+                            Vec3d start, Vec3d direction, double extraSpread) {
+        Box search = user.getBoundingBox().stretch(direction.multiply(range)).expand(1.6);
+        for (int i = 0; i < PELLETS; i++) {
+            // A wide, even cone: each pellet wanders independently.
+            Vec3d spread = new Vec3d(
+                    direction.x + (world.random.nextDouble() - 0.5) * 0.42,
+                    direction.y + (world.random.nextDouble() - 0.5) * 0.30,
+                    direction.z + (world.random.nextDouble() - 0.5) * 0.42).normalize();
+            Vec3d end = start.add(spread.multiply(range));
+            EntityHitResult hit = ProjectileUtil.raycast(user, start, end, search,
+                    entity -> !entity.isSpectator() && entity.isAlive() && entity.canHit(), range * range);
+            if (hit != null && hit.getEntity() instanceof LivingEntity living) {
+                living.damage(world.getDamageSources().playerAttack(user), PELLET_DAMAGE);
+                living.takeKnockback(0.35, -spread.x, -spread.z);
+                world.playSound(null, living.getX(), living.getY(), living.getZ(),
+                        SoundEvents.ENTITY_ARROW_HIT_PLAYER, SoundCategory.PLAYERS, 0.5f, 1.1f);
+                drawTracer(world, start, spread, hit.getPos().distanceTo(start));
+            } else {
+                drawTracer(world, start, spread, range * 0.7);
             }
-
-            serverWorld.playSound(null, user.getX(), user.getY(), user.getZ(),
-                    SoundEvents.ENTITY_GENERIC_EXPLODE, SoundCategory.PLAYERS, 0.7f, 1.6f);
-            serverWorld.playSound(null, user.getX(), user.getY(), user.getZ(),
-                    SoundEvents.ENTITY_WITHER_SHOOT, SoundCategory.PLAYERS, 0.5f, 1.7f);
-            serverWorld.spawnParticles(ParticleTypes.LARGE_SMOKE,
-                    user.getX() + barrelX, user.getEyeY() - 0.1, user.getZ() + barrelZ, 10, 0.3, 0.15, 0.3, 0.03);
-            serverWorld.spawnParticles(ParticleTypes.FLAME,
-                    user.getX() + barrelX, user.getEyeY() - 0.1, user.getZ() + barrelZ, 5, 0.2, 0.1, 0.2, 0.05);
-            user.takeKnockback(0.9, -barrelX, -barrelZ);
-            user.getItemCooldownManager().set(this, 50);
-            stack.damage(1, user, hand == Hand.OFF_HAND
-                    ? EquipmentSlot.OFFHAND : EquipmentSlot.MAINHAND);
         }
-        return TypedActionResult.success(stack, world.isClient());
+    }
+
+    @Override
+    protected void fireFeedback(World world, PlayerEntity user, Vec3d start, Vec3d direction, Vec3d impact) {
+        super.fireFeedback(world, user, start, direction, impact);
+        if (!(world instanceof ServerWorld serverWorld)) {
+            return;
+        }
+        Vec3d muzzle = start.add(direction.multiply(1.0));
+        serverWorld.spawnParticles(ParticleTypes.LARGE_SMOKE,
+                muzzle.x, muzzle.y - 0.1, muzzle.z, 10, 0.3, 0.15, 0.3, 0.03);
+        serverWorld.spawnParticles(ParticleTypes.FLAME, muzzle.x, muzzle.y - 0.1, muzzle.z, 5, 0.2, 0.1, 0.2, 0.05);
+        // The gun shoves the shooter back; hip-fire taunts gravity.
+        user.takeKnockback(0.9, -direction.x, -direction.z);
+        serverWorld.playSound(null, user.getX(), user.getY(), user.getZ(), SoundEvents.ENTITY_GENERIC_EXPLODE,
+                SoundCategory.PLAYERS, 0.7f, 1.6f);
     }
 }
