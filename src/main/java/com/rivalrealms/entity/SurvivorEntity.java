@@ -309,7 +309,7 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
                                 && !warWorld.getBlockState(at.offset(toward)).isAir()) {
                             warWorld.setBlockState(at, net.minecraft.block.Blocks.LADDER
                                     .getDefaultState()
-                                    .with(net.minecraft.state.property.HorizontalFacingBlock.FACING,
+                                    .with(net.minecraft.block.HorizontalFacingBlock.FACING,
                                             toward), 3);
                             raised = true;
                         }
