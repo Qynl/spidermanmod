@@ -53,11 +53,8 @@ public class WheelScreen extends Screen {
     public void tick() {
         super.tick();
         ticksOpen++;
-        if (ticksOpen > 4) {
-            if (!ClientTickHandler.isWheelDown()) {
-                confirmAndClose();
-            }
-        }
+        // FIXED: Don't auto-close here, let ClientTickHandler handle it with robust GLFW check
+        // This prevents interval closing
     }
 
     @Override
