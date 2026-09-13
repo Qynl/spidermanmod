@@ -209,6 +209,8 @@ public final class StructureBuilder {
         chapel(world, base.add(-16, 0, 10));
         gardenPatch(world, base.add(9, 0, 2));
         gardenPatch(world, base.add(-16, 0, -8));
+        // The smithy and its coal-dark yard.
+        forge(world, base.add(-2, 0, 10));
         spawnGuard(world, base, y, style);
     }
 
@@ -225,6 +227,10 @@ public final class StructureBuilder {
                 new ItemStack(Items.COOKED_COD, 8), new ItemStack(Items.GOLD_NUGGET, 12),
                 new ItemStack(ModItems.CANNONBALL, 2));
         mooredBoat(world, base.add(16, 0, -6));
+        // A fishing family's stilt hut, legs in the tide.
+        fishingStilt(world, base.add(16, 0, 3));
+        // The light that brings the ships home.
+        lighthouse(world, base.add(-18, 0, -16));
         // The waterfront arcade: stone arches, timber loft, long dark
         // roof - the building every harbor photograph is of.
         quayArcade(world, base.add(-10, 0, 9), 3);
@@ -1446,6 +1452,204 @@ public final class StructureBuilder {
         set(world, corner.add(1, y, 1), Blocks.WATER);
     }
 
+    /** A striped lighthouse: banded tower, gallery, a light that never sleeps. */
+    private static void lighthouse(ServerWorld world, BlockPos base) {
+        int y = groundAt(world, base.getX(), base.getZ());
+        BlockPos origin = new BlockPos(base.getX(), y, base.getZ());
+        packUnder(world, origin.add(-3, 0, -3), 7, 7, y, Blocks.COBBLESTONE);
+        // Banded drum: red and white courses, tapering by rings.
+        for (int h = 1; h <= 12; h++) {
+            int reach = h <= 3 ? 3 : (h <= 8 ? 2 : 1);
+            boolean red = (h / 2) % 2 == 0;
+            for (int dx = -3; dx <= 3; dx++) {
+                for (int dz = -3; dz <= 3; dz++) {
+                    double dist = Math.sqrt(dx * dx + dz * dz);
+                    boolean shell = dist > reach - 1.1 && dist <= reach + 0.1;
+                    boolean solid = dist <= reach + 0.1;
+                    if (shell) {
+                        set(world, origin.add(dx, h, dz), red
+                                ? Blocks.RED_WOOL : Blocks.SPRUCE_PLANKS);
+                    } else if (solid && h == 1) {
+                        set(world, origin.add(dx, h, dz), Blocks.COBBLESTONE);
+                    } else if (solid) {
+                        set(world, origin.add(dx, h, dz), Blocks.AIR);
+                    }
+                }
+            }
+            if (h == 6) {
+                set(world, origin.add(0, h, reach), Blocks.AIR);
+                set(world, origin.add(0, h - 1, reach), Blocks.AIR);
+            }
+        }
+        // The gallery: rail, the great light, a dark cap.
+        for (int dx = -2; dx <= 2; dx++) {
+            for (int dz = -2; dz <= 2; dz++) {
+                boolean rim = Math.abs(dx) == 2 || Math.abs(dz) == 2;
+                set(world, origin.add(dx, 13, dz), rim ? Blocks.STONE_BRICKS : Blocks.GLOWSTONE);
+                if (rim) {
+                    set(world, origin.add(dx, 14, dz), Blocks.OAK_FENCE);
+                }
+            }
+        }
+        for (int dx = -1; dx <= 1; dx++) {
+            for (int dz = -1; dz <= 1; dz++) {
+                set(world, origin.add(dx, 15, dz), Blocks.DARK_OAK_SLAB);
+            }
+        }
+        set(world, origin.add(0, 12, 3), Blocks.STONE_BRICK_SLAB);
+        set(world, origin.add(-2, 12, 3), Blocks.BARREL);
+    }
+
+    /** The smithy: brick walls under a towering chimney, and a working yard. */
+    private static void forge(ServerWorld world, BlockPos corner) {
+        int y = lowestCorner(world, corner.getX(), corner.getZ(), 8, 7);
+        BlockPos origin = new BlockPos(corner.getX(), y, corner.getZ());
+        packUnder(world, origin, 8, 7, y, Blocks.COBBLESTONE);
+        for (int h = 1; h <= 4; h++) {
+            for (int x = 0; x <= 7; x++) {
+                for (int z = 0; z <= 6; z++) {
+                    boolean edge = x == 0 || z == 0 || x == 7 || z == 6;
+                    BlockPos pos = origin.add(x, h, z);
+                    if (h <= 4 && edge) {
+                        boolean post = (x < 2 || x > 5) && (z < 2 || z > 4);
+                        set(world, pos, post ? Blocks.SPRUCE_LOG
+                                : (h == 1 ? Blocks.COBBLESTONE : Blocks.BRICKS));
+                    } else if (h == 4 && !edge) {
+                        set(world, pos, Blocks.SPRUCE_PLANKS);
+                    } else {
+                        set(world, pos, Blocks.AIR);
+                    }
+                }
+            }
+            // Open work bays to the south.
+            if (h <= 3) {
+                set(world, origin.add(2, h, 6), Blocks.AIR);
+                set(world, origin.add(4, h, 6), Blocks.AIR);
+            }
+            if (h == 3) {
+                set(world, origin.add(2, h, 6), Blocks.SPRUCE_SLAB);
+                set(world, origin.add(4, h, 6), Blocks.SPRUCE_SLAB);
+            }
+        }
+        // The dark shingled roof falls to a valley over the forge hall.
+        for (int x = 0; x <= 7; x++) {
+            set(world, origin.add(x, 5, 0), Blocks.SPRUCE_LOG);
+            for (int z = 1; z <= 3; z++) {
+                set(world, origin.add(x, 5, z), Blocks.DARK_OAK_STAIRS);
+            }
+            for (int z = 4; z <= 6; z++) {
+                set(world, origin.add(x, 5, z), Blocks.DARK_OAK_STAIRS);
+            }
+        }
+        set(world, origin.add(3, 5, 4), Blocks.DARK_OAK_SLAB);
+        set(world, origin.add(4, 5, 4), Blocks.DARK_OAK_SLAB);
+        // The chimney: full stone, smoking at the top.
+        for (int h = 1; h <= 9; h++) {
+            set(world, origin.add(5, h, 2), Blocks.STONE_BRICKS);
+            set(world, origin.add(6, h, 2), Blocks.STONE_BRICKS);
+            set(world, origin.add(5, h, 1), Blocks.STONE_BRICKS);
+            set(world, origin.add(6, h, 1), Blocks.STONE_BRICKS);
+        }
+        set(world, origin.add(5, 10, 1), Blocks.STONE_BRICK_SLAB);
+        set(world, origin.add(6, 10, 2), Blocks.STONE_BRICK_SLAB);
+        set(world, origin.add(5, 9, 2), Blocks.CAMPFIRE);
+        // The forge floor and the working yard.
+        set(world, origin.add(6, 1, 3), Blocks.ANVIL);
+        stockChest(world, origin.add(1, 1, 1), new ItemStack(Items.IRON_INGOT, 5),
+                new ItemStack(Items.COAL, 8), new ItemStack(ModItems.ROYAL_COIN, 2));
+        set(world, origin.add(1, 1, 5), Blocks.CAULDRON);
+        set(world, origin.add(8, y + 1, 5), Blocks.COAL_BLOCK);
+        set(world, origin.add(8, y + 1, 4), Blocks.COAL_BLOCK);
+        set(world, origin.add(9, y + 1, 5), Blocks.BARREL);
+        set(world, origin.add(8, y + 2, 4), ModBlocks.WEAPON_RACK);
+    }
+
+    /** A stilt fishing hut: rugged legs in the water, a ladder to the deck. */
+    private static void fishingStilt(ServerWorld world, BlockPos base) {
+        int y = groundAt(world, base.getX() + 2, base.getZ() + 2);
+        BlockPos deck = new BlockPos(base.getX(), y + 2, base.getZ());
+        // Legs: fences down into whatever is under the deck - water or air.
+        for (int[] leg : new int[][]{{0, 0}, {4, 0}, {0, 4}, {4, 4}}) {
+            for (int down = 1; down <= 8; down--) {
+                // (loop bounds kept simple below)
+                break;
+            }
+            for (int down = 0; down < 8; down++) {
+                BlockPos at = deck.add(leg[0], -down, leg[1]);
+                if (at.getY() <= y - 3) {
+                    break;
+                }
+                set(world, at, Blocks.OAK_FENCE);
+            }
+        }
+        for (int x = 0; x <= 4; x++) {
+            for (int z = 0; z <= 4; z++) {
+                set(world, deck.add(x, 0, z), ModBlocks.SHIP_PLANKS);
+            }
+        }
+        // The hut: stripped corners, plaster infill, a lamp in the window.
+        for (int h = 1; h <= 3; h++) {
+            for (int x = 0; x <= 4; x++) {
+                for (int z = 0; z <= 4; z++) {
+                    boolean edge = x == 0 || z == 0 || x == 4 || z == 4;
+                    BlockPos pos = deck.add(x, h, z);
+                    if (h == 3 && edge) {
+                        set(world, pos, Blocks.SPRUCE_LOG);
+                    } else if (edge) {
+                        boolean corner = (x == 0 || x == 4) && (z == 0 || z == 4);
+                        boolean door = z == 4 && x == 2 && h <= 2;
+                        set(world, pos, corner ? Blocks.STRIPPED_OAK_LOG
+                                : (door ? Blocks.AIR : Blocks.SPRUCE_PLANKS));
+                    } else {
+                        set(world, pos, Blocks.AIR);
+                    }
+                }
+            }
+        }
+        for (int x = 0; x <= 4; x++) {
+            for (int z = 0; z <= 4; z++) {
+                set(world, deck.add(x, 4, z), x % 2 == z % 2
+                        ? Blocks.SPRUCE_STAIRS : Blocks.SPRUCE_SLAB);
+            }
+        }
+        set(world, deck.add(2, 2, 1), Blocks.GLASS_PANE);
+        set(world, deck.add(0, 1, 2), Blocks.LANTERN);
+        set(world, deck.add(3, 1, 3), Blocks.BARREL);
+        stockChest(world, deck.add(3, 1, 0), new ItemStack(Items.COOKED_COD, 4),
+                new ItemStack(Items.STRING, 3));
+        // The landing ladder.
+        set(world, deck.add(4, 1, 2), net.minecraft.block.Blocks.LADDER
+                .getDefaultState().with(net.minecraft.block.HorizontalFacingBlock.FACING,
+                        net.minecraft.util.math.Direction.EAST));
+    }
+
+    /** A captured battering ram on its frame, waiting in the war yard. */
+    private static void siegeRam(ServerWorld world, BlockPos base) {
+        int y = groundAt(world, base.getX() + 3, base.getZ() + 1);
+        BlockPos origin = new BlockPos(base.getX(), y, base.getZ());
+        // The frame: four stripped posts with a chain-hung roof beam.
+        for (int[] post : new int[][]{{0, 0}, {0, 2}, {7, 0}, {7, 2}}) {
+            for (int h = 1; h <= 4; h++) {
+                set(world, origin.add(post[0], h, post[1]), Blocks.STRIPPED_OAK_LOG);
+            }
+        }
+        for (int x = 0; x <= 7; x++) {
+            set(world, origin.add(x, 5, 0), x % 3 == 0 ? Blocks.STRIPPED_OAK_LOG
+                    : Blocks.OAK_FENCE);
+            set(world, origin.add(x, 5, 2), x % 3 == 0 ? Blocks.STRIPPED_OAK_LOG
+                    : Blocks.OAK_FENCE);
+        }
+        // The ram: a banded trunk with an iron-shod head.
+        for (int x = 0; x <= 6; x++) {
+            set(world, origin.add(x + 1, 3, 1), x % 2 == 0 ? Blocks.OAK_WOOD
+                    : Blocks.SPRUCE_LOG);
+        }
+        set(world, origin.add(1, 2, 1), Blocks.CHAIN);
+        set(world, origin.add(1, 3, 1), Blocks.AIR);
+        set(world, origin.add(7, 3, 1), Blocks.ANVIL);
+        set(world, origin.add(0, 1, 1), Blocks.BARREL);
+    }
+
     /** A fire basket on a stone post - courtyard and gate light. */
     private static void brazier(ServerWorld world, BlockPos base) {
         int y = groundAt(world, base.getX(), base.getZ());
@@ -2314,6 +2518,8 @@ public final class StructureBuilder {
         }
         set(world, base.add(-2, groundAt(world, base.getX() - 2, base.getZ() + 9) + 3, 9),
                 ModBlocks.REALM_BANNER);
+        // A captured ram waits in the yard for the next soft gate.
+        siegeRam(world, base.add(1, 0, 4));
         // Bench logs around the bone-fire, the war council's seats.
         for (int[] seat : new int[][]{{-3, -1}, {-3, 0}, {1, -1}, {1, 0}}) {
             set(world, base.add(seat[0], y + 1, seat[1]), Blocks.SPRUCE_STAIRS);
