@@ -997,8 +997,8 @@ add('net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry', [], [
 add('net.fabricmc.fabric.api.client.rendering.v1.EntityModelLayerRegistry', [], [
     'public static void registerModelLayer(net.minecraft.client.render.entity.model.EntityModelLayer layer, java.util.function.Supplier<net.minecraft.client.model.TexturedModelData> provider);',
 ])
-add('net.fabricmc.fabric.api.client.rendering.v1.BlockRenderLayerMap', [], [
-    'public static final net.fabricmc.fabric.api.client.rendering.v1.BlockRenderLayerMap INSTANCE;',
+add('net.fabricmc.fabric.api.blockrenderlayer.v1.BlockRenderLayerMap', [], [
+    'public static final net.fabricmc.fabric.api.blockrenderlayer.v1.BlockRenderLayerMap INSTANCE;',
     'public void putBlock(net.minecraft.block.Block block, net.minecraft.client.render.RenderLayer renderLayer);',
 ])
 add('net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents', [], [
