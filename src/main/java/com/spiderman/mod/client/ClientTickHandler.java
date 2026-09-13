@@ -17,8 +17,8 @@ public final class ClientTickHandler {
     private static int handFlip;
     private static int diveKeyTicks = 0;
     private static boolean wasSneaking = false;
-    private static int lastJumpTick = 0;
-    private static final int JUMP_COOLDOWN = 12; // Prevent spam
+    private static long lastJumpTick = 0;
+    private static final long JUMP_COOLDOWN = 12; // Prevent spam
 
     private ClientTickHandler() {
     }
@@ -100,7 +100,7 @@ public final class ClientTickHandler {
         
         // FIXED: Wall jump / double jump now has cooldown to prevent random jumps and spam
         if (client.options.jumpKey.wasPressed() && !player.isOnGround()) {
-            int currentTick = ClientPowers.clientTick;
+            long currentTick = ClientPowers.clientTick;
             if (currentTick - lastJumpTick >= JUMP_COOLDOWN) {
                 // FIXED: Only allow jump in air if actually in air for a bit, not immediately after leaving ground
                 if (player.age > 10 && !player.isOnGround()) {
