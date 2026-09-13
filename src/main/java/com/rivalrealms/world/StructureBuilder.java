@@ -227,6 +227,8 @@ public final class StructureBuilder {
                 new ItemStack(Items.COOKED_COD, 8), new ItemStack(Items.GOLD_NUGGET, 12),
                 new ItemStack(ModItems.CANNONBALL, 2));
         mooredBoat(world, base.add(16, 0, -6));
+        // The dockhands' grand crane watches the arcade.
+        grandQuayCrane(world, base.add(-13, 0, -3));
         // A fishing family's stilt hut, legs in the tide.
         fishingStilt(world, base.add(16, 0, 3));
         // The light that brings the ships home.
@@ -561,6 +563,8 @@ public final class StructureBuilder {
         roundTower(world, base.add(-22, 0, 18), 3, 13, stone, trim, true);
         roundTower(world, base.add(22, 0, 18), 3, 13, stone, trim, true);
         gatehouse(world, base.add(0, 0, -18), 7, 10, trim, stone);
+        // The barbican guards the bridge head.
+        barbican(world, base.add(-5, 0, -25));
         stable(world, base.add(15, 0, 2), 6, 7);
         bridge(world, base.add(-7, y - 1, -22), 15, Blocks.POLISHED_ANDESITE);
         set(world, base.add(0, y + 1, -19), ModBlocks.REALM_BANNER);
@@ -601,11 +605,12 @@ public final class StructureBuilder {
         // The shipwright's yard: two grounded hangars flanking a service
         // apron and one mast. No floating slabs - the ships do the flying.
         int y = plateau(world, base, 37, 33, Blocks.COARSE_DIRT);
-        hangar(world, base.add(-15, 0, -12), 8, 10);
-        hangar(world, base.add(7, 0, -12), 8, 10);
+        grandHangar(world, base.add(-16, 0, -13));
+        grandHangar(world, base.add(6, 0, -13));
         fill(world, base.add(-15, y, 1), 31, 1, 5, ModBlocks.AIRSHIP_METAL);
         set(world, base.add(0, y + 1, 3), ModBlocks.REALM_BANNER);
         workshop(world, base.add(-15, 0, 9), 7, 6, ModBlocks.AIRSHIP_METAL, Blocks.SPRUCE_LOG);
+        grandQuayCrane(world, base.add(-4, 0, 8));
         farmhouse(world, base.add(9, 0, 9));
         lampPost(world, base.add(-5, 0, 3));
         lampPost(world, base.add(5, 0, 3));
@@ -1376,11 +1381,20 @@ public final class StructureBuilder {
                 Blocks.DARK_OAK_STAIRS, ModBlocks.SHIP_PLANKS);
         int y = groundAt(world, base.getX() + 4, base.getZ() + 3);
         // Sign post and barrels out front.
+        // The pub front: hanging shield sign, striped awning, benches,
+        // barrels, and a lamp so the evening crowd can find the door.
         set(world, base.add(4, y + 1, 8), Blocks.OAK_FENCE);
         set(world, base.add(4, y + 2, 8), Blocks.OAK_FENCE);
+        set(world, base.add(4, y + 3, 8), ModBlocks.REALM_BANNER);
+        set(world, base.add(2, y + 3, 8), Blocks.RED_WOOL);
+        set(world, base.add(3, y + 3, 8), Blocks.WHITE_WOOL);
+        set(world, base.add(4, y + 3, 8), Blocks.RED_WOOL);
         set(world, base.add(3, y + 1, 8), Blocks.BARREL);
         set(world, base.add(5, y + 1, 8), Blocks.BARREL);
+        set(world, base.add(1, y + 1, 8), Blocks.SPRUCE_STAIRS);
+        set(world, base.add(1, y + 2, 8), Blocks.SPRUCE_STAIRS);
         set(world, base.add(4, y + 2, 7), Blocks.LANTERN);
+        set(world, base.add(6, y + 1, 7), Blocks.AZALEA);
     }
 
     private static void saloon(ServerWorld world, BlockPos base, int sizeX, int sizeZ, Block wood, Block log) {
@@ -1648,6 +1662,195 @@ public final class StructureBuilder {
         set(world, origin.add(1, 3, 1), Blocks.AIR);
         set(world, origin.add(7, 3, 1), Blocks.ANVIL);
         set(world, origin.add(0, 1, 1), Blocks.BARREL);
+    }
+
+    /** The grand quay crane: timber tower, railed jib, chain-hung cargo. */
+    private static void grandQuayCrane(ServerWorld world, BlockPos base) {
+        int y = groundAt(world, base.getX() + 2, base.getZ() + 2);
+        BlockPos origin = new BlockPos(base.getX(), y, base.getZ());
+        packUnder(world, origin, 5, 5, y, Blocks.STONE_BRICKS);
+        for (int x = 0; x <= 4; x++) {
+            for (int z = 0; z <= 4; z++) {
+                boolean pier = (x == 0 || x == 4) && (z == 0 || z == 4);
+                set(world, origin.add(x, 1, z), pier ? Blocks.STONE_BRICKS
+                        : Blocks.STONE_BRICK_SLAB);
+            }
+        }
+        // The mast: paired posts with cross braces, a cap platform, a light.
+        for (int[] post : new int[][]{{1, 1}, {3, 1}}) {
+            for (int h = 2; h <= 9; h++) {
+                set(world, origin.add(post[0], h, post[1]), Blocks.SPRUCE_LOG);
+            }
+        }
+        for (int h = 3; h <= 8; h += 2) {
+            set(world, origin.add(2, h, 1), Blocks.STRIPPED_OAK_LOG);
+        }
+        for (int x = 0; x <= 4; x++) {
+            for (int z = 0; z <= 2; z++) {
+                boolean rim = x == 0 || x == 4 || z == 0 || z == 2;
+                set(world, origin.add(x, 10, z), rim ? Blocks.DARK_OAK_SLAB
+                        : Blocks.SPRUCE_PLANKS);
+            }
+        }
+        set(world, origin.add(2, 11, 0), Blocks.OAK_FENCE);
+        set(world, origin.add(2, 11, 2), Blocks.OAK_FENCE);
+        set(world, origin.add(0, 11, 1), Blocks.LANTERN);
+        // The jib reaches over the water, railed, with the load on chains.
+        for (int arm = 1; arm <= 8; arm++) {
+            set(world, origin.add(2 + arm, 10, 1), Blocks.SPRUCE_LOG);
+            set(world, origin.add(2 + arm, 11, 1), Blocks.OAK_FENCE);
+            set(world, origin.add(2 + arm, 9, 1), Blocks.OAK_FENCE);
+        }
+        for (int h = 6; h <= 8; h++) {
+            set(world, origin.add(10, h, 1), Blocks.CHAIN);
+        }
+        set(world, origin.add(10, 5, 1), ModBlocks.SUPPLY_CRATE);
+        // The capstan the dockhands lean on, and cargo at the foot.
+        set(world, origin.add(2, 2, 3), Blocks.HAY_BLOCK);
+        set(world, origin.add(2, 3, 3), Blocks.SPRUCE_LOG);
+        set(world, origin.add(4, 2, 4), Blocks.BARREL);
+        set(world, origin.add(0, 2, 4), Blocks.BARREL);
+        set(world, origin.add(5, 2, 0), ModBlocks.SUPPLY_CRATE);
+    }
+
+    /** A grand hangar: an arched metal vault with cradles, rigging, gearwork. */
+    private static void grandHangar(ServerWorld world, BlockPos corner) {
+        int y = lowestCorner(world, corner.getX(), corner.getZ(), 11, 10);
+        BlockPos origin = new BlockPos(corner.getX(), y, corner.getZ());
+        packUnder(world, origin, 11, 10, y, ModBlocks.AIRSHIP_METAL);
+        for (int h = 1; h <= 6; h++) {
+            for (int x = 0; x <= 10; x++) {
+                for (int z = 0; z <= 9; z++) {
+                    boolean side = x == 0 || x == 10 || z == 0 || z == 9;
+                    BlockPos pos = origin.add(x, h, z);
+                    if (side) {
+                        boolean frame = x % 5 == 0 || z % 9 == 0;
+                        set(world, pos, frame ? ModBlocks.AIRSHIP_METAL : Blocks.SPRUCE_LOG);
+                    } else {
+                        set(world, pos, Blocks.AIR);
+                    }
+                }
+            }
+            if (h >= 4) {
+                set(world, origin.add(1, h, 0), ModBlocks.AIRSHIP_METAL);
+                set(world, origin.add(9, h, 0), ModBlocks.AIRSHIP_METAL);
+                set(world, origin.add(1, h, 9), ModBlocks.AIRSHIP_METAL);
+                set(world, origin.add(9, h, 9), ModBlocks.AIRSHIP_METAL);
+            }
+            if (h >= 5) {
+                set(world, origin.add(2, h, 0), ModBlocks.AIRSHIP_METAL);
+                set(world, origin.add(8, h, 0), ModBlocks.AIRSHIP_METAL);
+                set(world, origin.add(2, h, 9), ModBlocks.AIRSHIP_METAL);
+                set(world, origin.add(8, h, 9), ModBlocks.AIRSHIP_METAL);
+            }
+        }
+        // The vault roof falls away from the crown.
+        for (int x = 0; x <= 10; x++) {
+            set(world, origin.add(x, 7, 0), Blocks.DARK_OAK_STAIRS);
+            set(world, origin.add(x, 7, 9), Blocks.DARK_OAK_STAIRS);
+            for (int z = 1; z <= 8; z++) {
+                set(world, origin.add(x, 7, z), Blocks.DARK_OAK_SLAB);
+            }
+        }
+        // The great door faces the apron.
+        for (int h = 1; h <= 5; h++) {
+            for (int x = 3; x <= 7; x++) {
+                set(world, origin.add(x, h, 9), Blocks.AIR);
+            }
+        }
+        set(world, origin.add(4, 1, 9), Blocks.SPRUCE_SLAB);
+        set(world, origin.add(6, 1, 9), Blocks.SPRUCE_SLAB);
+        // Inside: the ship cradle, rigging chains, the workbench row.
+        for (int x = 3; x <= 7; x++) {
+            set(world, origin.add(x, 1, 3), Blocks.STRIPPED_OAK_LOG);
+            set(world, origin.add(x, 1, 5), Blocks.STRIPPED_OAK_LOG);
+        }
+        for (int z = 3; z <= 5; z++) {
+            set(world, origin.add(3, 1, z), Blocks.STRIPPED_OAK_LOG);
+            set(world, origin.add(7, 1, z), Blocks.STRIPPED_OAK_LOG);
+        }
+        for (int h = 4; h <= 5; h++) {
+            set(world, origin.add(3, h, 4), Blocks.CHAIN);
+            set(world, origin.add(7, h, 4), Blocks.CHAIN);
+        }
+        set(world, origin.add(1, 1, 2), Blocks.CRAFTING_TABLE);
+        set(world, origin.add(1, 1, 3), Blocks.ANVIL);
+        set(world, origin.add(9, 1, 2), Blocks.BARREL);
+        set(world, origin.add(9, 1, 3), Blocks.BARREL);
+        stockChest(world, origin.add(9, 1, 6), new ItemStack(ModItems.AIRSHIP_KIT),
+                new ItemStack(Items.IRON_INGOT, 6), new ItemStack(Items.COPPER_INGOT, 5));
+        // The gearwork emblem over the door, and the banner above it.
+        set(world, origin.add(4, 6, 8), Blocks.OAK_FENCE);
+        set(world, origin.add(6, 6, 8), Blocks.OAK_FENCE);
+        set(world, origin.add(5, 6, 8), Blocks.SPRUCE_LOG);
+        set(world, origin.add(4, 7, 8), Blocks.OAK_FENCE);
+        set(world, origin.add(6, 7, 8), Blocks.OAK_FENCE);
+        set(world, origin.add(5, 7, 8), ModBlocks.REALM_BANNER);
+        set(world, origin.add(1, 5, 8), Blocks.LANTERN);
+        set(world, origin.add(9, 5, 8), Blocks.LANTERN);
+    }
+
+    /** The barbican: twin drum towers, a wide arch, a portcullis, a gate room. */
+    private static void barbican(ServerWorld world, BlockPos corner) {
+        int y = lowestCorner(world, corner.getX(), corner.getZ(), 11, 7);
+        BlockPos origin = new BlockPos(corner.getX(), y, corner.getZ());
+        packUnder(world, origin, 11, 7, y, ModBlocks.CROWN_BRICK);
+        // Twin drums with arrow slits, capped in trim with a banner each.
+        for (int[] tower : new int[][]{{0, 0}, {8, 0}}) {
+            BlockPos drum = origin.add(tower[0] + 1, 0, tower[1] + 1);
+            for (int h = 1; h <= 8; h++) {
+                for (int dx = -1; dx <= 1; dx++) {
+                    for (int dz = -1; dz <= 1; dz++) {
+                        double dist = Math.sqrt(dx * dx + dz * dz);
+                        if (dist > 0.8 && dist <= 1.6) {
+                            set(world, drum.add(dx, h, dz), h == 8 ? ModBlocks.CROWN_BRICK
+                                    : Blocks.STONE_BRICKS);
+                        } else if (dist <= 0.8) {
+                            set(world, drum.add(dx, h, dz), Blocks.AIR);
+                        }
+                    }
+                }
+                if (h == 3 || h == 6) {
+                    set(world, drum.add(0, h, 1), Blocks.AIR);
+                }
+            }
+            set(world, drum.add(0, 9, 0), ModBlocks.REALM_BANNER);
+            set(world, drum.add(0, 8, 2), Blocks.LANTERN);
+        }
+        // The passage: a wide arch with a raised portcullis in the throat.
+        for (int h = 1; h <= 5; h++) {
+            for (int x = 3; x <= 7; x++) {
+                for (int z = 0; z <= 6; z++) {
+                    boolean vault = (x == 3 || x == 7) || h == 5;
+                    set(world, origin.add(x, h, z), vault && h >= 2 ? Blocks.STONE_BRICKS
+                            : Blocks.AIR);
+                }
+            }
+        }
+        for (int h = 1; h <= 4; h++) {
+            set(world, origin.add(5, h, 3), Blocks.OAK_FENCE);
+        }
+        set(world, origin.add(4, 4, 3), Blocks.OAK_FENCE);
+        set(world, origin.add(6, 4, 3), Blocks.OAK_FENCE);
+        // The gate room over the passage, half timbered, glassy, warmed.
+        for (int x = 3; x <= 7; x++) {
+            for (int z = 0; z <= 6; z++) {
+                boolean wall = x == 3 || x == 7 || z == 0 || z == 6;
+                set(world, origin.add(x, 6, z), wall ? Blocks.SPRUCE_PLANKS : Blocks.AIR);
+                set(world, origin.add(x, 7, z), wall ? Blocks.SPRUCE_LOG
+                        : (z == 3 ? Blocks.GLASS_PANE : Blocks.AIR));
+            }
+        }
+        for (int x = 3; x <= 7; x++) {
+            set(world, origin.add(x, 8, 0), Blocks.DARK_OAK_STAIRS);
+            set(world, origin.add(x, 8, 6), Blocks.DARK_OAK_STAIRS);
+            for (int z = 1; z <= 5; z++) {
+                set(world, origin.add(x, 8, z), Blocks.DARK_OAK_SLAB);
+            }
+        }
+        set(world, origin.add(4, 7, 1), Blocks.LANTERN);
+        stockChest(world, origin.add(6, 7, 1), new ItemStack(Items.ARROW, 12),
+                new ItemStack(ModItems.ROYAL_COIN, 3));
     }
 
     /** A fire basket on a stone post - courtyard and gate light. */
