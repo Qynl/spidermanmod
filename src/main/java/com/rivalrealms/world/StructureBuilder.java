@@ -98,6 +98,7 @@ public final class StructureBuilder {
             case ROYAL_CITY -> buildRoyalCity(world, center);
             case HARBOR -> buildScatteredHarbor(world, center);
             case SHIPYARD -> buildShipyard(world, center);
+            case PIRATE_COVE -> buildCove(world, center);
             case SKYPORT -> buildScatteredSkyport(world, center);
             case AIRSHIP_YARD -> buildAirshipYard(world, center);
             case OUTPOST -> buildScatteredOutpost(world, center, style);
@@ -207,6 +208,7 @@ public final class StructureBuilder {
                 new ItemStack(ModItems.ROYAL_COIN, 2));
         // The gate stands where the road enters the town.
         townGate(world, base.add(0, 0, -14));
+        prisonYard(world, base.add(9, 0, -12));
         waysideShrine(world, base.add(4, 0, -9));
         // The richer quarter: a two-storey townhouse and a chapel.
         townhouse(world, base.add(9, 0, -7), 7, 7);
@@ -1467,17 +1469,50 @@ public final class StructureBuilder {
 
     private static void stable(ServerWorld world, BlockPos corner, int sizeX, int sizeZ) {
         int y = lowestCorner(world, corner.getX(), corner.getZ(), sizeX, sizeZ);
+        packUnder(world, corner, sizeX, sizeZ, y, Blocks.COBBLESTONE);
+        // The open shelter: log posts on stone bases, plank half-walls.
+        int shelterZ = Math.max(3, sizeZ - 3);
+        for (int x : new int[]{0, sizeX - 1}) {
+            for (int z : new int[]{0, shelterZ - 1}) {
+                set(world, corner.add(x, y, z), Blocks.COBBLESTONE);
+                set(world, corner.add(x, y + 1, z), Blocks.OAK_LOG);
+                set(world, corner.add(x, y + 2, z), Blocks.OAK_LOG);
+            }
+        }
         for (int x = 0; x < sizeX; x++) {
-            set(world, corner.add(x, y, sizeZ / 2), Blocks.OAK_FENCE);
-            set(world, corner.add(x, y + 1, sizeZ / 2), Blocks.OAK_FENCE);
+            set(world, corner.add(x, y + 1, 0), Blocks.SPRUCE_PLANKS);
         }
-        for (int z = 0; z < sizeZ; z++) {
-            set(world, corner.add(sizeX / 2, y, z), Blocks.OAK_FENCE);
-            set(world, corner.add(sizeX / 2, y + 1, z), Blocks.OAK_FENCE);
+        for (int z = 1; z < shelterZ - 1; z++) {
+            set(world, corner.add(0, y + 1, z), Blocks.SPRUCE_PLANKS);
+            set(world, corner.add(sizeX - 1, y + 1, z), Blocks.SPRUCE_PLANKS);
         }
-        roofFlat(world, corner, sizeX, sizeZ, y + 2, Blocks.SPRUCE_PLANKS);
-        set(world, corner.add(sizeX / 2, y + 1, sizeZ / 2), Blocks.HAY_BLOCK);
-        set(world, corner.add(1, y, 1), Blocks.WATER);
+        // Deep shingled roof with an eave over the open front.
+        for (int x = 0; x < sizeX; x++) {
+            for (int z = 0; z < shelterZ; z++) {
+                set(world, corner.add(x, y + 3, z), z == 0
+                        ? Blocks.SPRUCE_PLANKS : Blocks.SPRUCE_SLAB);
+            }
+            set(world, corner.add(x, y + 2, 0), Blocks.SPRUCE_PLANKS);
+        }
+        // Stalls: hay bedding, a water trough that stays in its cauldron.
+        set(world, corner.add(2, y + 1, 1), Blocks.HAY_BLOCK);
+        set(world, corner.add(3, y + 1, 1), Blocks.CAULDRON);
+        set(world, corner.add(4, y + 2, 1), Blocks.LANTERN);
+        // The paddock strip: fenced with a gate gap, hay and a trough.
+        for (int z = shelterZ; z < sizeZ; z++) {
+            set(world, corner.add(0, y + 1, z), Blocks.OAK_FENCE);
+            set(world, corner.add(sizeX - 1, y + 1, z), Blocks.OAK_FENCE);
+        }
+        for (int x = 0; x < sizeX; x++) {
+            if (x != sizeX / 2) {
+                set(world, corner.add(x, y + 1, sizeZ - 1), Blocks.OAK_FENCE);
+            }
+        }
+        set(world, corner.add(1, y + 1, sizeZ - 2), Blocks.HAY_BLOCK);
+        set(world, corner.add(sizeX - 2, y + 1, sizeZ - 2), Blocks.CAULDRON);
+        // A lamp by the yard gate.
+        set(world, corner.add(sizeX - 1, y + 2, sizeZ - 1), Blocks.OAK_FENCE);
+        set(world, corner.add(sizeX - 1, y + 3, sizeZ - 1), Blocks.LANTERN);
     }
 
     /** A striped lighthouse: banded tower, gallery, a light that never sleeps. */
@@ -2351,6 +2386,147 @@ public final class StructureBuilder {
         set(world, pos.add(0, 1, -1), Blocks.AZALEA);
         set(world, pos.add(0, 1, 1), Blocks.CANDLE);
         set(world, pos.add(1, 1, 0), Blocks.MOSS_CARPET);
+    }
+
+    /** The pirate cove: a beached longboat, tents, treasure and a gibbet. */
+    private static void buildCove(ServerWorld world, BlockPos center) {
+        int y = groundAt(world, center.getX(), center.getZ());
+        BlockPos origin = new BlockPos(center.getX(), y, center.getZ());
+        plateau(world, origin.add(-8, 0, -8), 17, 17, Blocks.SAND);
+        // The longboat, beached and stripped: keel in the sand, benches out.
+        BlockPos boat = origin.add(4, 0, 5);
+        for (int r = 0; r <= 8; r++) {
+            set(world, boat.add(r, 0, 0), Blocks.SPRUCE_LOG);
+            if (r == 0 || r == 8) {
+                set(world, boat.add(r, 1, 0), Blocks.OAK_LOG);
+                set(world, boat.add(r, 2, 0), Blocks.OAK_LOG);
+                continue;
+            }
+            for (int z = -1; z <= 1; z++) {
+                set(world, boat.add(r, 1, z), ModBlocks.SHIP_PLANKS);
+                if (z != 0 || r == 1 || r == 7) {
+                    set(world, boat.add(r, 2, z), r == 4 ? Blocks.SPRUCE_PLANKS
+                            : Blocks.SPRUCE_LOG);
+                }
+            }
+            if (r == 3 || r == 5) {
+                set(world, boat.add(r, 2, -1), Blocks.SPRUCE_SLAB);
+                set(world, boat.add(r, 2, 0), Blocks.SPRUCE_SLAB);
+                set(world, boat.add(r, 2, 1), Blocks.SPRUCE_SLAB);
+            }
+        }
+        set(world, boat.add(2, 2, 0), Blocks.BARREL);
+        set(world, boat.add(6, 2, 0), ModBlocks.SUPPLY_CRATE);
+        // A furled sail slung between stem and stern.
+        set(world, boat.add(3, 3, 0), Blocks.WHITE_WOOL);
+        set(world, boat.add(4, 3, 0), Blocks.WHITE_WOOL);
+        set(world, boat.add(5, 3, 0), Blocks.WHITE_WOOL);
+        // The campfire and its log seats.
+        campfire(world, origin.add(-3, 0, -2));
+        set(world, origin.add(-3, 1, -1), Blocks.SPRUCE_SLAB);
+        set(world, origin.add(-2, 1, -3), Blocks.SPRUCE_SLAB);
+        set(world, origin.add(-4, 1, -3), Blocks.SPRUCE_SLAB);
+        // Two canvas tents: red and white, bedrolls at the mouth.
+        tent(world, origin.add(-7, 0, -6), Blocks.RED_WOOL);
+        tent(world, origin.add(-8, 0, 2), Blocks.WHITE_WOOL);
+        // The treasure: a chest, a gold course, a candle stub.
+        stockChest(world, origin.add(-2, 0, 3), new ItemStack(Items.GOLD_NUGGET, 12),
+                new ItemStack(ModItems.ROYAL_COIN, 6), new ItemStack(Items.GOLD_INGOT, 3));
+        set(world, origin.add(-1, 0, 3), Blocks.GOLD_BLOCK);
+        set(world, origin.add(-1, 1, 3), Blocks.CANDLE);
+        // The gibbet: an iron cage on posts, a skull inside, a chain above.
+        BlockPos cage = origin.add(3, 0, -5);
+        for (int h = 1; h <= 3; h++) {
+            for (int x = 0; x <= 2; x++) {
+                for (int z = 0; z <= 2; z++) {
+                    boolean edge = x == 0 || z == 0 || x == 2 || z == 2;
+                    if (edge) {
+                        set(world, cage.add(x, h, z), Blocks.IRON_BARS);
+                    }
+                }
+            }
+        }
+        set(world, cage.add(1, 1, 1), ModBlocks.TROPHY_SKULL);
+        set(world, cage.add(1, 4, 1), Blocks.CHAIN);
+        // The captain's map table and rum store.
+        set(world, origin.add(-6, 1, 6), ModBlocks.WAR_TABLE);
+        set(world, origin.add(-4, 1, 6), Blocks.SPRUCE_SLAB);
+        set(world, origin.add(-7, 1, 6), Blocks.SPRUCE_SLAB);
+        set(world, origin.add(6, 0, -2), Blocks.BARREL);
+        set(world, origin.add(7, 0, -1), Blocks.BARREL);
+        set(world, origin.add(6, 0, -1), Blocks.BARREL);
+        set(world, origin.add(7, 1, -2), Blocks.LANTERN);
+        // Ragged red flags on poles around the camp.
+        int[][] poles = {{-7, 7}, {7, 7}, {7, -7}};
+        for (int[] pole : poles) {
+            for (int h = 1; h <= 3; h++) {
+                set(world, origin.add(pole[0], h, pole[1]), Blocks.OAK_FENCE);
+            }
+            set(world, origin.add(pole[0], 4, pole[1]), Blocks.RED_WOOL);
+        }
+    }
+
+    /** A canvas tent: wool walls, a slab ridge, a bedroll at the mouth. */
+    private static void tent(ServerWorld world, BlockPos corner, net.minecraft.block.Block wool) {
+        for (int x = 0; x <= 2; x++) {
+            for (int z = 0; z <= 2; z++) {
+                boolean edge = x == 0 || x == 2 || z == 0;
+                if (edge) {
+                    set(world, corner.add(x, 1, z), wool);
+                    set(world, corner.add(x, 2, z), z == 0 ? wool : Blocks.AIR);
+                }
+            }
+        }
+        for (int x = 0; x <= 2; x++) {
+            set(world, corner.add(x, 3, 0), wool);
+            set(world, corner.add(x, 3, 1), Blocks.SPRUCE_SLAB);
+        }
+        set(world, corner.add(1, 1, 1), Blocks.SPRUCE_SLAB);
+        set(world, corner.add(1, 1, 2), Blocks.WHITE_WOOL);
+    }
+
+    /** The lockup: a barred cell, the stocks, and the wanted board. */
+    private static void prisonYard(ServerWorld world, BlockPos base) {
+        int y = groundAt(world, base.getX(), base.getZ());
+        BlockPos corner = new BlockPos(base.getX() - 2, y, base.getZ() - 2);
+        // The cell: five by five, mossy cobble, log quoins, barred door.
+        for (int h = 1; h <= 3; h++) {
+            for (int x = 0; x <= 4; x++) {
+                for (int z = 0; z <= 4; z++) {
+                    boolean edge = x == 0 || z == 0 || x == 4 || z == 4;
+                    if (!edge) {
+                        set(world, corner.add(x, h, z), Blocks.AIR);
+                        continue;
+                    }
+                    boolean quoin = (x == 0 || x == 4) && (z == 0 || z == 4);
+                    boolean moss = (x * 3 + z * 5 + h) % 7 == 0;
+                    set(world, corner.add(x, h, z), quoin ? Blocks.OAK_LOG
+                            : moss ? Blocks.MOSSY_COBBLESTONE : Blocks.COBBLESTONE);
+                }
+            }
+        }
+        set(world, corner.add(2, 1, 4), Blocks.IRON_BARS);
+        set(world, corner.add(2, 2, 4), Blocks.IRON_BARS);
+        set(world, corner.add(0, 2, 2), Blocks.IRON_BARS);
+        set(world, corner.add(4, 2, 2), Blocks.IRON_BARS);
+        roofFlat(world, corner, 5, 5, 4, Blocks.SPRUCE_SLAB);
+        // A bracket lantern over the door; a cot and rations inside.
+        set(world, corner.add(2, 4, 5), Blocks.OAK_FENCE);
+        set(world, corner.add(2, 3, 5), Blocks.LANTERN);
+        set(world, corner.add(1, 1, 1), Blocks.SPRUCE_SLAB);
+        set(world, corner.add(1, 1, 2), Blocks.WHITE_WOOL);
+        set(world, corner.add(2, 3, 2), Blocks.LANTERN);
+        stockChest(world, corner.add(3, 1, 1), new ItemStack(Items.BREAD, 2),
+                new ItemStack(Items.STRING, 1));
+        // The stocks before the cell: posts, a seat, the restraint board.
+        BlockPos stocks = corner.add(-3, 0, 2);
+        set(world, stocks.add(0, 1, 0), Blocks.OAK_FENCE);
+        set(world, stocks.add(2, 1, 0), Blocks.OAK_FENCE);
+        set(world, stocks.add(1, 1, 0), Blocks.SPRUCE_SLAB);
+        set(world, stocks.add(0, 2, 0), Blocks.SPRUCE_SLAB);
+        set(world, stocks.add(2, 2, 0), Blocks.SPRUCE_SLAB);
+        // The wanted bills, nailed up where the accused will see them.
+        set(world, corner.add(-2, 1, -1), ModBlocks.NOTICE_BOARD);
     }
 
     /** A fire basket on a stone post - courtyard and gate light. */

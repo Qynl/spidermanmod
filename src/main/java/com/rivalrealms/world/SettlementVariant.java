@@ -12,6 +12,7 @@ public enum SettlementVariant {
     AIRSHIP_YARD,
     OUTPOST,
     WATCHTOWER,
+    PIRATE_COVE,
     MILL,
     RUIN,
     GRAVEYARD,
