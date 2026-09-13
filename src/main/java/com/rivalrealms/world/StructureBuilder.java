@@ -322,8 +322,8 @@ public final class StructureBuilder {
                 double dist = Math.sqrt(dx * dx + dz * dz);
                 for (int h = 1; h <= 8; h++) {
                     BlockPos at = mo.add(dx, h, dz);
-                    double ring = dist > 2.1 && dist <= 3.2;
-                    double ring2 = dist > 1.1 && dist <= 2.1;
+                    boolean ring = dist > 2.1 && dist <= 3.2;
+                    boolean ring2 = dist > 1.1 && dist <= 2.1;
                     if (h <= 2 && ring) {
                         set(world, at, Blocks.COBBLESTONE);
                     } else if (h <= 4 && (ring || (h == 4 && ring2))) {
