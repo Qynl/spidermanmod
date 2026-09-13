@@ -55,6 +55,18 @@ public final class WorldSettlementGenerator {
             return;
         }
 
+        // Places outside every map: hermits beyond the reach of banners.
+        if (hash % 37L == 0L) {
+            state.markGeneratedSite(center);
+            buildHidden(world, state, center, SettlementVariant.HERMITAGE);
+            return;
+        }
+        // Places where the world's rules bent.
+        if (hash % 23L == 0L) {
+            state.markGeneratedSite(center);
+            buildHidden(world, state, center, SettlementVariant.ANOMALY);
+            return;
+        }
         // Rare treasure shrines ignore biome borders: old gods had no borders.
         if (hash % 11L == 0L) {
             state.markGeneratedSite(center);
@@ -91,6 +103,25 @@ public final class WorldSettlementGenerator {
             // the fields. The slow cadence still grows it from here.
             RealmEvents.populateSettlement(world, center, plan.style(), plan.variant());
             RivalRealms.LOGGER.info("Generated {} at {} in {}", name, center, biome);
+        } catch (RuntimeException exception) {
+            RivalRealms.LOGGER.error("Failed to generate Rival Realms site at {}", center, exception);
+        }
+    }
+
+    /** Hidden sites claim quietly; hermits live alone. */
+    private static void buildHidden(ServerWorld world, RealmState state, BlockPos center,
+                                    SettlementVariant variant) {
+        UUID owner = UUID.nameUUIDFromBytes((RivalRealms.MOD_ID + ":generated:" + world.getSeed()
+                + ":" + center.asLong()).getBytes(StandardCharsets.UTF_8));
+        try {
+            StructureBuilder.buildScattered(world, center, BuildStyle.CUSTOM, variant);
+            String name = (variant == SettlementVariant.HERMITAGE ? "Hermitage" : "Strange Place")
+                    + " · " + center.getX() + ", " + center.getZ();
+            state.claimGeneratedBase(center, owner, BuildStyle.CUSTOM, name);
+            if (variant == SettlementVariant.HERMITAGE) {
+                RealmEvents.populateSettlement(world, center, BuildStyle.CUSTOM, variant);
+            }
+            RivalRealms.LOGGER.info("Generated {} at {}", name, center);
         } catch (RuntimeException exception) {
             RivalRealms.LOGGER.error("Failed to generate Rival Realms site at {}", center, exception);
         }

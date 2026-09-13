@@ -47,6 +47,10 @@ public final class ModItems {
             new Item(new Item.Settings().maxCount(64)));
     public static final Item ROYAL_JEWELRY = register("royal_jewelry",
             new Item(new Item.Settings().maxCount(16)));
+    public static final Item CAMP_KIT = register("camp_kit",
+            new CampKitItem(new Item.Settings().maxCount(1)));
+    public static final Item TREASURE_MAP = register("treasure_map",
+            new TreasureMapItem(new Item.Settings().maxCount(1)));
     public static final Item MEDIEVAL_MAP = register("medieval_map",
             new MedievalMapItem(new Item.Settings().maxCount(1)));
     public static final Item CANNON = registerBlockItem("cannon", ModBlocks.CANNON);

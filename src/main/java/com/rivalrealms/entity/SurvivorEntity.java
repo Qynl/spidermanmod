@@ -2,6 +2,7 @@ package com.rivalrealms.entity;
 
 import com.rivalrealms.item.ModItems;
 import com.rivalrealms.world.RealmState;
+import com.rivalrealms.world.RoadsideEncounters;
 import com.rivalrealms.world.SettlementRole;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.EquipmentSlot;
@@ -107,6 +108,10 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
     private int forgeTimer;
     private long nextPatrol;
     private String familyName = "";
+    private Trait trait = Trait.NONE;
+    private long nextHobby;
+    private int hobbyTimer;
+    private ItemStack hobbyHand = ItemStack.EMPTY;
     private boolean child;
     private int childAge;
     private SettlementRole inheritedRole = SettlementRole.NONE;
@@ -182,8 +187,12 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
         farmTick();
         suspicionTick();
         aimTick();
+        hobbyTick();
         if (getWorld().getTime() % 100L == 0L) {
             rumorTick();
+        }
+        if (getWorld().getTime() % 300L == 0L) {
+            socialCircleTick();
         }
 
         if (recruited) {
@@ -205,7 +214,9 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
 
                 // Trust is not a static menu value: leaving a companion alone
                 // for days or repeatedly hurting them can turn an alliance sour.
-                if (getWorld().getTime() % 2400L == 0 && trust > 0) {
+                // Loyal friends barely cool off at all.
+                boolean loyal = trait == Trait.LOYAL;
+                if (getWorld().getTime() % 2400L == 0 && trust > 0 && (!loyal || random.nextBoolean())) {
                     trust--;
                 }
                 if (trust < 25 && random.nextInt(1200) == 0) {
@@ -401,6 +412,7 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
             // few are good-natured traders. Rolled once, remembered forever.
             temperament = Temperament.roll(getArchetype(), random);
             temperamentChosen = true;
+            trait = Trait.roll(random);
         }
         if (!hasCustomName()) {
             // Family folk carry surnames; drifters keep their culture epithets.
@@ -803,16 +815,26 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
                     RealmState realms = RealmState.get(serverWorld);
                     var base = realms.findByCenter(other.guardCenter);
                     if (base != null) {
-                        base.adjustLocalReputation(rumorAbout, -(rumorStrength + 2));
                         PlayerEntity subject = getWorld().getPlayerByUuid(rumorAbout);
-                        if (subject != null && subject.squaredDistanceTo(this) < 32.0 * 32.0) {
-                            String crime = switch (rumorKind) {
-                                case 1 -> "theft";
-                                case 2 -> "murder";
-                                default -> "threats";
-                            };
-                            subject.sendMessage(Text.literal("Word of your " + crime
-                                    + " reaches " + base.name() + ".").formatted(Formatting.GOLD), true);
+                        if (rumorKind == 4) {
+                            // Good news travels too.
+                            base.adjustLocalReputation(rumorAbout, rumorStrength + 2);
+                            if (subject != null && subject.squaredDistanceTo(this) < 32.0 * 32.0) {
+                                subject.sendMessage(Text.literal(getName().getString()
+                                        + " grins: \"Word of your deeds reached " + base.name()
+                                        + ". They speak well of you.\"").formatted(Formatting.GREEN), true);
+                            }
+                        } else {
+                            base.adjustLocalReputation(rumorAbout, -(rumorStrength + 2));
+                            if (subject != null && subject.squaredDistanceTo(this) < 32.0 * 32.0) {
+                                String crime = switch (rumorKind) {
+                                    case 1 -> "theft";
+                                    case 2 -> "murder";
+                                    default -> "threats";
+                                };
+                                subject.sendMessage(Text.literal("Word of your " + crime
+                                        + " reaches " + base.name() + ".").formatted(Formatting.GOLD), true);
+                            }
                         }
                     }
                 }
@@ -851,7 +873,115 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
     }
 
     private int aimRequirement() {
-        return getArchetype() == Archetype.OUTLAW || getArchetype() == Archetype.PIRATE ? 12 : 8;
+        int base = getArchetype() == Archetype.OUTLAW || getArchetype() == Archetype.PIRATE ? 12 : 8;
+        if (trait == Trait.BRAVE) {
+            base = (int) (base * 0.6);
+        } else if (trait == Trait.COWARDLY) {
+            base = (int) (base * 1.6);
+        }
+        return base;
+    }
+
+    // ------------------------------------------------------- traits & hobbies
+
+    public Trait getTrait() {
+        return trait;
+    }
+
+    /** Hobbies make NPCs people: fishing, music, gambling, idle chatter. */
+    private void hobbyTick() {
+        if (getTarget() != null || recruited || isChild()) {
+            return;
+        }
+        long now = getWorld().getTime();
+        if (hobbyTimer > 0) {
+            hobbyTimer--;
+            if (hobbyTimer == 0 && !hobbyHand.isEmpty()) {
+                setStackInHand(Hand.OFF_HAND, hobbyHand);
+                hobbyHand = ItemStack.EMPTY;
+            }
+            return;
+        }
+        if (now < nextHobby) {
+            return;
+        }
+        nextHobby = now + 900L + random.nextInt(1200L);
+        int roll = random.nextInt(6);
+        if (roll == 0 && getWorld() instanceof ServerWorld serverWorld) {
+            // Music: a few notes while idle.
+            BlockPos at = getBlockPos();
+            serverWorld.playSound(null, at, net.minecraft.sound.SoundEvents.ENTITY_VILLAGER_CELEBRATE,
+                    SoundCategory.NEUTRAL, 0.7f, 0.8f + random.nextFloat() * 0.6f);
+        } else if (roll == 1 && guardCenter != null) {
+            // Fishing by the water when there is water near home.
+            BlockPos water = findWaterNear();
+            if (water != null && !getOffHandStack().isEmpty()) {
+                hobbyHand = getOffHandStack().copy();
+                setStackInHand(Hand.OFF_HAND, new ItemStack(Items.FISHING_ROD));
+                hobbyTimer = 300;
+                getNavigation().startMovingTo(water.getX() + 0.5, water.getY(), water.getZ() + 0.5, 0.9);
+            }
+        }
+        // GREEDY eyes your gear; CURIOUS drifts toward strangers.
+        if (trait == Trait.CURIOUS && random.nextInt(3) == 0) {
+            PlayerEntity stranger = getWorld().getClosestPlayer(this, 10.0);
+            if (stranger != null && !isOwner(stranger)) {
+                getLookControl().lookAt(stranger);
+            }
+        }
+    }
+
+    private BlockPos findWaterNear() {
+        if (!(getWorld() instanceof ServerWorld serverWorld)) {
+            return null;
+        }
+        BlockPos base = getBlockPos();
+        for (int attempt = 0; attempt < 8; attempt++) {
+            BlockPos probe = base.add(random.nextInt(17) - 8, 0, random.nextInt(17) - 8);
+            BlockPos top = serverWorld.getTopPosition(net.minecraft.world.Heightmap.Type.MOTION_BLOCKING, probe);
+            if (serverWorld.getFluidState(top).isIn(net.minecraft.registry.tag.FluidTags.WATER)) {
+                return top;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Friend circles and rivalries: same-folk clusters laugh together, and
+     * rivals shove each other when the guard is watching something else.
+     */
+    private void socialCircleTick() {
+        if (getTarget() != null || isChild() || !(getWorld() instanceof ServerWorld serverWorld)) {
+            return;
+        }
+        for (net.minecraft.entity.Entity candidate : getWorld().getOtherEntities(this,
+                getBoundingBox().expand(8.0), e -> e instanceof SurvivorEntity other
+                        && other.isAlive() && !other.isChild()
+                        && other.effectiveFaction().equals(effectiveFaction()))) {
+            SurvivorEntity other = (SurvivorEntity) candidate;
+            int bond = bondStrength(other.getUuid());
+            if (bond >= 2 && random.nextInt(4) == 0) {
+                // Friends laugh; you can hear a settlement breathing.
+                serverWorld.playSound(null, getBlockPos(),
+                        net.minecraft.sound.SoundEvents.ENTITY_VILLAGER_CELEBRATE,
+                        SoundCategory.NEUTRAL, 0.5f, 1.3f);
+            } else if (bond < 0 && random.nextInt(6) == 0) {
+                // A rivalry boils over: a shove, a stumble, hard words.
+                other.takeKnockback(0.5, getX() - other.getX(), getZ() - other.getZ());
+                serverWorld.playSound(null, getBlockPos(),
+                        net.minecraft.sound.SoundEvents.ENTITY_PLAYER_ATTACK_SWEEP,
+                        SoundCategory.NEUTRAL, 0.6f, 0.8f);
+                for (PlayerEntity witness : serverWorld.getPlayers()) {
+                    if (witness.squaredDistanceTo(this) < 24.0 * 24.0) {
+                        witness.sendMessage(Text.literal(getName().getString() + " shoves "
+                                + other.getName().getString() + " - these two never got along.")
+                                .formatted(Formatting.GRAY), true);
+                        break;
+                    }
+                }
+            }
+            break;
+        }
     }
 
     public boolean isRecruited() {
@@ -885,6 +1015,14 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
     @Override
     public ActionResult interactMob(PlayerEntity player, Hand hand) {
         ItemStack held = player.getStackInHand(hand);
+
+        if (!getWorld().isClient) {
+            // Stranded merchants want their axle fixed before anything else.
+            if (RoadsideEncounters.tryHelpMerchant(this, player)) {
+                return ActionResult.SUCCESS;
+            }
+            greet(player);
+        }
 
         // Grudges close hearts: someone you wronged wants nothing from you.
         if (grudgeAgainst(player) && !isRecruited() && !isOwner(player) && !held.isOf(ModItems.RECRUITMENT_CONTRACT)) {
@@ -982,6 +1120,38 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
     }
 
     /**
+     * People remember you: your name, your standing, the steel you wear.
+     * The greeting is where memory becomes words - and voice.
+     */
+    private void greet(PlayerEntity player) {
+        if (!(getWorld() instanceof ServerWorld serverWorld) || isChild()) {
+            return;
+        }
+        long now = getWorld().getTime();
+        if (now < nextQuip) {
+            return;
+        }
+        nextQuip = now + 400L;
+        RealmState realms = RealmState.get(serverWorld);
+        int rep = realms.getReputation(player.getUuid(), effectiveFaction());
+        String title = com.rivalrealms.world.LivingRealm.titleFor(rep);
+        boolean armored = !player.getEquippedStack(net.minecraft.entity.EquipmentSlot.CHEST).isEmpty();
+        String armorWord = armored ? "armored" : "road-worn";
+        String line;
+        if (rep <= -40) {
+            line = getName().getString() + " spits: \"" + title + ". You have some nerve walking here.\"";
+            com.rivalrealms.sound.ModSounds.playVoice(serverWorld, getBlockPos(), "greeting_hostile");
+        } else if (rep >= 30) {
+            line = getName().getString() + " bows: \"" + title + " of the " + effectiveFaction()
+                    + "! An honor. What brings you to " + (guardCenter != null ? "our home" : "the road") + "?\"";
+            com.rivalrealms.sound.ModSounds.playVoice(serverWorld, getBlockPos(), "greeting_friendly");
+        } else {
+            line = getName().getString() + " nods at the " + armorWord + " stranger: \"Safe roads, " + title + ".\"";
+        }
+        player.sendMessage(Text.literal(line).formatted(Formatting.GRAY), true);
+    }
+
+    /**
      * Opens a villager-style trade screen with offers rolled from this
      * survivor's culture. Uses the vanilla merchant protocol, so it works on
      * dedicated servers exactly like trading with a wanderer.
@@ -1010,6 +1180,9 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
             merchant.sendOffers(player, getDisplayName(), 0);
             getWorld().playSound(null, getX(), getY(), getZ(), SoundEvents.ENTITY_VILLAGER_YES,
                     SoundCategory.NEUTRAL, 0.9f, 1.0f);
+            if (getWorld() instanceof ServerWorld serverWorld) {
+                com.rivalrealms.sound.ModSounds.playVoiceFor(serverWorld, getBlockPos(), "merchant_trade", (ServerPlayerEntity) player);
+            }
             return;
         }
         SimpleMerchant merchant = new SimpleMerchant(player);
@@ -1134,6 +1307,9 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
                 realm.adjustReputation(killer.getUuid(), "Crownlands", 2);
             }
         }
+        if (!getWorld().isClient && getWorld() instanceof ServerWorld deathWorld && random.nextInt(100) < 40) {
+            com.rivalrealms.sound.ModSounds.playVoice(deathWorld, getBlockPos(), "death_last_words");
+        }
         super.onDeath(source);
     }
 
@@ -1149,6 +1325,12 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
             if (source.getAttacker() instanceof LivingEntity attacker && attacker != this) {
                 if (temperament == Temperament.CHILL && !isRecruited() && !isSettlementWorker()) {
                     // Good-natured folk never fight back: they run.
+                    startFleeing(attacker);
+                    return super.damage(source, amount);
+                }
+                // Cowards break early; the brave die on their feet.
+                if (!isRecruited() && trait == Trait.COWARDLY
+                        && getHealth() - amount < getMaxHealth() * 0.4f) {
                     startFleeing(attacker);
                     return super.damage(source, amount);
                 }
@@ -1289,6 +1471,8 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
             nbt.putString("GuardFaction", guardFaction);
         }
         nbt.putString("Family", familyName);
+        nbt.putString("Trait", trait.id());
+        nbt.putInt("HobbyTimer", hobbyTimer);
         nbt.putBoolean("Child", child);
         nbt.putInt("ChildAge", childAge);
         nbt.putString("InheritedRole", inheritedRole.id());
@@ -1333,6 +1517,8 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
         // only re-roll the loadout for survivors that never had one.
         loadoutApplied = nbt.getBoolean("LoadoutApplied");
         familyName = nbt.getString("Family");
+        trait = Trait.byId(nbt.getString("Trait"));
+        hobbyTimer = Math.max(0, nbt.getInt("HobbyTimer"));
         child = nbt.getBoolean("Child");
         childAge = Math.max(0, nbt.getInt("ChildAge"));
         inheritedRole = SettlementRole.byId(nbt.getString("InheritedRole"));
@@ -1537,7 +1723,8 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
             return;
         }
         suspicion++;
-        if (suspicion >= 2 && !grudgeAgainst(player)) {
+        int threshold = trait == Trait.SUSPICIOUS ? 1 : 2;
+        if (suspicion >= threshold && !grudgeAgainst(player)) {
             holdGrudge(player, 48000L);
             player.sendMessage(Text.literal(getName().getString()
                     + " does not like the way you are aiming that.").formatted(Formatting.GOLD), true);

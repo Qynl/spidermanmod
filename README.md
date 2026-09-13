@@ -155,6 +155,35 @@ Claimed settlements recruit guards and workers up to their level. Jobs (guard, b
 
 ---
 
+## Sieges & the wide world
+
+- **SIEGES are events**: bells ring, defenders rally under Speed/Resistance buffs, a Royal Messenger sprints for the nearest friendly town, allied relief columns march, civilians flee outward from the fighting, and when the dust settles the town either holds (fanfare, feast) or bears **grave rows outside its walls**. Arrive halfway through and you'll have to piece together what started it — the chronicle knows
+- **Player camps**: craft a Camp Kit (wool + campfire + lead) and raise a real home — tent, bed, chest, map table, weapon rack, lanterns. It's claimed as a settlement in `/rivalrealms bases`; come back across days and it **grows trophies and a banner** into a landmark of the roads
+- **The peaceful road**: lost children (reunite them for Hearthfolk gratitude), stranded merchants (an iron ingot repairs the axle — half the load is yours), horse disputes, roadside festivals with live bard music, gossips who recite the chronicle and ask if it really happened that way, and travelers who greet you **by your reputation title**
+- **Disasters**: storms walk lightning across fields, earthquakes shake the ground and drop gravel — settlements drain and the chronicle remembers
+- **Seasons**: 8-day spring → summer → autumn → winter. Winter squeezes the pantries; autumn brings **harvest festivals** with music in every fed settlement
+- **Hidden civilizations**: rare hermitages (mossy cottages outside every faction, a hermit, an old friend's grave) and **world anomalies** — crying-obsidian craters, ever-glow mushroom groves, haunted stone circles with a guardian
+- **Abandoned places return**: empty villages smoke again when new settlers arrive
+- **Expeditions**: big settlements send pioneers into the wilds to found new homes — civilization spreads itself
+
+## NPC souls
+
+- **Traits**: Brave (aims faster, never breaks), Cowardly (flees below 40% health, slow to fire), Suspicious (accuses at first sight of a drawn crossbow), Loyal (trust barely cools), Curious (drifts toward strangers), Greedy, Ambitious — rolled once, persisted
+- **Hobbies**: NPCs play music, go fishing by the water, and gather in **friend circles** that laugh together; **rivals** shove each other when no one's watching
+- **Weddings**: two friends become family at a feast — chronicle entry, hearts, hearthfire song
+- **Rumors cut both ways**: deeds of valor (found a child, saved a caravan, fought off raiders) travel the same mouth-to-mouth road as crimes — and raise your **local** standing town by town
+- **Recognition**: NPCs greet you by name, title and the armor you wear — "Legend of the Crownlands! An honor."
+
+## Riches & roads
+
+- **Treasure maps**: craft from paper + compass. Never "go to X" — a bearing from the nearest town, a pace count, a riddle, and green motes where the X sleeps under dark earth
+- **Traveling merchants**: caravans walk settlement to settlement (and pirates still cut the roads)
+
+## Bard & voice
+
+- **Six composed melodies** play in the world: Hearthfire (taverns), March of Banners (sieges), Harvest Reel (festivals), Dirge (funerals), Wanderer's Rest (camps), Victory Fanfare (held walls)
+- **A performed voice catalog** for the realm's great moments — sieges, greetings, farewells, trade, celebration — wired into the world's biggest events
+
 ## The living realm
 
 - **Factions run on wealth** (0–100): surplus food and caravans fill the treasury, raids and famine drain it. Wealthy factions field enchanted veterans and an extra patrol; bankrupt ones send people out in rags

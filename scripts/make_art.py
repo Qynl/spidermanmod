@@ -829,6 +829,67 @@ def cannon_block_textures(folder):
     save16(folder / "cannon_carriage.png", carriage)
 
 
+def camp_kit_texture(path):
+    """16x16: a rolled canvas tent with a peeking campfire and bedroll."""
+    p = canvas(16, 16, (0, 0, 0, 0))
+    canvas_c, canvas_d = (226, 220, 202, 255), (188, 180, 160, 255)
+    rope = (140, 52, 44, 255)
+    # rolled tent bundle
+    for y in range(4, 10):
+        for x in range(2, 13):
+            px(p, 16, x, y, canvas_c)
+    for x in range(2, 13):
+        px(p, 16, x, 4, (240, 236, 222, 255))
+        px(p, 16, x, 9, canvas_d)
+    for y in range(4, 10):                          # tie straps
+        px(p, 16, 4, y, rope); px(p, 16, 10, y, rope)
+    # peeking flame
+    px(p, 16, 12, 8, (240, 160, 60, 255)); px(p, 16, 13, 7, (252, 200, 110, 255))
+    px(p, 16, 12, 7, (252, 200, 110, 255)); px(p, 16, 13, 8, (240, 160, 60, 255))
+    # bedroll underneath
+    hline(p, 16, 3, 12, 11, (150, 90, 60, 255))
+    hline(p, 16, 3, 12, 12, (110, 62, 40, 255))
+    px(p, 16, 2, 11, (238, 234, 220, 255)); px(p, 16, 2, 12, (200, 194, 176, 255))
+    outline(p, 16, (40, 34, 26, 255))
+    save16(path, p)
+
+
+def treasure_map_texture(path):
+    """16x16: a cracked old map with roads, a coastline and a red X."""
+    p = canvas(16, 16)
+    paper = (214, 196, 158, 255)
+    paper_d = (176, 158, 120, 255)
+    ink = (70, 52, 36, 255)
+    for y in range(0, 16):
+        for x in range(0, 16):
+            shade = paper if (x * 7 + y * 13) % 9 else paper_d
+            px(p, 16, x, y, shade)
+    # coastline + water
+    for y in range(0, 16):
+        px(p, 16, 0, y, (86, 130, 170, 255))
+        px(p, 16, 1, y, (86, 130, 170, 255))
+    px(p, 16, 2, 3, paper); px(p, 16, 2, 10, paper)
+    vline(p, 16, 2, 5, 9, (86, 130, 170, 255))
+    # a road and a ridge
+    for i in range(9):
+        px(p, 16, 4 + i, 12 - i, ink)
+        px(p, 16, 5 + i, 12 - i, paper_d)
+    for x in (9, 10, 11):
+        px(p, 16, x, 3, (120, 120, 108, 255)); px(p, 16, x, 4, (100, 100, 90, 255))
+    # little trees
+    px(p, 16, 5, 4, (74, 120, 62, 255)); px(p, 16, 6, 5, (74, 120, 62, 255))
+    px(p, 16, 12, 12, (74, 120, 62, 255))
+    # THE X
+    px(p, 16, 11, 8, (178, 48, 42, 255)); px(p, 16, 13, 8, (178, 48, 42, 255))
+    px(p, 16, 12, 9, (178, 48, 42, 255))
+    px(p, 16, 11, 10, (178, 48, 42, 255)); px(p, 16, 13, 10, (178, 48, 42, 255))
+    px(p, 16, 11, 8, (220, 90, 80, 255))
+    # burnt corner
+    px(p, 16, 15, 0, (60, 44, 30, 255)); px(p, 16, 14, 0, (96, 72, 46, 255)); px(p, 16, 15, 1, (96, 72, 46, 255))
+    outline(p, 16, (52, 40, 28, 255))
+    save16(path, p)
+
+
 def farmer_hoe_texture(path):
     """16x16: iron blade with a green field ribbon, worn oak handle.""" 
     p = canvas(16, 16)
@@ -1570,6 +1631,8 @@ def main():
     bottle_texture(TEX / "item/ship_in_a_bottle.png")
     cannonball_texture(TEX / "item/cannonball.png")
     farmer_hoe_texture(TEX / "item/farmer_hoe.png")
+    camp_kit_texture(TEX / "item/camp_kit.png")
+    treasure_map_texture(TEX / "item/treasure_map.png")
     war_weapon_textures()
     food_textures()
     cannon_block_textures(TEX / "block")

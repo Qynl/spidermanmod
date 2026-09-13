@@ -166,6 +166,7 @@ add('net.minecraft.util.math.random.Random', [], [
 ])
 add('net.minecraft.util.Formatting', [], [
     'public static final net.minecraft.util.Formatting RED;', 'public static final net.minecraft.util.Formatting GOLD;', 'public static final net.minecraft.util.Formatting GREEN;', 'public static final net.minecraft.util.Formatting GRAY;', 'public static final net.minecraft.util.Formatting WHITE;', 'public static final net.minecraft.util.Formatting AQUA;', 'public static final net.minecraft.util.Formatting DARK_RED;', 'public static final net.minecraft.util.Formatting YELLOW;',
+    'public static final net.minecraft.util.Formatting LIGHT_PURPLE;',
 ])
 add('net.minecraft.util.Hand', [], [
     'public static final net.minecraft.util.Hand MAIN_HAND;',
@@ -204,6 +205,7 @@ add('net.minecraft.sound.SoundCategory', [], [
     'public static final net.minecraft.sound.SoundCategory NEUTRAL;',
     'public static final net.minecraft.sound.SoundCategory PLAYERS;',
     'public static final net.minecraft.sound.SoundCategory HOSTILE;',
+    'public static final net.minecraft.sound.SoundCategory RECORDS;',
 ])
 add('net.minecraft.sound.SoundEvent', [], [])
 add('net.minecraft.sound.SoundEvents', [], [
@@ -229,6 +231,13 @@ add('net.minecraft.sound.SoundEvents', [], [
     'public static final net.minecraft.sound.SoundEvent ENTITY_VILLAGER_NO;',
     'public static final net.minecraft.sound.SoundEvent ENTITY_WITHER_SPAWN;',
     'public static final net.minecraft.sound.SoundEvent ITEM_FLINTANDSTEEL_USE;',
+    'public static final net.minecraft.sound.SoundEvent BLOCK_BELL_USE;',
+    'public static final net.minecraft.sound.SoundEvent BLOCK_WOOD_PLACE;',
+    'public static final net.minecraft.registry.entry.RegistryEntry.Reference<net.minecraft.sound.SoundEvent> BLOCK_NOTE_BLOCK_HARP;',
+    'public static final net.minecraft.registry.entry.RegistryEntry.Reference<net.minecraft.sound.SoundEvent> BLOCK_NOTE_BLOCK_BASS;',
+    'public static final net.minecraft.registry.entry.RegistryEntry.Reference<net.minecraft.sound.SoundEvent> BLOCK_NOTE_BLOCK_FLUTE;',
+    'public static final net.minecraft.registry.entry.RegistryEntry.Reference<net.minecraft.sound.SoundEvent> BLOCK_NOTE_BLOCK_BELL;',
+    'public static final net.minecraft.registry.entry.RegistryEntry.Reference<net.minecraft.sound.SoundEvent> BLOCK_NOTE_BLOCK_BASEDRUM;',
 ])
 
 # ---- registry
@@ -237,6 +246,7 @@ add('net.minecraft.registry.Registries', [], [
     'public static final net.minecraft.registry.Registry<net.minecraft.item.Item> ITEM;',
     'public static final net.minecraft.registry.Registry<net.minecraft.entity.EntityType<?>> ENTITY_TYPE;',
     'public static final net.minecraft.registry.Registry<net.minecraft.item.ItemGroup> ITEM_GROUP;',
+    'public static final net.minecraft.registry.Registry<net.minecraft.sound.SoundEvent> SOUND_EVENT;',
 ])
 add('net.minecraft.registry.Registry', [], [
     'public <V extends T> V register(net.minecraft.util.Identifier id, V value);',
@@ -298,6 +308,12 @@ add('net.minecraft.block.Blocks', [], [
     'public static final net.minecraft.block.Block CAMPFIRE;', 'public static final net.minecraft.block.Block FARMLAND;', 'public static final net.minecraft.block.Block GOLD_BLOCK;',
         'public class RenderLayer extends RenderPhase { public static RenderLayer getCutout(); public static RenderLayer getTranslucent(); }',
     'public static final net.minecraft.block.Block WHEAT;', 'public static final net.minecraft.block.Block COARSE_DIRT;', 'public static final net.minecraft.block.Block SOUL_LANTERN;', 'public static final net.minecraft.block.Block COBBLESTONE_SLAB;', 'public static final net.minecraft.block.Block STONE_BRICK_SLAB;', 'public static final net.minecraft.block.Block DEAD_BUSH;', 'public static final net.minecraft.block.Block MOSSY_COBBLESTONE;', 'public static final net.minecraft.block.Block PODZOL;', 'public static final net.minecraft.block.Block COBWEB;', 'public static final net.minecraft.block.Block GRASS_BLOCK;', 'public static final net.minecraft.block.Block CARVED_PUMPKIN;', 'public static final net.minecraft.block.Block WATER;', 'public static final net.minecraft.block.Block CARROTS;', 'public static final net.minecraft.block.Block POTATOES;', 'public static final net.minecraft.block.Block BEETROOTS;', 'public static final net.minecraft.block.Block BARREL;', 'public static final net.minecraft.block.Block LANTERN;',
+    'public static final net.minecraft.block.Block MOSS_BLOCK;', 'public static final net.minecraft.block.Block MOSSY_STONE_BRICKS;',
+    'public static final net.minecraft.block.Block MOSS_CARPET;', 'public static final net.minecraft.block.Block CRYING_OBSIDIAN;',
+    'public static final net.minecraft.block.Block MAGMA_BLOCK;', 'public static final net.minecraft.block.Block RED_MUSHROOM;',
+    'public static final net.minecraft.block.Block BROWN_MUSHROOM;', 'public static final net.minecraft.block.Block AZALEA;',
+    'public static final net.minecraft.block.Block GLOW_LICHEN;', 'public static final net.minecraft.block.Block STRIPPED_OAK_LOG;',
+    'public static final net.minecraft.block.Block RED_BED;',
     'public static final net.minecraft.block.Block GRAVEL;', 'public static final net.minecraft.block.Block RED_SANDSTONE;',
     'public static final net.minecraft.block.Block WHITE_CARPET;', 'public static final net.minecraft.block.Block CRAFTING_TABLE;',
     'public static final net.minecraft.block.Block FURNACE;', 'public static final net.minecraft.block.Block ANVIL;',
@@ -439,6 +455,7 @@ add('net.minecraft.item.Items', [], [
     'public static final net.minecraft.item.Item GLASS;', 'public static final net.minecraft.item.Item FLINT;',
     'public static final net.minecraft.item.Item REDSTONE;', 'public static final net.minecraft.item.Item GOLD_BLOCK;',
     'public static final net.minecraft.item.Item COPPER_BLOCK;',
+    'public static final net.minecraft.item.Item FISHING_ROD;', 'public static final net.minecraft.item.Item AMETHYST_SHARD;',
     'public static final net.minecraft.item.Item OAK_PLANKS;', 'public static final net.minecraft.item.Item DARK_OAK_PLANKS;',
     'public static final net.minecraft.item.Item SPRUCE_PLANKS;',
     'public static final net.minecraft.item.Item COOKED_COD;', 'public static final net.minecraft.item.Item ROTTEN_FLESH;',
@@ -770,6 +787,7 @@ add('net.minecraft.world.World.ExplosionSourceType', [], [
 add('net.minecraft.world.Heightmap', [], [])
 add('net.minecraft.world.Heightmap.Type', [], [
     'public static final net.minecraft.world.Heightmap.Type MOTION_BLOCKING_NO_LEAVES;',
+    'public static final net.minecraft.world.Heightmap.Type MOTION_BLOCKING;',
     'public static final net.minecraft.world.Heightmap.Type WORLD_SURFACE;',
 ])
 add('net.minecraft.server.world.ServerWorld', ['net.minecraft.world.World'], [
@@ -1024,6 +1042,17 @@ add('net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents', [], [
 add('net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents.EndClientTick', [], [
     'public void register(java.util.function.Consumer<net.minecraft.client.MinecraftClient> callback);',
 ], iface=True)
+add('net.minecraft.entity.FallingBlockEntity', [], [
+    'public FallingBlockEntity(net.minecraft.world.World world, double x, double y, double z, net.minecraft.block.BlockState blockState);',
+])
+add('net.minecraft.entity.LightningEntity', [], [
+    'public LightningEntity(net.minecraft.entity.EntityType<? extends net.minecraft.entity.LightningEntity> type, net.minecraft.world.World world);',
+    'public void refreshPositionAfterTeleport(double x, double y, double z);',
+])
+add('net.minecraft.block.BedBlock', [], [
+    'public static final net.minecraft.state.property.EnumProperty<net.minecraft.block.enums.BedPart> PART;',
+])
+add('net.minecraft.block.enums.BedPart', [], [])
 add('org.joml.Quaternionf', [], [])
 add('org.slf4j.Logger', [], [
     'public void info(String msg);', 'public void info(String msg, Object arg);',

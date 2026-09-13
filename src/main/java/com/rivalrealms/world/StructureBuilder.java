@@ -86,6 +86,8 @@ public final class StructureBuilder {
             case GRAVEYARD -> buildScatteredGraveyard(world, center);
             case FARMSTEAD -> buildScatteredFarmstead(world, center);
             case TEMPLE -> buildScatteredTemple(world, center);
+            case HERMITAGE -> buildScatteredHermitage(world, center);
+            case ANOMALY -> buildScatteredAnomaly(world, center);
         }
         world.playSound(null, center.getX() + 0.5, center.getY(), center.getZ() + 0.5, SoundEvents.BLOCK_ANVIL_LAND, SoundCategory.BLOCKS, 0.55f, 0.9f);
     }
@@ -724,6 +726,89 @@ public final class StructureBuilder {
     }
 
     /** Rectangular great hall: pillars, throne, glass windows, chandelier, stairs. */
+    /** A hidden community outside every faction: mossy cottage, warm lantern, a hermit. */
+    private static void buildScatteredHermitage(ServerWorld world, BlockPos base) {
+        int y = plateau(world, base, 9, 9, Blocks.MOSS_BLOCK);
+        BlockPos origin = new BlockPos(base.getX(), y, base.getZ());
+        for (int x = -2; x <= 2; x++) {
+            for (int z = -2; z <= 2; z++) {
+                boolean shell = Math.abs(x) == 2 || Math.abs(z) == 2;
+                set(world, origin.add(x, 1, z), shell ? Blocks.MOSSY_STONE_BRICKS : Blocks.AIR);
+                if (shell) {
+                    foundation(world, origin.getX() + x, origin.getZ() + z, y, Blocks.MOSSY_STONE_BRICKS);
+                }
+                set(world, origin.add(x, 0, z), Blocks.MOSSY_STONE_BRICKS);
+            }
+        }
+        set(world, origin.add(0, 1, 2), Blocks.AIR);
+        set(world, origin.add(0, 2, 2), Blocks.AIR);
+        for (int x = -2; x <= 2; x++) {
+            for (int z = -2; z <= 2; z++) {
+                set(world, origin.add(x, 3, z), Blocks.MOSS_BLOCK);
+                set(world, origin.add(x, 4, z), Math.abs(x) < 2 && Math.abs(z) < 2 ? Blocks.MOSS_CARPET : Blocks.AIR);
+            }
+        }
+        set(world, origin.add(-1, 1, -1), Blocks.CRAFTING_TABLE);
+        set(world, origin.add(1, 1, -1), ModBlocks.HEARTH_LANTERN);
+        stockChest(world, origin.add(0, 2, -1), new ItemStack(Items.GOLDEN_CARROT, 3),
+                new ItemStack(ModItems.ROYAL_JEWELRY, 1), new ItemStack(Items.EMERALD, 5));
+        set(world, origin.add(3, 1, 0), ModBlocks.HEARTH_LANTERN);
+        set(world, origin.add(-3, 1, 2), Blocks.BARREL);
+        set(world, origin.add(4, 1, 4), Blocks.COBBLESTONE_SLAB);
+        set(world, origin.add(4, 1, 5), Blocks.OAK_FENCE);
+    }
+
+    /** A place where the rules of the world bent: craters, strange groves, haunted stones. */
+    private static void buildScatteredAnomaly(ServerWorld world, BlockPos base) {
+        int kind = (int) (Math.floorMod(base.asLong(), 31L) % 3L);
+        int y = plateau(world, base, 15, 15, Blocks.GRASS_BLOCK);
+        if (kind == 0) {
+            for (int dx = -5; dx <= 5; dx++) {
+                for (int dz = -5; dz <= 5; dz++) {
+                    double dist = Math.sqrt(dx * dx + dz * dz);
+                    BlockPos at = base.add(dx, y, dz);
+                    if (dist <= 1.5) {
+                        set(world, at, Blocks.CRYING_OBSIDIAN);
+                    } else if (dist <= 3.5) {
+                        set(world, at, Blocks.MAGMA_BLOCK);
+                    } else if (dist <= 5.2) {
+                        set(world, at, Blocks.COBBLESTONE);
+                    }
+                }
+            }
+            set(world, base.add(0, y + 1, 3), ModBlocks.TROPHY_SKULL);
+            set(world, base.add(3, y + 1, 0), ModBlocks.TROPHY_SKULL);
+        } else if (kind == 1) {
+            for (int ring = 0; ring < 2; ring++) {
+                int r = 3 + ring * 2;
+                for (int i = 0; i < 12; i++) {
+                    double angle = Math.PI * 2 * i / 12.0;
+                    int x = (int) Math.round(Math.cos(angle) * r);
+                    int z = (int) Math.round(Math.sin(angle) * r);
+                    set(world, base.add(x, y + 1, z), ring == 0 ? Blocks.RED_MUSHROOM : Blocks.BROWN_MUSHROOM);
+                }
+            }
+            set(world, base.add(0, y + 1, 0), Blocks.AZALEA);
+            fill(world, base.add(-2, y + 1, -2), 5, 1, 1, Blocks.MOSS_CARPET);
+            set(world, base.add(0, y + 2, 0), Blocks.GLOW_LICHEN);
+        } else {
+            for (int i = 0; i < 8; i++) {
+                double angle = Math.PI * 2 * i / 8.0;
+                int x = (int) Math.round(Math.cos(angle) * 4);
+                int z = (int) Math.round(Math.sin(angle) * 4);
+                set(world, base.add(x, y + 1, z), Blocks.COBBLESTONE_WALL);
+                set(world, base.add(x, y + 2, z), world.random.nextBoolean() ? Blocks.COBBLESTONE_WALL : Blocks.AIR);
+            }
+            set(world, base.add(0, y + 1, 0), Blocks.SOUL_LANTERN);
+            set(world, base.add(2, y + 1, 1), Blocks.COBWEB);
+            set(world, base.add(-2, y + 1, -1), Blocks.COBWEB);
+            set(world, base.add(1, y + 1, -2), ModBlocks.TROPHY_SKULL);
+        }
+        stockChest(world, base.add(-3, y + 2, 3), new ItemStack(Items.AMETHYST_SHARD, 4),
+                new ItemStack(ModItems.ROYAL_COIN, 2));
+        spawnGuard(world, base, y, BuildStyle.CUSTOM);
+    }
+
     private static void keep(ServerWorld world, BlockPos corner, int sizeX, int height, int sizeZ,
                              Block wall, Block trim) {
         int y = groundAt(world, corner.getX() + sizeX / 2, corner.getZ() + sizeZ / 2);
@@ -1538,6 +1623,11 @@ public final class StructureBuilder {
 
     private static void wall(ServerWorld world, BlockPos corner, int sizeX, int height, int sizeZ, Block block) {
         fill(world, corner, sizeX, height, sizeZ, block);
+    }
+
+    /** Buried loot for treasure maps: a real chest with a real haul. */
+    public static void buryTreasure(ServerWorld world, BlockPos pos, ItemStack... stacks) {
+        stockChest(world, pos, stacks);
     }
 
     private static void stockChest(ServerWorld world, BlockPos pos, ItemStack... stacks) {

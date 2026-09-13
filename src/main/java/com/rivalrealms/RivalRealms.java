@@ -27,6 +27,7 @@ public final class RivalRealms implements ModInitializer {
         ModBlocks.register();
         ModItems.register();
         ModEntities.register();
+        com.rivalrealms.sound.ModSounds.register();
         ModCommands.register();
         ServerLifecycleEvents.SERVER_STARTED.register(RealmEvents::onServerStarted);
         ServerChunkEvents.CHUNK_LOAD.register(WorldSettlementGenerator::onChunkLoad);

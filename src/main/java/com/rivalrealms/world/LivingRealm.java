@@ -5,6 +5,8 @@ import com.rivalrealms.entity.Archetype;
 import com.rivalrealms.entity.ModEntities;
 import com.rivalrealms.entity.SurvivorEntity;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.FallingBlockEntity;
+import net.minecraft.entity.LightningEntity;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.server.world.ServerWorld;
@@ -14,6 +16,8 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import net.minecraft.util.math.Direction;
 import net.minecraft.world.Heightmap;
 
@@ -68,6 +72,53 @@ public final class LivingRealm {
         SURNAMES.put("independent", new String[]{"Wanderer", "Drifter", "Wayfarer"});
     }
 
+    // ------------------------------------------------------------- seasons
+
+    public static final int SPRING = 0;
+    public static final int SUMMER = 1;
+    public static final int AUTUMN = 2;
+    public static final int WINTER = 3;
+
+    /** Eight-day seasons; a year lasts a month of days. */
+    public static int season(ServerWorld world) {
+        long day = world.getTime() / 24000L + 1L;
+        return (int) ((day / 8L) % 4L);
+    }
+
+    public static String seasonName(ServerWorld world) {
+        return switch (season(world)) {
+            case SPRING -> "Spring";
+            case SUMMER -> "Summer";
+            case AUTUMN -> "Autumn";
+            default -> "Winter";
+        };
+    }
+
+    /** Reputation as words, the way NPCs say it. */
+    public static String titleFor(int reputation) {
+        if (reputation >= 80) return "Legend";
+        if (reputation >= 60) return "Local Hero";
+        if (reputation >= 30) return "Trusted";
+        if (reputation >= 15) return "Known";
+        if (reputation > -15) return "Traveler";
+        if (reputation > -40) return "Outlaw";
+        return "Enemy";
+    }
+
+    /**
+     * A good deed by the player, seen by someone: the rumor mill carries
+     * praise as readily as blame, and this is how "Local Hero" happens.
+     */
+    public static void seedPlayerDeed(ServerWorld world, net.minecraft.entity.player.PlayerEntity hero, String deed) {
+        for (Entity witness : world.getOtherEntities(hero,
+                hero.getBoundingBox().expand(20.0), e -> e instanceof SurvivorEntity s && s.isAlive())) {
+            ((SurvivorEntity) witness).seedRumor(hero.getUuid(), 4, 3);
+            break;
+        }
+        world.getServer().getPlayerManager().broadcast(
+                Text.literal("Word spreads of a traveler who " + deed + ".").formatted(Formatting.GRAY), false);
+    }
+
     /** A family surname that matches the culture, so generations read real. */
     public static String surname(String faction, net.minecraft.util.math.random.Random random) {
         String[] pool = SURNAMES.getOrDefault(faction == null ? "independent" : faction.toLowerCase(java.util.Locale.ROOT),
@@ -99,6 +150,16 @@ public final class LivingRealm {
         // World events: rare, never stacked on the same cycle.
         if (world.getTime() % 3600L == 0L && world.random.nextInt(3) == 0) {
             rollWorldEvent(world, state);
+        }
+
+        tickSieges(world, state);
+        tickSeason(world, state);
+        tickExpeditions(world);
+        tickTreasureHints(world);
+        if (world.getTime() % 1200L == 0L) {
+            tickCelebrations(world, state);
+            tickResettlement(world, state);
+            tickCampGrowth(world, state);
         }
     }
 
@@ -274,15 +335,48 @@ public final class LivingRealm {
             return;
         }
         RealmState.BaseRecord base = loaded.get(world.random.nextInt(loaded.size()));
-        int roll = world.random.nextInt(6);
+        int roll = world.random.nextInt(8);
         switch (roll) {
             case 0 -> famine(world, state, base);
             case 1 -> plague(world, state, base);
             case 2 -> merchantBoom(world, state, base);
             case 3 -> uprising(world, state, base);
             case 4 -> refugees(world, state, base);
+            case 5 -> storm(world, state, base);
+            case 6 -> earthquake(world, state, base);
             default -> skirmish(world, state, base, loaded);
         }
+    }
+
+    /** A summer storm walks the fields: lightning, panic, one hard night. */
+    private static void storm(ServerWorld world, RealmState state, RealmState.BaseRecord base) {
+        for (int i = 0; i < 3; i++) {
+            BlockPos strike = surface(world, base.center().add(
+                    world.random.nextInt(31) - 15, 0, world.random.nextInt(31) - 15));
+            LightningEntity bolt = new LightningEntity(net.minecraft.entity.EntityType.LIGHTNING_BOLT, world);
+            bolt.refreshPositionAfterTeleport(strike.getX() + 0.5, strike.getY(), strike.getZ() + 0.5);
+            world.spawnEntity(bolt);
+        }
+        state.drain(base, 2, 2);
+        state.chronicle(world.getTime(), "A furious storm broke over " + base.name() + "; lightning walked the fields.", true);
+        chronicleBroadcast(world, state, "Storm breaks over " + base.name() + "!", true);
+    }
+
+    /** The ground remembers an old wound: tremors, falling gravel, shaken folk. */
+    private static void earthquake(ServerWorld world, RealmState state, RealmState.BaseRecord base) {
+        BlockPos at = surface(world, base.center().add(world.random.nextInt(21) - 10, 0, world.random.nextInt(21) - 10));
+        for (int i = 0; i < 4; i++) {
+            BlockPos drop = at.add(world.random.nextInt(7) - 3, 3, world.random.nextInt(7) - 3);
+            FallingBlockEntity gravel = new FallingBlockEntity(world, drop.getX() + 0.5, drop.getY(), drop.getZ() + 0.5,
+                    net.minecraft.block.Blocks.GRAVEL.getDefaultState());
+            world.spawnEntity(gravel);
+        }
+        for (SurvivorEntity survivor : population(world, base)) {
+            survivor.takeKnockback(0.8, world.random.nextDouble() - 0.5, world.random.nextDouble() - 0.5);
+        }
+        state.drain(base, 0, 4);
+        state.chronicle(world.getTime(), "The earth shuddered near " + base.name() + "; stones fell from the hills.", true);
+        chronicleBroadcast(world, state, "Earth tremors near " + base.name() + "!", false);
     }
 
     private static void famine(ServerWorld world, RealmState state, RealmState.BaseRecord base) {
@@ -486,6 +580,455 @@ public final class LivingRealm {
             // A bankrupt faction cannot arm its people.
             survivor.equipStack(net.minecraft.entity.EquipmentSlot.CHEST,
                     new net.minecraft.item.ItemStack(net.minecraft.item.Items.LEATHER_CHESTPLATE));
+        }
+    }
+
+    // ------------------------------------------------------------- sieges
+
+    private static final class Siege {
+        final String attackerFaction;
+        int phase;
+        long phaseUntil;
+        long messengerSent;
+        boolean reliefArrived;
+
+        Siege(String attackerFaction, long now) {
+            this.attackerFaction = attackerFaction;
+            this.phase = 0;
+            this.phaseUntil = now + 1200L;
+        }
+    }
+
+    private static final Map<Long, Siege> SIEGES = new HashMap<>();
+
+    /** Opens a siege around a settlement under raider attack. */
+    public static void beginSiege(ServerWorld world, RealmState.BaseRecord base, String attackerFaction) {
+        if (SIEGES.containsKey(base.center().asLong())) {
+            return;
+        }
+        SIEGES.put(base.center().asLong(), new Siege(attackerFaction, world.getTime()));
+        RealmState state = RealmState.get(world);
+        state.chronicle(world.getTime(), "SIEGE: the " + attackerFaction + " close around " + base.name() + ".", true);
+        chronicleBroadcast(world, state, "SIEGE at " + base.name() + "! The " + attackerFaction
+                + " are at the walls!", true);
+        // Defenders prepare: the bell rings, the watch stiffens.
+        world.playSound(null, base.center().getX(), base.center().getY(), base.center().getZ(),
+                SoundEvents.BLOCK_BELL_USE, SoundCategory.HOSTILE, 2.0f, 0.8f);
+        for (SurvivorEntity defender : population(world, base)) {
+            if (defender.isBaseGuard()) {
+                defender.addStatusEffect(new StatusEffectInstance(StatusEffects.SPEED, 2400, 0));
+                defender.addStatusEffect(new StatusEffectInstance(StatusEffects.RESISTANCE, 2400, 0));
+            }
+        }
+        com.rivalrealms.sound.ModSounds.playVoice(world, base.center(), "siege_defense");
+    }
+
+    /** Advances every live siege: preparation, evacuation, relief, aftermath. */
+    private static void tickSieges(ServerWorld world, RealmState state) {
+        if (SIEGES.isEmpty()) {
+            return;
+        }
+        Iterator<Map.Entry<Long, Siege>> iterator = SIEGES.entrySet().iterator();
+        while (iterator.hasNext()) {
+            Map.Entry<Long, Siege> entry = iterator.next();
+            RealmState.BaseRecord base = state.findByCenter(entry.getKey());
+            Siege siege = entry.getValue();
+            if (base == null || base.abandoned() || !areaLoaded(world, base.center(), base.radius())) {
+                continue;
+            }
+            long now = world.getTime();
+            List<SurvivorEntity> defenders = new ArrayList<>();
+            List<SurvivorEntity> attackers = new ArrayList<>();
+            for (Entity entity : world.getOtherEntities(null, box(base),
+                    candidate -> candidate instanceof SurvivorEntity s && s.isAlive())) {
+                SurvivorEntity survivor = (SurvivorEntity) entity;
+                if (survivor.isBaseGuard() && base.faction().equalsIgnoreCase(survivor.effectiveFaction())) {
+                    defenders.add(survivor);
+                } else if (!survivor.isRecruited()
+                        && attackerMatches(siege, survivor.effectiveFaction())) {
+                    attackers.add(survivor);
+                }
+            }
+
+            if (attackers.isEmpty()) {
+                // The walls held.
+                iterator.remove();
+                state.chronicle(now, base.name() + " held. The " + siege.attackerFaction
+                        + " broke and melted into the hills.", true);
+                chronicleBroadcast(world, state, base.name() + " has held the siege!", true);
+                RealmMusic.play(world, base.center(), RealmMusic.VICTORY_FANFARE);
+                com.rivalrealms.sound.ModSounds.playVoice(world, base.center(), "siege_victory");
+                state.adjustWealth(base.faction(), 2);
+                continue;
+            }
+            if (now < siege.phaseUntil) {
+                // While the assault runs: civilians flee outward, repeatedly.
+                if (now % 200L == 0L) {
+                    evacuateCivilians(world, base, attackers);
+                }
+                continue;
+            }
+            switch (siege.phase) {
+                case 0 -> {
+                    // Phase 1: messengers run to the nearest allied town.
+                    siege.phase = 1;
+                    siege.phaseUntil = now + 1200L;
+                    sendMessenger(world, state, base, siege);
+                    com.rivalrealms.sound.ModSounds.playVoice(world, base.center(), "civilian_flee");
+                }
+                case 1 -> {
+                    // Phase 2: allied relief if the messenger made it.
+                    siege.phase = 2;
+                    siege.phaseUntil = now + 2400L;
+                    if (siege.messengerSent > 0 && !siege.reliefArrived) {
+                        sendRelief(world, state, base, siege);
+                    }
+                }
+                default -> {
+                    // Phase 3: the aftermath. The town that falls, falls for good;
+                    // the town that holds rebuilds scarred.
+                    iterator.remove();
+                    if (defenders.isEmpty() && !attackers.isEmpty()) {
+                        state.chronicle(now, "The last defenders of " + base.name()
+                                + " fell at dusk. The " + siege.attackerFaction + " own the walls now.", true);
+                    } else {
+                        state.drain(base, 4, 6);
+                        // Battle scars: a small grave row outside the walls.
+                        BlockPos grave = surface(world, base.center().offset(
+                                Direction.Type.HORIZONTAL.random(world.random), base.radius() + 3));
+                        for (int i = 0; i < Math.max(1, 3 - defenders.size()); i++) {
+                            world.setBlockState(grave.add(i, 0, 0),
+                                    net.minecraft.block.Blocks.COBBLESTONE_SLAB.getDefaultState());
+                            world.setBlockState(grave.add(i, 0, 1),
+                                    net.minecraft.block.Blocks.OAK_FENCE.getDefaultState());
+                        }
+                        state.chronicle(now, "Graves were raised outside " + base.name()
+                                + " for those who held the walls.", false);
+                    }
+                }
+            }
+        }
+    }
+
+    private static boolean attackerMatches(Siege siege, String faction) {
+        return siege.attackerFaction.equalsIgnoreCase(faction)
+                || "Marauders".equalsIgnoreCase(faction);
+    }
+
+    private static void evacuateCivilians(ServerWorld world, RealmState.BaseRecord base,
+                                          List<SurvivorEntity> attackers) {
+        if (attackers.isEmpty()) {
+            return;
+        }
+        double cx = attackers.get(0).getX();
+        double cz = attackers.get(0).getZ();
+        for (SurvivorEntity civilian : population(world, base)) {
+            if (civilian.isBaseGuard() || civilian.isChild() && world.random.nextBoolean()) {
+                continue;
+            }
+            double awayX = civilian.getX() - cx;
+            double awayZ = civilian.getZ() - cz;
+            double len = Math.sqrt(awayX * awayX + awayZ * awayZ);
+            if (len < 0.01) {
+                continue;
+            }
+            BlockPos flight = surface(world, BlockPos.ofFloored(
+                    civilian.getX() + awayX / len * 24.0, civilian.getY(),
+                    civilian.getZ() + awayZ / len * 24.0));
+            civilian.getNavigation().startMovingTo(flight.getX() + 0.5, flight.getY(), flight.getZ() + 0.5, 1.35);
+        }
+    }
+
+    private static void sendMessenger(ServerWorld world, RealmState state,
+                                      RealmState.BaseRecord base, Siege siege) {
+        RealmState.BaseRecord ally = null;
+        for (RealmState.BaseRecord other : state.bases()) {
+            if (other != base && !other.abandoned()
+                    && !state.isHostile(other.faction(), base.faction())
+                    && other.center().getSquaredDistance(base.center()) <= 260.0 * 260.0
+                    && areaLoaded(world, other.center(), other.radius() + 8)) {
+                ally = other;
+                break;
+            }
+        }
+        if (ally == null) {
+            return;
+        }
+        SurvivorEntity messenger = com.rivalrealms.entity.ModEntities.SURVIVOR.create(world);
+        if (messenger == null) {
+            return;
+        }
+        BlockPos spot = surface(world, base.center().offset(
+                Direction.Type.HORIZONTAL.random(world.random), base.radius() + 2));
+        messenger.refreshPositionAndAngles(spot.getX() + 0.5, spot.getY(), spot.getZ() + 0.5,
+                world.random.nextFloat() * 360.0f, 0.0f);
+        messenger.setArchetype(com.rivalrealms.entity.Archetype.byFaction(base.faction()));
+        messenger.setCustomName(Text.literal("Royal Messenger").formatted(Formatting.YELLOW));
+        world.spawnEntity(messenger);
+        messenger.getNavigation().startMovingTo(ally.center().getX(), ally.center().getY(),
+                ally.center().getZ(), 1.45);
+        siege.messengerSent = world.getTime();
+        state.chronicle(world.getTime(), "A messenger slipped the siege lines of " + base.name()
+                + ", riding for " + ally.name() + ".", false);
+    }
+
+    private static void sendRelief(ServerWorld world, RealmState state,
+                                   RealmState.BaseRecord base, Siege siege) {
+        siege.reliefArrived = true;
+        BlockPos edge = surface(world, base.center().offset(
+                Direction.Type.HORIZONTAL.random(world.random), base.radius() + 8));
+        for (int i = 0; i < 2; i++) {
+            SurvivorEntity relief = com.rivalrealms.entity.ModEntities.SURVIVOR.create(world);
+            if (relief == null) {
+                continue;
+            }
+            BlockPos at = surface(world, edge.add(i * 2, 0, world.random.nextInt(3) - 1));
+            relief.refreshPositionAndAngles(at.getX() + 0.5, at.getY(), at.getZ() + 0.5,
+                    world.random.nextFloat() * 360.0f, 0.0f);
+            relief.setArchetype(com.rivalrealms.entity.Archetype.byFaction(base.faction()));
+            relief.assignGuard(base.center(), base.owner(), base.faction());
+            relief.setCustomName(Text.literal("Relief Guard").formatted(Formatting.AQUA));
+            world.spawnEntity(relief);
+        }
+        chronicleBroadcast(world, state, "Relief columns reach " + base.name() + "!", false);
+    }
+
+    // ------------------------------------------------------------- seasons
+
+    private static void tickSeason(ServerWorld world, RealmState state) {
+        long time = world.getTime();
+        if (time % (8L * 24000L) != 0L) {
+            return;
+        }
+        String line = switch (season(world)) {
+            case SPRING -> "Spring returns to the realm. The roads dry, the world stirs.";
+            case SUMMER -> "High summer. Caravans crowd the roads.";
+            case AUTUMN -> "Autumn. Settlements begin drying and salting for winter.";
+            default -> "WINTER has come to the realm. The wells sing a colder song.";
+        };
+        state.chronicle(time, line, false);
+        chronicleBroadcast(world, state, line, false);
+        if (season(world) == WINTER) {
+            // The realm's kitchens work double through the first winter day.
+            for (RealmState.BaseRecord base : state.bases()) {
+                if (!base.abandoned() && areaLoaded(world, base.center(), base.radius())) {
+                    state.recordSettlementWork(base, 4, 0, 0);
+                }
+            }
+        }
+        if (season(world) == AUTUMN) {
+            celebrate(world, state, "harvest", RealmMusic.HARVEST_REEL);
+        }
+    }
+
+    // ------------------------------------------------------------- celebrations
+
+    private static void tickCelebrations(ServerWorld world, RealmState state) {
+        if (world.random.nextFloat() >= 0.10f) {
+            return;
+        }
+        List<RealmState.BaseRecord> loaded = new ArrayList<>();
+        for (RealmState.BaseRecord base : state.bases()) {
+            if (!base.abandoned() && base.food() >= 30
+                    && areaLoaded(world, base.center(), base.radius())) {
+                loaded.add(base);
+            }
+        }
+        if (loaded.isEmpty()) {
+            return;
+        }
+        RealmState.BaseRecord base = loaded.get(world.random.nextInt(loaded.size()));
+        if (world.random.nextBoolean()) {
+            // A wedding: two friends become family, and the town talks for days.
+            List<SurvivorEntity> adults = population(world, base);
+            SurvivorEntity first = null;
+            SurvivorEntity second = null;
+            for (SurvivorEntity candidate : adults) {
+                if (candidate.isChild() || candidate.isRecruited()) {
+                    continue;
+                }
+                if (first == null) {
+                    first = candidate;
+                } else {
+                    second = candidate;
+                    break;
+                }
+            }
+            if (first != null && second != null) {
+                first.setBond(second.getUuid(), (byte) 2);
+                second.setBond(first.getUuid(), (byte) 2);
+                world.spawnParticles(net.minecraft.particle.ParticleTypes.HEART,
+                        first.getX(), first.getY() + 2.2, first.getZ(), 8, 0.6, 0.4, 0.6, 0.0);
+                world.spawnParticles(net.minecraft.particle.ParticleTypes.HEART,
+                        second.getX(), second.getY() + 2.2, second.getZ(), 8, 0.6, 0.4, 0.6, 0.0);
+                RealmMusic.play(world, base.center(), RealmMusic.HEARTHFIRE);
+                state.chronicle(world.getTime(), first.getName().getString() + " and "
+                        + second.getName().getString() + " were wed at " + base.name()
+                        + ". The whole settlement feasted.", true);
+                chronicleBroadcast(world, state, "Wedding bells at " + base.name() + "!", true);
+                com.rivalrealms.sound.ModSounds.playVoice(world, base.center(), "celebration");
+            }
+        } else {
+            celebrate(world, state, "an evening of songs", RealmMusic.WANDERERS_REST);
+        }
+    }
+
+    private static void celebrate(ServerWorld world, RealmState state, String what, String song) {
+        for (RealmState.BaseRecord base : state.bases()) {
+            if (base.abandoned() || base.food() < 30
+                    || !areaLoaded(world, base.center(), base.radius())) {
+                continue;
+            }
+            RealmMusic.play(world, base.center(), song);
+            com.rivalrealms.sound.ModSounds.playVoice(world, base.center(), "celebration");
+            state.chronicle(world.getTime(), base.name() + " kept " + what
+                    + " with fires, fiddles and full cups.", false);
+        }
+    }
+
+    // ------------------------------------------------------------- expeditions
+
+    private record Expedition(ServerWorld world, BlockPos destination, long founded) {
+    }
+
+    private static final List<Expedition> EXPEDITIONS = new ArrayList<>();
+
+    private static void tickExpeditions(ServerWorld world) {
+        // Rarely, a settlement sends people into the unknown to found a new home.
+        if (world.getTime() % 72000L != 0L || world.random.nextInt(3) != 0) {
+            return;
+        }
+        List<RealmState.BaseRecord> loaded = new ArrayList<>();
+        for (RealmState.BaseRecord base : state_of(world).bases()) {
+            if (!base.abandoned() && base.level() >= 3
+                    && areaLoaded(world, base.center(), base.radius())) {
+                loaded.add(base);
+            }
+        }
+        if (loaded.isEmpty()) {
+            return;
+        }
+        RealmState.BaseRecord home = loaded.get(world.random.nextInt(loaded.size()));
+        BlockPos destination = home.center().add(
+                (world.random.nextInt(161) - 80), 0, (world.random.nextInt(161) - 80));
+        if (!areaLoaded(world, destination, 16)) {
+            return;
+        }
+        int founded = 0;
+        for (int i = 0; i < 3; i++) {
+            SurvivorEntity pioneer = com.rivalrealms.entity.ModEntities.SURVIVOR.create(world);
+            if (pioneer == null) {
+                continue;
+            }
+            BlockPos at = surface(world, home.center().add(i * 2 - 2, 0, world.random.nextInt(3) - 1));
+            pioneer.refreshPositionAndAngles(at.getX() + 0.5, at.getY(), at.getZ() + 0.5,
+                    world.random.nextFloat() * 360.0f, 0.0f);
+            pioneer.setArchetype(com.rivalrealms.entity.Archetype.byFaction(home.faction()));
+            pioneer.assignWorker(destination, home.owner(), home.faction(), SettlementRole.BUILDER);
+            pioneer.setCustomName(Text.literal("Pioneer · " + home.faction()).formatted(Formatting.AQUA));
+            pioneer.setFamily(surname(home.faction(), world.random), null);
+            world.spawnEntity(pioneer);
+            founded++;
+        }
+        if (founded > 0) {
+            EXPEDITIONS.add(new Expedition(world, destination, world.getTime()));
+            state_of(world).chronicle(world.getTime(), founded + " pioneers left " + home.name()
+                    + " to found a home in the wilds.", true);
+            chronicleBroadcast(world, state_of(world), "An expedition departs " + home.name() + " for the unknown.", true);
+        }
+    }
+
+    private static RealmState state_of(ServerWorld world) {
+        return RealmState.get(world);
+    }
+
+    // ------------------------------------------------------------- resettle + camps + treasure
+
+    /** Abandoned places remember hands: someone always starts again. */
+    private static void tickResettlement(ServerWorld world, RealmState state) {
+        for (RealmState.BaseRecord base : state.bases()) {
+            if (!base.abandoned() || world.random.nextFloat() >= 0.07f
+                    || !areaLoaded(world, base.center(), base.radius() + 8)) {
+                continue;
+            }
+            base.setAbandoned(false);
+            BlockPos edge = surface(world, base.center().offset(
+                    Direction.Type.HORIZONTAL.random(world.random), base.radius()));
+            for (int i = 0; i < 2; i++) {
+                SurvivorEntity settler = com.rivalrealms.entity.ModEntities.SURVIVOR.create(world);
+                if (settler == null) {
+                    continue;
+                }
+                BlockPos at = surface(world, edge.add(i * 2, 0, world.random.nextInt(3) - 1));
+                settler.refreshPositionAndAngles(at.getX() + 0.5, at.getY(), at.getZ() + 0.5,
+                        world.random.nextFloat() * 360.0f, 0.0f);
+                settler.setArchetype(com.rivalrealms.entity.Archetype.byFaction(base.faction()));
+                settler.assignWorker(base.center(), base.owner(), base.faction(),
+                        i == 0 ? SettlementRole.BUILDER : SettlementRole.FARMER);
+                settler.setCustomName(Text.literal("New Settler").formatted(Formatting.GREEN));
+                settler.setFamily(surname(base.faction(), world.random), null);
+                world.spawnEntity(settler);
+            }
+            state.chronicle(world.getTime(), "Smoke rises again from " + base.name()
+                    + ": new folk have begun rebuilding the old walls.", true);
+            chronicleBroadcast(world, state, base.name() + " is being rebuilt!", true);
+        }
+    }
+
+    /** Player camps grow recognisable: trophies, a banner, and a name. */
+    private static void tickCampGrowth(ServerWorld world, RealmState state) {
+        for (RealmState.BaseRecord base : state.bases()) {
+            if (base.level() >= 3 || !base.name().endsWith("'s Camp")
+                    || !areaLoaded(world, base.center(), base.radius())) {
+                continue;
+            }
+            var owner = world.getServer().getPlayerManager().getPlayer(base.owner());
+            if (owner == null || !base.contains(owner.getBlockPos())) {
+                continue;
+            }
+            if (world.random.nextFloat() < 0.25f) {
+                base.setFamineCycles(base.famineCycles() + 1);
+                if (base.famineCycles() >= 2) {
+                    base.setFamineCycles(0);
+                    state.upgrade(base);
+                    BlockPos at = surface(world, base.center().add(2, 0, 2));
+                    world.setBlockState(at, com.rivalrealms.block.ModBlocks.TROPHY_SKULL.getDefaultState());
+                    world.setBlockState(at.add(1, 0, 0), com.rivalrealms.block.ModBlocks.REALM_BANNER.getDefaultState());
+                    owner.sendMessage(Text.literal("Your camp has grown - trophies and a banner now mark it (level "
+                            + base.level() + ").").formatted(Formatting.GOLD), true);
+                    state.chronicle(world.getTime(), base.name() + " has become a landmark of the roads.", false);
+                }
+            }
+        }
+    }
+
+    private static final Map<java.util.UUID, BlockPos> TREASURES = new HashMap<>();
+
+    /** Registers a buried treasure so the world can hint at it. */
+    public static void registerTreasure(java.util.UUID hunter, BlockPos pos) {
+        TREASURES.put(hunter, pos.toImmutable());
+    }
+
+    private static void tickTreasureHints(ServerWorld world) {
+        if (TREASURES.isEmpty() || world.getTime() % 200L != 0L) {
+            return;
+        }
+        Iterator<Map.Entry<java.util.UUID, BlockPos>> iterator = TREASURES.entrySet().iterator();
+        while (iterator.hasNext()) {
+            Map.Entry<java.util.UUID, BlockPos> entry = iterator.next();
+            var hunter = world.getServer().getPlayerManager().getPlayer(entry.getKey());
+            if (hunter == null) {
+                continue;
+            }
+            BlockPos spot = entry.getValue();
+            double distance = Math.sqrt(hunter.squaredDistanceTo(spot.getX(), spot.getY(), spot.getZ()));
+            if (distance < 2.5) {
+                hunter.sendMessage(Text.literal("The X on your map is under your boots.").formatted(Formatting.GOLD), true);
+                iterator.remove();
+            } else if (distance < 24.0 && world.isChunkLoaded(spot.getX() >> 4, spot.getZ() >> 4)) {
+                world.spawnParticles(net.minecraft.particle.ParticleTypes.HAPPY_VILLAGER,
+                        spot.getX() + 0.5, spot.getY() + 1.2, spot.getZ() + 0.5, 3, 0.3, 0.2, 0.3, 0.0);
+            }
         }
     }
 

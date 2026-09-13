@@ -63,7 +63,17 @@ public final class RealmEvents {
                             world.getRegistryKey().getValue(), exception);
                 }
             }
+            if (world.getTime() % 100L == 0) {
+                try {
+                    RoadsideEncounters.tick(world);
+                } catch (RuntimeException exception) {
+                    RivalRealms.LOGGER.error("Roadside encounter tick failed in {}",
+                            world.getRegistryKey().getValue(), exception);
+                }
+            }
         }
+
+        RealmMusic.tick();
 
         for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
             if (player.age % 1200 != 0) {
@@ -480,6 +490,8 @@ public final class RealmEvents {
 
         base.setLastRaid(world.getTime());
         state.markDirty();
+        // A raid with real teeth becomes a SIEGE: bells, messengers, refugees.
+        LivingRealm.beginSiege(world, base, attacker.faction());
         BlockPos center = base.center();
         List<Entity> defenders = world.getOtherEntities(null, new Box(center).expand(base.radius()),
                 entity -> entity instanceof SurvivorEntity guard
@@ -665,8 +677,12 @@ public final class RealmEvents {
             return;
         }
         BlockPos center = surfacePosition(world, requested);
-        // Encounter mix: a Marauder warband hunting throats, a Hearthfolk
-        // caravan trading its way across the realm, or plain frontier wanderers.
+        // Encounter mix: warbands and caravans, but also the quieter road -
+        // lost children, stranded carts, disputes, festivals and gossip.
+        if (world.random.nextInt(3) == 0) {
+            RoadsideEncounters.spawn(world, player.getBlockPos());
+            return;
+        }
         Archetype culture;
         int roll = world.random.nextInt(5);
         if (roll == 0) {

@@ -243,7 +243,7 @@ public final class ModCommands {
         try {
             variant = SettlementVariant.valueOf(variantId.toUpperCase(java.util.Locale.ROOT));
         } catch (IllegalArgumentException exception) {
-            source.sendError(Text.literal("Unknown landmark. Use fortress, citadel, town, royal_city, harbor, shipyard, skyport, airship_yard, outpost, mill, ruin, graveyard, farmstead, or temple."));
+            source.sendError(Text.literal("Unknown landmark. Use fortress, citadel, town, royal_city, harbor, shipyard, skyport, airship_yard, outpost, mill, ruin, graveyard, farmstead, temple, hermitage, or anomaly."));
             return 0;
         }
         BuildStyle style = switch (variant) {
@@ -252,7 +252,7 @@ public final class ModCommands {
             case HARBOR, SHIPYARD -> BuildStyle.PIRATE;
             case SKYPORT, AIRSHIP_YARD -> BuildStyle.SKY;
             case MILL -> BuildStyle.KNIGHT;
-            case RUIN, GRAVEYARD, FARMSTEAD, TEMPLE -> BuildStyle.CUSTOM;
+            case RUIN, GRAVEYARD, FARMSTEAD, TEMPLE, HERMITAGE, ANOMALY -> BuildStyle.CUSTOM;
         };
         ServerWorld world = player.getServerWorld();
         BlockPos center = player.getBlockPos();

@@ -51,5 +51,7 @@
   "block.rivalrealms.hearth_lantern": "Hearth Lantern",
   "block.rivalrealms.supply_crate": "Supply Crate",
   "block.rivalrealms.road_stone": "Road Stone",
-  "block.rivalrealms.arrow_slit": "Arrow Slit Wall"
+  "block.rivalrealms.arrow_slit": "Arrow Slit Wall",
+  "item.rivalrealms.camp_kit": "Camp Kit",
+  "item.rivalrealms.treasure_map": "Treasure Map"
 }

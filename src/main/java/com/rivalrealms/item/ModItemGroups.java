@@ -63,6 +63,9 @@ public final class ModItemGroups {
                         entries.add(ModItems.MERCHANT_SHIP_SPAWN_EGG);
                         entries.add(ModItems.PIRATE_SHIP_SPAWN_EGG);
                         entries.add(ModItems.GALLEON_SHIP_SPAWN_EGG);
+                        // Camp life & cartography
+                        entries.add(ModItems.CAMP_KIT);
+                        entries.add(ModItems.TREASURE_MAP);
                         // Trade & paperwork
                         entries.add(ModItems.ROYAL_COIN);
                         entries.add(ModItems.ROYAL_JEWELRY);
