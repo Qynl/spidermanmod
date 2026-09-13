@@ -18,114 +18,20 @@ Fabric Loom: 1.6.12
 :remapping 50 mods from modImplementation (java-api)
 
 > Task :compileJava
-/home/runner/work/spidermanmod/spidermanmod/src/main/java/com/spiderman/mod/entity/BiteGoal.java:115: error: cannot find symbol
-                player.playSound(SoundEvents.ENTITY_SPIDER_HURT.value(), 1.0f, 0.4f);
-                                                               ^
-  symbol:   method value()
-  location: variable ENTITY_SPIDER_HURT of type SoundEvent
-/home/runner/work/spidermanmod/spidermanmod/src/main/java/com/spiderman/mod/entity/BiteGoal.java:117: error: cannot find symbol
-                mob.playSound(SoundEvents.ENTITY_SPIDER_DEATH.value(), 1.0f, 1.5f);
-                                                             ^
-  symbol:   method value()
-  location: variable ENTITY_SPIDER_DEATH of type SoundEvent
-/home/runner/work/spidermanmod/spidermanmod/src/main/java/com/spiderman/mod/entity/RadioactiveSpiderEntity.java:99: error: cannot find symbol
-                    playSound(SoundEvents.ENTITY_SPIDER_HURT.value(), 0.8f, 1.8f);
-                                                            ^
-  symbol:   method value()
-  location: variable ENTITY_SPIDER_HURT of type SoundEvent
-/home/runner/work/spidermanmod/spidermanmod/src/main/java/com/spiderman/mod/entity/RadioactiveSpiderEntity.java:134: error: cannot find symbol
-            getWorld().playSound(null, getX(), getY(), getZ(), SoundEvents.ENTITY_SPIDER_DEATH.value(), getSoundCategory(), 1.0f, 0.6f);
-                                                                                              ^
-  symbol:   method value()
-  location: variable ENTITY_SPIDER_DEATH of type SoundEvent
-/home/runner/work/spidermanmod/spidermanmod/src/main/java/com/spiderman/mod/entity/WebShotEntity.java:81: error: cannot find symbol
-            world.playSound(null, eye.x, eye.y, eye.z, SoundEvents.ENTITY_FIREWORK_ROCKET_LAUNCH.value(),
-                                                                                                ^
-  symbol:   method value()
-  location: variable ENTITY_FIREWORK_ROCKET_LAUNCH of type SoundEvent
-/home/runner/work/spidermanmod/spidermanmod/src/main/java/com/spiderman/mod/entity/WebShotEntity.java:332: error: cannot find symbol
-                world.playSound(null, x, y, z, SoundEvents.BLOCK_COBWEB_BREAK.value(), SoundCategory.PLAYERS, 0.8f, 0.7f);
-                                                                             ^
-  symbol:   method value()
-  location: variable BLOCK_COBWEB_BREAK of type SoundEvent
-/home/runner/work/spidermanmod/spidermanmod/src/main/java/com/spiderman/mod/entity/WebShotEntity.java:334: error: cannot find symbol
-                world.playSound(null, x, y, z, SoundEvents.BLOCK_COBWEB_HIT.value(), SoundCategory.PLAYERS, 0.6f, 1.2f);
-                                                                           ^
-  symbol:   method value()
-  location: variable BLOCK_COBWEB_HIT of type SoundEvent
-/home/runner/work/spidermanmod/spidermanmod/src/main/java/com/spiderman/mod/server/ComboTracker.java:65: error: cannot find symbol
-                player.playSound(SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP.value(), 1.0f, 1.0f + powers.combo * 0.05f);
-                                                                         ^
-  symbol:   method value()
-  location: variable ENTITY_EXPERIENCE_ORB_PICKUP of type SoundEvent
-/home/runner/work/spidermanmod/spidermanmod/src/main/java/com/spiderman/mod/server/TransformLogic.java:66: error: cannot find symbol
-                player.playSound(SoundEvents.ENTITY_SPIDER_HURT.value(), 1.0f, 0.5f);
-                                                               ^
-  symbol:   method value()
-  location: variable ENTITY_SPIDER_HURT of type SoundEvent
-/home/runner/work/spidermanmod/spidermanmod/src/main/java/com/spiderman/mod/server/TransformLogic.java:68: error: cannot find symbol
-                    SoundEvents.ENTITY_SPIDER_DEATH.value(), player.getSoundCategory(), 0.8f, 0.6f);
-                                                   ^
-  symbol:   method value()
-  location: variable ENTITY_SPIDER_DEATH of type SoundEvent
-/home/runner/work/spidermanmod/spidermanmod/src/main/java/com/spiderman/mod/server/TransformLogic.java:77: error: cannot find symbol
-            player.playSound(SoundEvents.BLOCK_BEACON_POWER_SELECT.value(), 0.8f, 1.5f);
+/home/runner/work/spidermanmod/spidermanmod/src/main/java/com/spiderman/mod/server/SenseLogic.java:44: error: local variables referenced from a lambda expression must be final or effectively final
+                e -> e.isAlive() && e.squaredDistanceTo(player) < radius * radius);
                                                                   ^
-  symbol:   method value()
-  location: variable BLOCK_BEACON_POWER_SELECT of type SoundEvent
-/home/runner/work/spidermanmod/spidermanmod/src/main/java/com/spiderman/mod/server/TransformLogic.java:122: error: cannot find symbol
-                    player.playSound(SoundEvents.ENTITY_PLAYER_LEVELUP.value(), 1.0f, 1.2f);
-                                                                      ^
-  symbol:   method value()
-  location: variable ENTITY_PLAYER_LEVELUP of type SoundEvent
-/home/runner/work/spidermanmod/spidermanmod/src/main/java/com/spiderman/mod/server/TransformLogic.java:123: error: cannot find symbol
-                    player.playSound(SoundEvents.UI_TOAST_CHALLENGE_COMPLETE.value(), 0.8f, 1.3f);
-                                                                            ^
-  symbol:   method value()
-  location: variable UI_TOAST_CHALLENGE_COMPLETE of type SoundEvent
-/home/runner/work/spidermanmod/spidermanmod/src/main/java/com/spiderman/mod/server/TransformLogic.java:124: error: cannot find symbol
-                    player.playSound(SoundEvents.BLOCK_BEACON_ACTIVATE.value(), 0.6f, 1.5f);
-                                                                      ^
-  symbol:   method value()
-  location: variable BLOCK_BEACON_ACTIVATE of type SoundEvent
-/home/runner/work/spidermanmod/spidermanmod/src/main/java/com/spiderman/mod/server/AbilityExecutor.java:277: error: cannot find symbol
-            player.playSound(SoundEvents.ENTITY_ENDERMAN_TELEPORT.value(), 0.4f, 1.5f);
-                                                                 ^
-  symbol:   method value()
-  location: variable ENTITY_ENDERMAN_TELEPORT of type SoundEvent
-/home/runner/work/spidermanmod/spidermanmod/src/main/java/com/spiderman/mod/server/AbilityExecutor.java:353: error: cannot find symbol
-            player.playSound(SoundEvents.ENTITY_FISHING_BOBBER_RETRIEVE.value(), 1.0f, 0.7f);
-                                                                       ^
-  symbol:   method value()
-  location: variable ENTITY_FISHING_BOBBER_RETRIEVE of type SoundEvent
-/home/runner/work/spidermanmod/spidermanmod/src/main/java/com/spiderman/mod/server/AbilityExecutor.java:394: error: cannot find symbol
-                player.playSound(SoundEvents.BLOCK_COBWEB_PLACE.value(), 1.0f, 0.9f);
-                                                               ^
-  symbol:   method value()
-  location: variable BLOCK_COBWEB_PLACE of type SoundEvent
-/home/runner/work/spidermanmod/spidermanmod/src/main/java/com/spiderman/mod/server/AbilityExecutor.java:522: error: cannot find symbol
-            world.playSound(null, center.x, center.y, center.z, SoundEvents.ENTITY_SPIDER_HURT.value(), SoundCategory.PLAYERS, 0.8f, 0.5f);
-                                                                                              ^
-  symbol:   method value()
-  location: variable ENTITY_SPIDER_HURT of type SoundEvent
-/home/runner/work/spidermanmod/spidermanmod/src/main/java/com/spiderman/mod/server/AbilityExecutor.java:588: error: cannot find symbol
-            player.playSound(SoundEvents.BLOCK_WOOL_PLACE.value(), 0.9f, 0.9f);
-                                                         ^
-  symbol:   method value()
-  location: variable BLOCK_WOOL_PLACE of type SoundEvent
-/home/runner/work/spidermanmod/spidermanmod/src/main/java/com/spiderman/mod/server/AbilityExecutor.java:589: error: cannot find symbol
-            player.playSound(SoundEvents.BLOCK_COBWEB_PLACE.value(), 1.0f, 1.2f);
-                                                           ^
-  symbol:   method value()
-  location: variable BLOCK_COBWEB_PLACE of type SoundEvent
+/home/runner/work/spidermanmod/spidermanmod/src/main/java/com/spiderman/mod/server/SenseLogic.java:44: error: local variables referenced from a lambda expression must be final or effectively final
+                e -> e.isAlive() && e.squaredDistanceTo(player) < radius * radius);
+                                                                           ^
 Note: /home/runner/work/spidermanmod/spidermanmod/src/main/java/com/spiderman/mod/entity/WebShotEntity.java uses or overrides a deprecated API.
 Note: Recompile with -Xlint:deprecation for details.
 Note: /home/runner/work/spidermanmod/spidermanmod/src/main/java/com/spiderman/mod/server/TransformLogic.java uses unchecked or unsafe operations.
 Note: Recompile with -Xlint:unchecked for details.
-20 errors
+2 errors
 
 > Task :compileJava FAILED
-gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1789300616672.json
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1789300896900.json
 
 FAILURE: Build failed with an exception.
 
@@ -328,5 +234,5 @@ You can use '--warning-mode all' to show the individual deprecation warnings and
 
 For more on this, please refer to https://docs.gradle.org/8.10.2/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
 
-BUILD FAILED in 52s
+BUILD FAILED in 1m 1s
 1 actionable task: 1 executed
