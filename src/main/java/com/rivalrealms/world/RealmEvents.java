@@ -1022,7 +1022,8 @@ public final class RealmEvents {
         BlockPos center = base.center();
         List<net.minecraft.entity.mob.MobEntity> folk = world.getEntitiesByClass(
                 net.minecraft.entity.mob.MobEntity.class,
-                new Box(center.add(-24, -8, -24), center.add(24, 16, 24)),
+                new Box(center.getX() - 24, center.getY() - 8, center.getZ() - 24,
+                        center.getX() + 24, center.getY() + 16, center.getZ() + 24),
                 entity -> entity instanceof SurvivorEntity);
         if (folk.isEmpty()) {
             return;
