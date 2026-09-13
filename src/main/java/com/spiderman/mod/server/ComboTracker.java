@@ -1,5 +1,6 @@
 package com.spiderman.mod.server;
 
+import com.spiderman.mod.util.SoundUtil;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
@@ -62,7 +63,7 @@ public final class ComboTracker {
         if (powers.combo >= 5) {
             try {
                 target.addStatusEffect(new StatusEffectInstance(StatusEffects.GLOWING, 40, 0));
-                player.playSound(SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP.value(), 1.0f, 1.0f + powers.combo * 0.05f);
+                player.playSound(SoundUtil.unwrap(SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP), 1.0f, 1.0f + powers.combo * 0.05f);
             } catch (Exception ignored) {}
         }
         

@@ -1,5 +1,6 @@
 package com.spiderman.mod.entity;
 
+import com.spiderman.mod.util.SoundUtil;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
@@ -96,7 +97,7 @@ public class RadioactiveSpiderEntity extends SpiderEntity {
                     Vec3d toTarget = getTarget().getPos().subtract(getPos()).normalize();
                     setVelocity(toTarget.x * 0.8, 0.7, toTarget.z * 0.8);
                     velocityModified = true;
-                    playSound(SoundEvents.ENTITY_SPIDER_HURT.value(), 0.8f, 1.8f);
+                    playSound(SoundUtil.unwrap(SoundEvents.ENTITY_SPIDER_HURT), 0.8f, 1.8f);
                     jumpCooldown = 60 + (int)(Math.random() * 40);
                 } catch (Exception ignored) {}
             }
@@ -131,7 +132,7 @@ public class RadioactiveSpiderEntity extends SpiderEntity {
                 sw.spawnParticles(ParticleTypes.ITEM_COBWEB, getX(), getY() + 0.5, getZ(), 20, 0.5, 0.5, 0.5, 0.15);
                 sw.spawnParticles(ParticleTypes.ELECTRIC_SPARK, getX(), getY() + 0.5, getZ(), 15, 0.4, 0.4, 0.4, 0.1);
             }
-            getWorld().playSound(null, getX(), getY(), getZ(), SoundEvents.ENTITY_SPIDER_DEATH.value(), getSoundCategory(), 1.0f, 0.6f);
+            getWorld().playSound(null, getX(), getY(), getZ(), SoundUtil.unwrap(SoundEvents.ENTITY_SPIDER_DEATH), getSoundCategory(), 1.0f, 0.6f);
         } catch (Exception ignored) {}
     }
 }

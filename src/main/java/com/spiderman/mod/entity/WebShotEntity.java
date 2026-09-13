@@ -1,5 +1,6 @@
 package com.spiderman.mod.entity;
 
+import com.spiderman.mod.util.SoundUtil;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
@@ -78,7 +79,7 @@ public class WebShotEntity extends Entity {
         world.playSound(null, eye.x, eye.y, eye.z, ModSounds.WEB_SHOT,
                 SoundCategory.PLAYERS, 1.0f, heavy ? 0.55f : 1.25f);
         if (heavy) {
-            world.playSound(null, eye.x, eye.y, eye.z, SoundEvents.ENTITY_FIREWORK_ROCKET_LAUNCH.value(),
+            world.playSound(null, eye.x, eye.y, eye.z, SoundUtil.unwrap(SoundEvents.ENTITY_FIREWORK_ROCKET_LAUNCH),
                     SoundCategory.PLAYERS, 0.7f, 0.8f);
         }
         return shot;
@@ -328,10 +329,10 @@ public class WebShotEntity extends Entity {
         try {
             world.playSound(null, x, y, z, ModSounds.WEB_SPLAT, SoundCategory.PLAYERS, 1.0f, heavy ? 0.45f : 1.15f);
             if (heavy) {
-                world.playSound(null, x, y, z, SoundEvents.ENTITY_GENERIC_EXPLODE.value(), SoundCategory.PLAYERS, 0.7f, 1.1f);
-                world.playSound(null, x, y, z, SoundEvents.BLOCK_COBWEB_BREAK.value(), SoundCategory.PLAYERS, 0.8f, 0.7f);
+                world.playSound(null, x, y, z, SoundUtil.unwrap(SoundEvents.ENTITY_GENERIC_EXPLODE), SoundCategory.PLAYERS, 0.7f, 1.1f);
+                world.playSound(null, x, y, z, SoundUtil.unwrap(SoundEvents.BLOCK_COBWEB_BREAK), SoundCategory.PLAYERS, 0.8f, 0.7f);
             } else {
-                world.playSound(null, x, y, z, SoundEvents.BLOCK_COBWEB_HIT.value(), SoundCategory.PLAYERS, 0.6f, 1.2f);
+                world.playSound(null, x, y, z, SoundUtil.unwrap(SoundEvents.BLOCK_COBWEB_HIT), SoundCategory.PLAYERS, 0.6f, 1.2f);
             }
         } catch (Exception ignored) {}
     }
