@@ -27,7 +27,21 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
 
       - name: Build with Gradle
-        run: chmod +x gradlew && ./gradlew build --stacktrace
+        run: |
+          chmod +x gradlew
+          ./gradlew build --stacktrace 2>&1 | tee /tmp/gradle.log
+          exit ${PIPESTATUS[0]}
+
+      - name: Report build failure (create issue with log)
+        if: failure() && github.ref == 'refs/heads/arena/01a09235-spidermanmod'
+        run: |
+          tail -n 300 /tmp/gradle.log > /tmp/fail.txt
+          echo "---" >> /tmp/fail.txt
+          ls -lh build/ >> /tmp/fail.txt 2>&1 || true
+          gh issue create --title "gradle build failed $GITHUB_RUN_ID" --body-file /tmp/fail.txt || true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload mod jar
         uses: actions/upload-artifact@v4
