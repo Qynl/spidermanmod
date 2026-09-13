@@ -82,6 +82,15 @@ public final class ModSounds {
     public static final SoundEvent QUARREL_A = register("voice.quarrel_a");
     public static final SoundEvent QUARREL_B = register("voice.quarrel_b");
     public static final SoundEvent TOWN_PRIDE = register("voice.town_pride");
+    public static final SoundEvent WARY_GREETING = register("voice.wary_greeting");
+    public static final SoundEvent WARM_GREETING = register("voice.warm_greeting");
+    public static final SoundEvent MARAUDER_GROWL = register("voice.marauder_growl");
+    public static final SoundEvent ESCORT_HAIL = register("voice.escort_hail");
+    public static final SoundEvent CHILD_ASK = register("voice.child_ask");
+    public static final SoundEvent MARKET_HERALD = register("voice.market_herald");
+    public static final SoundEvent HUNGER_CRY = register("voice.hunger_cry");
+    public static final SoundEvent TOWN_GROWS = register("voice.town_grows");
+    public static final SoundEvent STANDOFF = register("voice.standoff");
 
     private static final Map<String, SoundEvent> VOICES = Map.ofEntries(
             Map.entry("siege_defense", SIEGE_DEFENSE),
@@ -143,7 +152,16 @@ public final class ModSounds {
             Map.entry("triumph_recount", TRIUMPH_RECOUNT),
             Map.entry("quarrel_a", QUARREL_A),
             Map.entry("quarrel_b", QUARREL_B),
-            Map.entry("town_pride", TOWN_PRIDE));
+            Map.entry("town_pride", TOWN_PRIDE),
+            Map.entry("wary_greeting", WARY_GREETING),
+            Map.entry("warm_greeting", WARM_GREETING),
+            Map.entry("marauder_growl", MARAUDER_GROWL),
+            Map.entry("escort_hail", ESCORT_HAIL),
+            Map.entry("child_ask", CHILD_ASK),
+            Map.entry("market_herald", MARKET_HERALD),
+            Map.entry("hunger_cry", HUNGER_CRY),
+            Map.entry("town_grows", TOWN_GROWS),
+            Map.entry("standoff", STANDOFF));
 
     private static SoundEvent register(String name) {
         return Registry.register(Registries.SOUND_EVENT, RivalRealms.id(name), SoundEvent.of(RivalRealms.id(name)));

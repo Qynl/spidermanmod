@@ -200,6 +200,10 @@ public final class LivingRealm {
         if (base.food() == 0 && !pop.isEmpty()) {
             int famine = base.famineCycles() + 1;
             base.setFamineCycles(famine);
+            // An empty granary is cried aloud the moment it's found.
+            if (famine == 1) {
+                com.rivalrealms.sound.ModSounds.playVoice(world, base.center(), "hunger_cry");
+            }
             if (famine >= 3 && world.random.nextFloat() < 0.5f) {
                 SurvivorEntity leaver = pop.get(world.random.nextInt(pop.size()));
                 state.chronicle(world.getTime(), leaver.getName().getString()
@@ -921,6 +925,9 @@ public final class LivingRealm {
             }
             RealmMusic.play(world, base.center(), song);
             com.rivalrealms.sound.ModSounds.playVoice(world, base.center(), "celebration");
+            if ("harvest".equals(what)) {
+                com.rivalrealms.sound.ModSounds.playVoice(world, base.center(), "market_herald");
+            }
             state.chronicle(world.getTime(), base.name() + " kept " + what
                     + " with fires, fiddles and full cups.", false);
         }
@@ -1111,6 +1118,7 @@ public final class LivingRealm {
                 if (base.famineCycles() >= 2) {
                     base.setFamineCycles(0);
                     state.upgrade(base);
+                    com.rivalrealms.sound.ModSounds.playVoice(world, base.center(), "town_grows");
                     BlockPos at = surface(world, base.center().add(2, 0, 2));
                     world.setBlockState(at, com.rivalrealms.block.ModBlocks.TROPHY_SKULL.getDefaultState());
                     world.setBlockState(at.add(1, 0, 0), com.rivalrealms.block.ModBlocks.REALM_BANNER.getDefaultState());

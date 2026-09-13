@@ -358,5 +358,59 @@
   "sounds": [
    "rivalrealms:voice/town_pride"
   ]
+ },
+ "voice.wary_greeting": {
+  "subtitle": "subtitles.rivalrealms.voice.wary_greeting",
+  "sounds": [
+   "rivalrealms:voice/wary_greeting"
+  ]
+ },
+ "voice.warm_greeting": {
+  "subtitle": "subtitles.rivalrealms.voice.warm_greeting",
+  "sounds": [
+   "rivalrealms:voice/warm_greeting"
+  ]
+ },
+ "voice.marauder_growl": {
+  "subtitle": "subtitles.rivalrealms.voice.marauder_growl",
+  "sounds": [
+   "rivalrealms:voice/marauder_growl"
+  ]
+ },
+ "voice.escort_hail": {
+  "subtitle": "subtitles.rivalrealms.voice.escort_hail",
+  "sounds": [
+   "rivalrealms:voice/escort_hail"
+  ]
+ },
+ "voice.child_ask": {
+  "subtitle": "subtitles.rivalrealms.voice.child_ask",
+  "sounds": [
+   "rivalrealms:voice/child_ask"
+  ]
+ },
+ "voice.market_herald": {
+  "subtitle": "subtitles.rivalrealms.voice.market_herald",
+  "sounds": [
+   "rivalrealms:voice/market_herald"
+  ]
+ },
+ "voice.hunger_cry": {
+  "subtitle": "subtitles.rivalrealms.voice.hunger_cry",
+  "sounds": [
+   "rivalrealms:voice/hunger_cry"
+  ]
+ },
+ "voice.town_grows": {
+  "subtitle": "subtitles.rivalrealms.voice.town_grows",
+  "sounds": [
+   "rivalrealms:voice/town_grows"
+  ]
+ },
+ "voice.standoff": {
+  "subtitle": "subtitles.rivalrealms.voice.standoff",
+  "sounds": [
+   "rivalrealms:voice/standoff"
+  ]
  }
 }

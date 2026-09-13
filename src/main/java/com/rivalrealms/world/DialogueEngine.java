@@ -109,6 +109,14 @@ public final class DialogueEngine {
                     npc.getName().getString() + ": \"Morning! Ovens are hot and the day's still ours.\"");
         }
 
+        // Children who know you always want the stories retold.
+        if (npc.isChild() && npc.lastMet(listener.getUuid()) != null
+                && world.random.nextInt(3) == 0) {
+            return new Moment("child_ask", 1.15f, 1.0f,
+                    npc.getName().getString() + " tugs your sleeve: \"Tell it again! "
+                            + "The one about the walls!\"");
+        }
+
         // 3. Recognition: an old face returning after days away.
         Long lastMet = npc.lastMet(listener.getUuid());
         if (lastMet != null && world.getTime() - lastMet >= 36000L && world.random.nextInt(2) == 0) {
@@ -140,6 +148,21 @@ public final class DialogueEngine {
                         npc.getName().getString() + " settles in to tell a story: \"" + story + "\"");
             }
         }
+        // Standing changes the hello: the hated are kept at arm's length,
+        // and a true friend of the town gets a hero's welcome.
+        int standing = RealmState.get(world).getReputation(listener.getUuid(),
+                npc.effectiveFaction());
+        if (standing <= -20 && world.random.nextInt(2) == 0) {
+            return new Moment("wary_greeting", 0.9f, 1.0f,
+                    npc.getName().getString() + " eyes you coldly: \"Say your business, "
+                            + "stranger. And be quick about it.\"");
+        }
+        if (standing >= 40 && world.random.nextInt(2) == 0) {
+            return new Moment("warm_greeting", 1.02f, 1.1f,
+                    npc.getName().getString() + " lights up: \"A friend of the town! "
+                            + "Folks have been asking after you!\"");
+        }
+
         // 6. A people's hello: every culture greets in its own voice.
         if (world.random.nextInt(2) == 0) {
             com.rivalrealms.entity.Archetype folk = npc.getArchetype();

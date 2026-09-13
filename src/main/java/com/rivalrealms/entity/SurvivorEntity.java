@@ -286,10 +286,13 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
             return;
         }
         // Battle joined: a bark over the din, never more than one at a time.
+        // Raiders menacing a player growl a proper threat instead.
         if (getTarget() != null && time >= nextBattleCry
                 && getWorld() instanceof ServerWorld battleWorld) {
+            String bark = getTarget() instanceof ServerPlayerEntity
+                    && getArchetype() == Archetype.MARAUDER ? "marauder_growl" : "combat_bark";
             com.rivalrealms.sound.ModSounds.playProfiled(battleWorld, getBlockPos(),
-                    "combat_bark", getUuid(), 1.2f, 1.15f);
+                    bark, getUuid(), 1.2f, 1.15f);
             nextBattleCry = time + 500L + random.nextInt(900);
         }
         // Interruptible: trouble cuts chatter off with a startled look.
@@ -301,6 +304,30 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
             return;
         }
         nextQuip = time + 300L + random.nextInt(600);
+        // A hired sword checks in with their captain.
+        PlayerEntity captain = isRecruited() && ownerUuid != null
+                ? getWorld().getPlayerByUuid(ownerUuid) : null;
+        if (captain != null && squaredDistanceTo(captain) < 144.0 && random.nextInt(3) == 0
+                && getWorld() instanceof ServerWorld escortWorld) {
+            com.rivalrealms.sound.ModSounds.playProfiled(escortWorld, getBlockPos(),
+                    "escort_hail", getUuid(), 1.0f, 1.0f);
+            return;
+        }
+        // Rival banners share a street: a quiet warning keeps the peace. For now.
+        if (getWorld() instanceof ServerWorld streetWorld && random.nextInt(4) == 0) {
+            com.rivalrealms.world.RealmState street =
+                    com.rivalrealms.world.RealmState.get(streetWorld);
+            for (net.minecraft.entity.Entity stranger : streetWorld.getOtherEntities(this,
+                    getBoundingBox().expand(6.0), e -> e instanceof SurvivorEntity passerby
+                            && passerby.isAlive())) {
+                SurvivorEntity other = (SurvivorEntity) stranger;
+                if (street.isHostile(effectiveFaction(), other.effectiveFaction())) {
+                    com.rivalrealms.sound.ModSounds.playProfiled(streetWorld, getBlockPos(),
+                            "standoff", getUuid(), 0.9f, 1.0f);
+                    break;
+                }
+            }
+        }
         if (random.nextInt(20) != 0 || eatTimer > 0) {
             return;
         }
