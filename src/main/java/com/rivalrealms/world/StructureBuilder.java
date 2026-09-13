@@ -832,7 +832,11 @@ public final class StructureBuilder {
         // mid-generation reports a garbage surface, and a building set on that
         // garbage floats. When the chunk is already whole this is a no-op.
         world.getChunk(x >> 4, z >> 4, net.minecraft.world.chunk.ChunkStatus.FULL, true);
-        BlockPos top = world.getTopPosition(Heightmap.Type.WORLD_SURFACE, new BlockPos(x, world.getBottomY(), z));
+        // MOTION_BLOCKING_NO_LEAVES: a tree canopy is not ground. Building on
+        // the leaves used to leave every settlement in a forest standing on a
+        // skirt of supports down to the real soil.
+        BlockPos top = world.getTopPosition(Heightmap.Type.MOTION_BLOCKING_NO_LEAVES,
+                new BlockPos(x, world.getBottomY(), z));
         int y = Math.min(top.getY() - 1, world.getTopY() - 2);
         int bottom = world.getBottomY() + 1;
         // Verify the report: the named surface block must actually be there.
@@ -3736,17 +3740,18 @@ public final class StructureBuilder {
             Block plinth = at.getBlock() == Blocks.HAY_BLOCK
                     || at.getBlock() == Blocks.WHITE_WOOL || at.getBlock() == Blocks.RED_WOOL
                     ? Blocks.DIRT : Blocks.COBBLESTONE;
-            // No depth cap: a build whose probe lied gets carried all the way
-            // down to honest ground, however far that is. The first solid
-            // block or water stops the fill, so piers and stilts keep their
-            // legs in the tide.
+            // A short, blended footing: three blocks of stone under the edge,
+            // then dirt that the grass takes over. Cliffs and steep slopes
+            // are terrain, not missing supports - stamping stone all the way
+            // down them plastered the countryside in cobble curtains. Water
+            // still stops the fill so piers and stilts keep their legs.
             BlockPos below = pos.down();
-            while (below.getY() > world.getBottomY() + 1) {
+            for (int skirt = 0; skirt < 10 && below.getY() > world.getBottomY() + 1; skirt++) {
                 BlockState state = world.getBlockState(below);
                 if (!state.isAir() || !world.getFluidState(below).isEmpty()) {
                     break;
                 }
-                set(world, below, plinth);
+                set(world, below, skirt < 3 ? plinth : Blocks.DIRT);
                 below = below.down();
             }
         }
