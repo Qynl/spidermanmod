@@ -89,14 +89,8 @@ jobs:
         run: |
           chmod +x build-local/build.sh build-local/test.sh
           export JAVAC="$JAVA_HOME/bin/javac"
-          ./build-local/build.sh 2>&1 | tee /tmp/local.log
-          ./build-local/test.sh 2>&1 | tee -a /tmp/local.log
-
-      - name: Show local log on failure
-        if: failure()
-        run: |
-          tail -n 1000 /tmp/local.log
-          echo "---END---"
+          ./build-local/build.sh
+          ./build-local/test.sh
 
       - name: Upload offline jar
         uses: actions/upload-artifact@v4
