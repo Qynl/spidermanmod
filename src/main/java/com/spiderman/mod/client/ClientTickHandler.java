@@ -19,40 +19,19 @@ public final class ClientTickHandler {
     private static boolean wasSneaking = false;
     private static long lastJumpTick = 0;
     private static final long JUMP_COOLDOWN = 12; // Prevent spam
+    private static int wheelGrace = 0; // Prevents flicker
 
     private ClientTickHandler() {
     }
 
+    // FIXED: No more 0..511 loop - that caused GL ERROR Invalid key 479..511 spam and extreme lag at lvl4
+    // Now uses only isPressed() which is valid and fast
     public static boolean isWheelDown() {
         try {
-            MinecraftClient mc = MinecraftClient.getInstance();
-            if (mc == null || mc.getWindow() == null) return false;
-            long handle = mc.getWindow().getHandle();
-            try {
-                if (Keybinds.wheel.isPressed()) return true;
-            } catch (Exception ignored) {}
-            try {
-                for (int code = 0; code < 512; code++) {
-                    if (net.minecraft.client.util.InputUtil.isKeyPressed(handle, code)) {
-                        if (Keybinds.wheel.matchesKey(code, 0)) {
-                            return true;
-                        }
-                    }
-                }
-            } catch (Exception ignored) {
-                try {
-                    if (net.minecraft.client.util.InputUtil.isKeyPressed(handle, org.lwjgl.glfw.GLFW.GLFW_KEY_G)) {
-                        return true;
-                    }
-                } catch (Exception ignored2) {}
-            }
-            return false;
+            if (Keybinds.wheel == null) return false;
+            return Keybinds.wheel.isPressed();
         } catch (Exception e) {
-            try {
-                return Keybinds.wheel.isPressed();
-            } catch (Exception e2) {
-                return false;
-            }
+            return false;
         }
     }
 
@@ -60,11 +39,19 @@ public final class ClientTickHandler {
         ClientPowers.tick();
         ClientPowers.clientTick++;
         if (client.player == null || client.world == null || !client.player.isAlive()) {
+            wheelGrace = 0;
             return;
         }
 
         if (ClientPowers.has) {
-            boolean held = isWheelDown();
+            boolean rawHeld = isWheelDown();
+            // Grace ticks: keep wheel open for 4 ticks after release to prevent flicker
+            if (rawHeld) {
+                wheelGrace = 4;
+            } else if (wheelGrace > 0) {
+                wheelGrace--;
+            }
+            boolean held = rawHeld || wheelGrace > 0;
             if (held) {
                 if (client.currentScreen == null) {
                     client.setScreen(new WheelScreen());
@@ -74,8 +61,10 @@ public final class ClientTickHandler {
                     wheel.confirmAndClose();
                 }
             }
+            // Drain wasPressed to prevent vanilla handling
             while (Keybinds.wheel.wasPressed()) {}
         } else {
+            wheelGrace = 0;
             while (Keybinds.wheel.wasPressed()) {}
         }
 
