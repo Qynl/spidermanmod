@@ -1,6 +1,5 @@
 package com.rivalrealms.block;
 
-import com.mojang.serialization.MapCodec;
 import com.rivalrealms.world.ContractEngine;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
@@ -20,11 +19,6 @@ import net.minecraft.world.World;
 public class NoticeBoardBlock extends Block {
     public NoticeBoardBlock(Settings settings) {
         super(settings);
-    }
-
-    @Override
-    public MapCodec<? extends Block> getCodec() {
-        return createCodec(NoticeBoardBlock::new);
     }
 
     @Override
