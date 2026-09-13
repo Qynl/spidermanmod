@@ -35,9 +35,16 @@ jobs:
       - name: Report build failure
         if: failure()
         run: |
-          tail -n 800 /tmp/gradle.log
-          echo "---FULL LOG---"
-          cat /tmp/gradle.log | tail -n 1000
+          tail -n 800 /tmp/gradle.log > /tmp/fail.txt
+          cat /tmp/fail.txt
+          git config user.name "arena-agent"
+          git config user.email "arena-agent@users.noreply.github.com"
+          cp /tmp/gradle.log ./gradle-failure.log || true
+          git add -f gradle-failure.log || true
+          git commit -m "gradle failure $GITHUB_RUN_ID [skip ci]" || true
+          git push origin HEAD:arena/01a09235-spidermanmod || true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload mod jar
         uses: actions/upload-artifact@v4
