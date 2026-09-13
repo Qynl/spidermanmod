@@ -106,6 +106,10 @@ public final class StructureBuilder {
         roundTower(world, base.add(-16, 0, 12), 3, 11, stone, trim, true);
         roundTower(world, base.add(16, 0, 12), 3, 11, stone, trim, true);
         gatehouse(world, base.add(0, 0, -12), 5, 8, stone, trim);
+        brazier(world, base.add(-4, 0, -11));
+        brazier(world, base.add(4, 0, -11));
+        set(world, base.add(-16, 0, -12), ModBlocks.REALM_BANNER);
+        set(world, base.add(16, 0, -12), ModBlocks.REALM_BANNER);
 
         // Great keep with a furnished hall and a throne.
         keep(world, base.add(-5, 0, -4), 11, 8, 10, stone, trim);
@@ -127,6 +131,10 @@ public final class StructureBuilder {
         // well keeps a siege from becoming a thirst.
         fill(world, base.add(-1, y, -11), 3, 1, 9, ModBlocks.ROAD_STONE);
         well(world, base.add(8, 0, 7));
+        // The soldiers' garden and a message post by the gate.
+        gardenPatch(world, base.add(11, 0, -8));
+        brazier(world, base.add(-2, 0, 4));
+        set(world, base.add(-8, y + 1, -9), ModBlocks.WAR_TABLE);
         lightYard(world, base, y, 14);
         spawnGuard(world, base, y, BuildStyle.KNIGHT);
     }
@@ -154,8 +162,11 @@ public final class StructureBuilder {
         warehouse(world, base.add(8, 0, 8), 8, 9, wood, log);
         saloon(world, base.add(-5, 0, -8), 6, 9, wood, log);
         well(world, base.add(-1, 0, 2));
-        marketStall(world, base.add(5, 0, 1), western ? Blocks.ORANGE_WOOL : Blocks.RED_WOOL, log);
-        marketStall(world, base.add(5, 0, 5), western ? Blocks.LIME_WOOL : Blocks.BLUE_WOOL, log);
+        fountain(world, base.add(1, 0, 3));
+        brazier(world, base.add(4, 0, -1));
+        brazier(world, base.add(4, 0, 7));
+        marketStall(world, base.add(6, 0, 1), western ? Blocks.ORANGE_WOOL : Blocks.RED_WOOL, log);
+        marketStall(world, base.add(6, 0, 5), western ? Blocks.LIME_WOOL : Blocks.BLUE_WOOL, log);
         farmPlot(world, base.add(-17, 0, -17), 9, 7);
         farmhouse(world, base.add(-19, 0, -6));
         scarecrow(world, base.add(-13, 0, -14));
@@ -173,6 +184,11 @@ public final class StructureBuilder {
         stockChest(world, base.add(2, y + 1, 2), new ItemStack(Items.BREAD, 8),
                 new ItemStack(Items.IRON_NUGGET, 8), new ItemStack(ModItems.RECRUITMENT_CONTRACT),
                 new ItemStack(ModItems.ROYAL_COIN, 2));
+        // The richer quarter: a two-storey townhouse and a chapel.
+        townhouse(world, base.add(9, 0, -7), 7, 7);
+        chapel(world, base.add(-16, 0, 10));
+        gardenPatch(world, base.add(9, 0, 2));
+        gardenPatch(world, base.add(-16, 0, -8));
         spawnGuard(world, base, y, style);
     }
 
@@ -189,6 +205,16 @@ public final class StructureBuilder {
                 new ItemStack(Items.COOKED_COD, 8), new ItemStack(Items.GOLD_NUGGET, 12),
                 new ItemStack(ModItems.CANNONBALL, 2));
         mooredBoat(world, base.add(16, 0, -6));
+        // A hulk aground at the harbor mouth: someone's luck ran out.
+        hulk(world, base.add(-14, 0, -14));
+        set(world, base.add(-6, groundAt(world, base.getX() - 6, base.getZ() + 14) + 1, 14),
+                Blocks.SPRUCE_SLAB);
+        set(world, base.add(-6, groundAt(world, base.getX() - 6, base.getZ() + 14) + 2, 14),
+                Blocks.SPRUCE_LOG);
+        set(world, base.add(11, groundAt(world, base.getX() + 11, base.getZ() + 13) + 1, 13),
+                Blocks.BARREL);
+        set(world, base.add(11, groundAt(world, base.getX() + 11, base.getZ() + 13) + 2, 13),
+                Blocks.BARREL);
     }
 
     private static void buildScatteredSkyport(ServerWorld world, BlockPos base) {
@@ -207,6 +233,15 @@ public final class StructureBuilder {
         set(world, base.add(0, y + 1, 3), ModBlocks.REALM_BANNER);
         stockChest(world, base.add(-3, y + 1, -5), new ItemStack(ModItems.AIRSHIP_KIT),
                 new ItemStack(Items.IRON_INGOT, 4), new ItemStack(Items.COPPER_INGOT, 3));
+        // Freight waiting for the next lift, and a windsock on a pole.
+        set(world, base.add(-4, y + 1, -6), ModBlocks.SUPPLY_CRATE);
+        set(world, base.add(-4, y + 2, -6), ModBlocks.SUPPLY_CRATE);
+        set(world, base.add(-3, y + 1, -6), ModBlocks.SUPPLY_CRATE);
+        set(world, base.add(4, y + 1, -6), ModBlocks.SUPPLY_CRATE);
+        set(world, base.add(4, y + 1, -5), Blocks.BARREL);
+        set(world, base.add(5, y + 1, 2), Blocks.OAK_FENCE);
+        set(world, base.add(5, y + 2, 2), Blocks.OAK_FENCE);
+        set(world, base.add(5, y + 3, 2), Blocks.WHITE_WOOL);
         lampPost(world, base.add(-4, 0, 3));
         lampPost(world, base.add(4, 0, 3));
         mooredAirship(world, base.add(0, 0, -2));
@@ -224,6 +259,11 @@ public final class StructureBuilder {
         roundTower(world, base.add(-6, 0, -6), 2, 9, wallBlock, log, true);
         house(world, base.add(4, 0, -6), 5, 6, wallBlock, log, Blocks.DARK_OAK_STAIRS, wallBlock);
         campfire(world, base.add(-5, 0, 4));
+        // A supply lean-to and a spiked barricade facing the road.
+        fill(world, base.add(5, y + 2, -3), 4, 1, 1, Blocks.WHITE_WOOL);
+        set(world, base.add(5, y + 1, -2), Blocks.OAK_FENCE);
+        set(world, base.add(8, y + 1, -2), Blocks.OAK_FENCE);
+        set(world, base.add(6, y + 1, -4), Blocks.BARREL);
         farmPlot(world, base.add(3, 0, 3), 6, 5);
         farmhouse(world, base.add(-7, 0, 9));
         scarecrow(world, base.add(7, 0, 5));
@@ -264,6 +304,14 @@ public final class StructureBuilder {
         farmhouse(world, base.add(-4, 0, -8));
         scarecrow(world, base.add(-6, 0, 6));
         campfire(world, base.add(3, 0, 2));
+        // A loaded hay cart and the watering trough beside it.
+        int cy = groundAt(world, base.getX() + 5, base.getZ() - 3);
+        set(world, base.add(5, cy + 1, -3), Blocks.HAY_BLOCK);
+        set(world, base.add(6, cy + 1, -3), Blocks.HAY_BLOCK);
+        set(world, base.add(5, cy + 1, -4), Blocks.OAK_FENCE);
+        set(world, base.add(6, cy + 1, -4), Blocks.OAK_FENCE);
+        set(world, base.add(8, cy + 1, -3), Blocks.STONE_BRICK_SLAB);
+        set(world, base.add(8, cy, -3), Blocks.WATER);
         stockChest(world, base.add(8, y + 2, -2), new ItemStack(Items.WHEAT, 12),
                 new ItemStack(Items.BREAD, 6), new ItemStack(ModItems.ROYAL_COIN, 1));
         spawnGuard(world, base, y, BuildStyle.KNIGHT);
@@ -287,6 +335,15 @@ public final class StructureBuilder {
             int z = base.getZ() + world.random.nextInt(19) - 9;
             set(world, base.add(x - base.getX(), y + 1, z - base.getZ()),
                     world.random.nextBoolean() ? Blocks.MOSSY_COBBLESTONE : Blocks.COBBLESTONE);
+        }
+        // The old colonnade, toppled and half swallowed by the moss.
+        for (int i = 0; i < 4; i++) {
+            set(world, base.add(-2 + i, y + 1, 6), Blocks.COBBLESTONE_WALL);
+            set(world, base.add(-2 + i, y + 1, 7), i < 2 ? Blocks.OAK_WOOD
+                    : Blocks.MOSS_CARPET);
+        }
+        for (int i = 0; i < 3; i++) {
+            set(world, base.add(6, y + 1, -6 + i), Blocks.MOSS_CARPET);
         }
         fill(world, base.add(4, y + 1, 5), 4, 2, 1, Blocks.WHITE_WOOL);
         set(world, base.add(4, y + 1, 4), Blocks.OAK_FENCE);
@@ -327,6 +384,21 @@ public final class StructureBuilder {
             set(world, base.add(world.random.nextInt(15) - 7, y + 1, world.random.nextInt(15) - 7),
                     Blocks.DEAD_BUSH);
         }
+        // The keeper's crypt: stone, a barred window, a slatted roof.
+        for (int h = 0; h <= 3; h++) {
+            for (int x = 3; x <= 6; x++) {
+                for (int z = 3; z <= 5; z++) {
+                    boolean edge = x == 3 || x == 6 || z == 3 || z == 5 || h == 0;
+                    set(world, base.add(x, y + h, z), h == 3 || !edge
+                            ? (h == 3 ? Blocks.STONE_BRICK_SLAB
+                            : Blocks.AIR) : Blocks.COBBLESTONE);
+                }
+            }
+        }
+        set(world, base.add(4, y + 1, 5), Blocks.AIR);
+        set(world, base.add(4, y + 2, 5), Blocks.AIR);
+        set(world, base.add(4, y + 2, 3), Blocks.GLASS_PANE);
+        set(world, base.add(5, y + 1, 4), Blocks.SOUL_LANTERN);
         set(world, base.add(0, y + 1, -6), Blocks.OAK_FENCE);
         set(world, base.add(0, y + 2, -6), Blocks.SOUL_LANTERN);
         stockChest(world, base.add(6, y + 1, 6), new ItemStack(Items.IRON_NUGGET, 8),
@@ -376,6 +448,9 @@ public final class StructureBuilder {
         marketStall(world, base.add(-16, 0, 5), Blocks.YELLOW_WOOL, Blocks.OAK_LOG);
         marketStall(world, base.add(10, 0, 5), Blocks.WHITE_WOOL, Blocks.OAK_LOG);
         stable(world, base.add(14, 0, -16), 6, 7);
+        brazier(world, base.add(-6, 0, 9));
+        brazier(world, base.add(6, 0, 9));
+        chapel(world, base.add(14, 0, 8));
         lampPost(world, base.add(-16, 0, -4));
         lampPost(world, base.add(16, 0, -4));
         set(world, base.add(0, groundAt(world, base.getX(), base.getZ()) + 1, 12), ModBlocks.REALM_BANNER);
@@ -1117,6 +1192,166 @@ public final class StructureBuilder {
         roofFlat(world, corner, sizeX, sizeZ, y + 2, Blocks.SPRUCE_PLANKS);
         set(world, corner.add(sizeX / 2, y + 1, sizeZ / 2), Blocks.HAY_BLOCK);
         set(world, corner.add(1, y, 1), Blocks.WATER);
+    }
+
+    /** A fire basket on a stone post - courtyard and gate light. */
+    private static void brazier(ServerWorld world, BlockPos base) {
+        int y = groundAt(world, base.getX(), base.getZ());
+        set(world, base.add(0, y + 1, 0), Blocks.COBBLESTONE_WALL);
+        set(world, base.add(0, y + 2, 0), Blocks.COBBLESTONE_WALL);
+        set(world, base.add(0, y + 3, 0), Blocks.CAMPFIRE);
+    }
+
+    /** A dressed-stone fountain: the heart of any market square. */
+    private static void fountain(ServerWorld world, BlockPos base) {
+        int y = groundAt(world, base.getX(), base.getZ());
+        for (int dx = -1; dx <= 1; dx++) {
+            for (int dz = -1; dz <= 1; dz++) {
+                boolean rim = Math.abs(dx) == 1 || Math.abs(dz) == 1;
+                set(world, base.add(dx, y + 1, dz), rim ? Blocks.STONE_BRICKS : Blocks.WATER);
+            }
+        }
+        set(world, base.add(0, y, 0), Blocks.STONE_BRICKS);
+        set(world, base.add(0, y + 2, 0), Blocks.STONE_BRICK_SLAB);
+        foundation(world, base.getX(), base.getZ(), y - 1, Blocks.STONE_BRICKS);
+    }
+
+    /** A chapel: stone walls, bell spire, pews and a carpet aisle. */
+    private static void chapel(ServerWorld world, BlockPos corner) {
+        int y = lowestCorner(world, corner.getX(), corner.getZ(), 7, 9);
+        BlockPos origin = new BlockPos(corner.getX(), y, corner.getZ());
+        packUnder(world, origin, 7, 9, y, Blocks.STONE_BRICKS);
+        for (int h = 0; h <= 5; h++) {
+            for (int x = 0; x < 7; x++) {
+                for (int z = 0; z < 9; z++) {
+                    boolean edge = x == 0 || z == 0 || x == 6 || z == 8;
+                    BlockPos pos = origin.add(x, h, z);
+                    if (h == 0) {
+                        set(world, pos, Blocks.STONE_BRICKS);
+                    } else if (edge) {
+                        boolean pillar = (x % 3 == 0) && (z % 4 == 0);
+                        set(world, pos, pillar ? ModBlocks.CROWN_BRICK : Blocks.STONE_BRICKS);
+                    } else {
+                        set(world, pos, Blocks.AIR);
+                    }
+                }
+            }
+            if (h == 3) {
+                set(world, origin.add(3, h, 8), Blocks.AIR);
+                set(world, origin.add(0, h, 2), Blocks.GLASS_PANE);
+                set(world, origin.add(6, h, 2), Blocks.GLASS_PANE);
+                set(world, origin.add(0, h, 5), Blocks.GLASS_PANE);
+                set(world, origin.add(6, h, 5), Blocks.GLASS_PANE);
+            }
+        }
+        // Bell spire over the entry.
+        for (int h = 5; h <= 8; h++) {
+            for (int x = 2; x <= 4; x++) {
+                for (int z = 7; z <= 8; z++) {
+                    boolean edge = x == 2 || x == 4 || z == 7;
+                    set(world, origin.add(x, h, z), h == 8 || !edge
+                            ? Blocks.STONE_BRICK_SLAB : Blocks.STONE_BRICKS);
+                }
+            }
+        }
+        set(world, origin.add(3, 6, 7), Blocks.BELL);
+        set(world, origin.add(3, 9, 8), ModBlocks.REALM_BANNER);
+        // Pews and the aisle.
+        for (int z = 2; z <= 6; z += 2) {
+            for (int x = 1; x <= 5; x++) {
+                if (x != 3) {
+                    set(world, origin.add(x, 1, z), Blocks.SPRUCE_STAIRS);
+                }
+            }
+        }
+        for (int z = 1; z <= 7; z++) {
+            set(world, origin.add(3, 1, z), Blocks.WHITE_CARPET);
+        }
+        set(world, origin.add(1, 1, 1), Blocks.LANTERN);
+        set(world, origin.add(5, 1, 1), Blocks.LANTERN);
+    }
+
+    /** A proper two-storey townhouse: shop below, home above, balcony out front. */
+    private static void townhouse(ServerWorld world, BlockPos corner, int sizeX, int sizeZ) {
+        house(world, corner, sizeX, sizeZ, Blocks.OAK_PLANKS, Blocks.OAK_LOG,
+                Blocks.OAK_STAIRS, Blocks.OAK_PLANKS);
+        int y = lowestCorner(world, corner.getX(), corner.getZ(), sizeX, sizeZ);
+        BlockPos origin = new BlockPos(corner.getX(), y, corner.getZ());
+        // Upper floor: log band, framed windows, its own little gable.
+        for (int h = 5; h <= 8; h++) {
+            for (int x = 0; x < sizeX; x++) {
+                for (int z = 0; z < sizeZ; z++) {
+                    boolean edge = x == 0 || z == 0 || x == sizeX - 1 || z == sizeZ - 1;
+                    BlockPos pos = origin.add(x, h, z);
+                    if (!edge) {
+                        set(world, pos, Blocks.AIR);
+                        continue;
+                    }
+                    boolean cornerPost = (x == 0 || x == sizeX - 1) && (z == 0 || z == sizeZ - 1);
+                    if (h == 5 || h == 8 || cornerPost) {
+                        set(world, pos, Blocks.OAK_LOG);
+                    } else if (h == 7 && (x == 1 || x == sizeX - 2) && z == sizeZ / 2) {
+                        set(world, pos, Blocks.GLASS_PANE);
+                    } else {
+                        set(world, pos, Blocks.SPRUCE_PLANKS);
+                    }
+                }
+            }
+        }
+        for (int r = 0; r < (sizeZ - 1) / 2; r++) {
+            int h = 9 + r;
+            for (int x = -1; x <= sizeX; x++) {
+                set(world, origin.add(x, h, r), Blocks.SPRUCE_STAIRS);
+                set(world, origin.add(x, h, sizeZ - 1 - r), Blocks.SPRUCE_STAIRS);
+            }
+        }
+        // Balcony over the door with a rail and a hanging lantern.
+        int doorX = sizeX / 2;
+        for (int dx = -1; dx <= 1; dx++) {
+            set(world, origin.add(doorX + dx, 5, sizeZ), Blocks.SPRUCE_SLAB);
+        }
+        set(world, origin.add(doorX - 1, 6, sizeZ), Blocks.OAK_FENCE);
+        set(world, origin.add(doorX + 1, 6, sizeZ), Blocks.OAK_FENCE);
+        set(world, origin.add(doorX, 6, sizeZ + 1), Blocks.LANTERN);
+        // Sign bracket: a shop lives here.
+        set(world, origin.add(doorX, 4, sizeZ + 1), Blocks.OAK_FENCE);
+    }
+
+    /** A beached, broken ship: ribs, a snapped mast, sand worked in. */
+    private static void hulk(ServerWorld world, BlockPos base) {
+        int y = groundAt(world, base.getX(), base.getZ());
+        for (int i = 0; i < 12; i++) {
+            int rise = i < 6 ? i / 2 : (11 - i) / 2;
+            BlockPos keel = base.add(i, y, 0);
+            set(world, keel, ModBlocks.SHIP_PLANKS);
+            for (int h = 1; h <= rise; h++) {
+                set(world, keel.up(h), h == rise ? Blocks.SPRUCE_LOG : ModBlocks.SHIP_PLANKS);
+            }
+            set(world, keel.north().up(1), rise >= 2 ? ModBlocks.SHIP_PLANKS : Blocks.AIR);
+            set(world, keel.south().up(1), rise >= 2 ? ModBlocks.SHIP_PLANKS : Blocks.AIR);
+        }
+        // The mast snapped and leans over the side.
+        set(world, base.add(4, y + 3, 0), Blocks.AIR);
+        for (int h = 1; h <= 2; h++) {
+            set(world, base.add(4, y + h, 0), Blocks.SPRUCE_LOG);
+        }
+        for (int i = 1; i <= 4; i++) {
+            set(world, base.add(4 + i, y + 2 - (i / 3), i / 2 + 1), Blocks.SPRUCE_LOG);
+        }
+        set(world, base.add(2, y + 1, 0), Blocks.BARREL);
+        set(world, base.add(7, y + 1, 0), Blocks.BARREL);
+    }
+
+    /** A kitchen garden: moss, azalea and a watering barrel. */
+    private static void gardenPatch(ServerWorld world, BlockPos base) {
+        int y = groundAt(world, base.getX(), base.getZ());
+        for (int dx = 0; dx <= 2; dx++) {
+            for (int dz = 0; dz <= 2; dz++) {
+                set(world, base.add(dx, y + 1, dz), (dx + dz) % 2 == 0
+                        ? Blocks.MOSS_CARPET : Blocks.AZALEA);
+            }
+        }
+        set(world, base.add(3, y + 1, 1), Blocks.BARREL);
     }
 
     private static void bridge(ServerWorld world, BlockPos start, int length, Block material) {
