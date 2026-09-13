@@ -1750,7 +1750,9 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
             holdGrudge(player, 48000L);
             player.sendMessage(Text.literal(getName().getString()
                     + " does not like the way you are aiming that.").formatted(Formatting.GOLD), true);
-            com.rivalrealms.sound.ModSounds.playVoiceFor(serverWorld, getBlockPos(), "guard_warning", player);
+            if (player instanceof ServerPlayerEntity aimingPlayer) {
+                com.rivalrealms.sound.ModSounds.playVoiceFor(serverWorld, getBlockPos(), "guard_warning", aimingPlayer);
+            }
             if (temperament != Temperament.CHILL) {
                 setTarget(player);
             }

@@ -42,27 +42,27 @@ public final class ModSounds {
     public static final SoundEvent GUARD_WARNING = register("voice.guard_warning");
     public static final SoundEvent HERALD_NEWS = register("voice.herald_news");
 
-    private static final Map<String, SoundEvent> VOICES = Map.of(
-            "siege_defense", SIEGE_DEFENSE,
-            "siege_victory", SIEGE_VICTORY,
-            "civilian_flee", CIVILIAN_FLEE,
-            "greeting_friendly", GREETING_FRIENDLY,
-            "greeting_hostile", GREETING_HOSTILE,
-            "rumor_player", RUMOR_PLAYER,
-            "merchant_trade", MERCHANT_TRADE,
-            "death_last_words", DEATH_LAST_WORDS,
-            "celebration", CELEBRATION,
-            "lost_child", LOST_CHILD,
-            "greeting_neutral", GREETING_NEUTRAL,
-            "greeting_folksy", GREETING_FOLKSY,
-            "quip_idle", QUIP_IDLE,
-            "quip_idle2", QUIP_IDLE2,
-            "trust_up", TRUST_UP,
-            "recruit_join", RECRUIT_JOIN,
-            "betray", BETRAY,
-            "theft_caught", THEFT_CAUGHT,
-            "guard_warning", GUARD_WARNING,
-            "herald_news", HERALD_NEWS);
+    private static final Map<String, SoundEvent> VOICES = Map.ofEntries(
+            Map.entry("siege_defense", SIEGE_DEFENSE),
+            Map.entry("siege_victory", SIEGE_VICTORY),
+            Map.entry("civilian_flee", CIVILIAN_FLEE),
+            Map.entry("greeting_friendly", GREETING_FRIENDLY),
+            Map.entry("greeting_hostile", GREETING_HOSTILE),
+            Map.entry("rumor_player", RUMOR_PLAYER),
+            Map.entry("merchant_trade", MERCHANT_TRADE),
+            Map.entry("death_last_words", DEATH_LAST_WORDS),
+            Map.entry("celebration", CELEBRATION),
+            Map.entry("lost_child", LOST_CHILD),
+            Map.entry("greeting_neutral", GREETING_NEUTRAL),
+            Map.entry("greeting_folksy", GREETING_FOLKSY),
+            Map.entry("quip_idle", QUIP_IDLE),
+            Map.entry("quip_idle2", QUIP_IDLE2),
+            Map.entry("trust_up", TRUST_UP),
+            Map.entry("recruit_join", RECRUIT_JOIN),
+            Map.entry("betray", BETRAY),
+            Map.entry("theft_caught", THEFT_CAUGHT),
+            Map.entry("guard_warning", GUARD_WARNING),
+            Map.entry("herald_news", HERALD_NEWS));
 
     private static SoundEvent register(String name) {
         return Registry.register(Registries.SOUND_EVENT, RivalRealms.id(name), SoundEvent.of(RivalRealms.id(name)));
