@@ -407,7 +407,12 @@ public final class StructureBuilder {
         set(world, base.add(5, cy + 1, -4), Blocks.OAK_FENCE);
         set(world, base.add(6, cy + 1, -4), Blocks.OAK_FENCE);
         set(world, base.add(8, cy + 1, -3), Blocks.STONE_BRICK_SLAB);
+        // The mill-race trough: walled so the water stays put.
         set(world, base.add(8, cy, -3), Blocks.WATER);
+        set(world, base.add(7, cy, -3), Blocks.STONE_BRICKS);
+        set(world, base.add(9, cy, -3), Blocks.STONE_BRICKS);
+        set(world, base.add(8, cy, -2), Blocks.STONE_BRICKS);
+        set(world, base.add(8, cy, -4), Blocks.STONE_BRICKS);
         stockChest(world, base.add(8, y + 2, -2), new ItemStack(Items.WHEAT, 12),
                 new ItemStack(Items.BREAD, 6), new ItemStack(ModItems.ROYAL_COIN, 1));
         spawnGuard(world, base, y, BuildStyle.KNIGHT);
@@ -3479,7 +3484,9 @@ public final class StructureBuilder {
         fill(world, base.add(-2, y + 1, 12), 1, 1, 5, Blocks.OAK_FENCE);
         fill(world, base.add(7, y + 1, 12), 1, 1, 5, Blocks.OAK_FENCE);
         set(world, base.add(-2, y + 1, 14), Blocks.AIR);
-        set(world, base.add(2, y + 1, 14), Blocks.WATER);
+        // The stock trough: sunken into the pen floor so it holds.
+        set(world, base.add(2, y + 1, 14), Blocks.AIR);
+        set(world, base.add(2, y, 14), Blocks.WATER);
         lampPost(world, base.add(0, 0, -8));
         // The working yard: open hay barn, watering pond, young orchard.
         hayBarn(world, base.add(9, 0, -8));
