@@ -118,5 +118,65 @@
     "sounds": [
       "rivalrealms:voice/herald_news"
     ]
+  },
+  "voice.event_aftermath": {
+    "subtitle": "subtitles.rivalrealms.voice.event_aftermath",
+    "sounds": [
+      "rivalrealms:voice/event_aftermath"
+    ]
+  },
+  "voice.story_chronicle": {
+    "subtitle": "subtitles.rivalrealms.voice.story_chronicle",
+    "sounds": [
+      "rivalrealms:voice/story_chronicle"
+    ]
+  },
+  "voice.npc_chat_a": {
+    "subtitle": "subtitles.rivalrealms.voice.npc_chat_a",
+    "sounds": [
+      "rivalrealms:voice/npc_chat_a"
+    ]
+  },
+  "voice.npc_chat_b": {
+    "subtitle": "subtitles.rivalrealms.voice.npc_chat_b",
+    "sounds": [
+      "rivalrealms:voice/npc_chat_b"
+    ]
+  },
+  "voice.night_warning": {
+    "subtitle": "subtitles.rivalrealms.voice.night_warning",
+    "sounds": [
+      "rivalrealms:voice/night_warning"
+    ]
+  },
+  "voice.morning_greeting": {
+    "subtitle": "subtitles.rivalrealms.voice.morning_greeting",
+    "sounds": [
+      "rivalrealms:voice/morning_greeting"
+    ]
+  },
+  "voice.work_shout": {
+    "subtitle": "subtitles.rivalrealms.voice.work_shout",
+    "sounds": [
+      "rivalrealms:voice/work_shout"
+    ]
+  },
+  "voice.child_play": {
+    "subtitle": "subtitles.rivalrealms.voice.child_play",
+    "sounds": [
+      "rivalrealms:voice/child_play"
+    ]
+  },
+  "voice.interrupt_wait": {
+    "subtitle": "subtitles.rivalrealms.voice.interrupt_wait",
+    "sounds": [
+      "rivalrealms:voice/interrupt_wait"
+    ]
+  },
+  "voice.known_return": {
+    "subtitle": "subtitles.rivalrealms.voice.known_return",
+    "sounds": [
+      "rivalrealms:voice/known_return"
+    ]
   }
 }

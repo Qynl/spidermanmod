@@ -289,6 +289,11 @@ public final class RoadsideEncounters {
         }
         near.sendMessage(Text.literal(gossip.getName().getString() + ": " + line)
                 .formatted(Formatting.GRAY), true);
+        // Gossip has a voice, pitched like the speaker.
+        if (world instanceof ServerWorld serverWorld) {
+            com.rivalrealms.sound.ModSounds.playProfiled(serverWorld, gossip.getBlockPos(),
+                    "rumor_player", gossip.getUuid(), 1.0f, 0.9f);
+        }
     }
 
     private static void recognizeBark(ServerWorld world, SurvivorEntity traveler, PlayerEntity near) {

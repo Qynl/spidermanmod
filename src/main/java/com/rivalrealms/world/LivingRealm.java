@@ -130,6 +130,7 @@ public final class LivingRealm {
 
     /** Runs every 600 ticks from the server tick hook. One cycle = 30 s. */
     public static void tick(ServerWorld world) {
+        DialogueEngine.tick();
         RealmState state = RealmState.get(world);
         List<RealmState.BaseRecord> bases = new ArrayList<>(state.bases());
         if (bases.isEmpty()) {
@@ -233,6 +234,9 @@ public final class LivingRealm {
         if (world.random.nextFloat() < 0.12f) {
             runCaravan(world, state, base, all);
         }
+
+        // --- the sound of a place: work, children, neighbors talking -------
+        DialogueEngine.settlementAmbient(world, base, pop);
     }
 
     // ------------------------------------------------------------- capture
@@ -264,6 +268,8 @@ public final class LivingRealm {
                 : Archetype.byFaction(winner) == Archetype.OUTLAW ? BuildStyle.WESTERN
                 : BuildStyle.KNIGHT;
         base.surrenderTo(newOwner, winner, style.id());
+        DialogueEngine.noteEvent(world, base.center(),
+                "The " + loser + " fell here. The " + winner + " raised their banner over our homes.");
         state.adjustWealth(winner, 6);
         state.adjustWealth(loser, -6);
         state.chronicle(world.getTime(), base.name() + " has fallen! The " + winner + " seized it from the "
@@ -609,6 +615,8 @@ public final class LivingRealm {
             return;
         }
         SIEGES.put(base.center().asLong(), new Siege(attackerFaction, world.getTime()));
+        DialogueEngine.noteEvent(world, base.center(),
+                "The " + attackerFaction + " laid siege to these walls. We closed the gates and prayed.");
         RealmState state = RealmState.get(world);
         state.chronicle(world.getTime(), "SIEGE: the " + attackerFaction + " close around " + base.name() + ".", true);
         chronicleBroadcast(world, state, "SIEGE at " + base.name() + "! The " + attackerFaction
@@ -867,6 +875,9 @@ public final class LivingRealm {
                 state.chronicle(world.getTime(), first.getName().getString() + " and "
                         + second.getName().getString() + " were wed at " + base.name()
                         + ". The whole settlement feasted.", true);
+                DialogueEngine.noteEvent(world, base.center(),
+                        first.getName().getString() + " and " + second.getName().getString()
+                                + " were wed here. You should have heard the singing.");
                 chronicleBroadcast(world, state, "Wedding bells at " + base.name() + "!", true);
                 com.rivalrealms.sound.ModSounds.playVoice(world, base.center(), "celebration");
             }
@@ -973,6 +984,8 @@ public final class LivingRealm {
             }
             state.chronicle(world.getTime(), "Smoke rises again from " + base.name()
                     + ": new folk have begun rebuilding the old walls.", true);
+            DialogueEngine.noteEvent(world, base.center(),
+                    "This place emptied once. Then new folk came and lit the hearths again.");
             chronicleBroadcast(world, state, base.name() + " is being rebuilt!", true);
         }
     }

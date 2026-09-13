@@ -116,6 +116,7 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
     private int childAge;
     private SettlementRole inheritedRole = SettlementRole.NONE;
     private final Map<UUID, Byte> bonds = new HashMap<>();
+    private final Map<UUID, Long> knownPlayers = new HashMap<>();
     private UUID rumorAbout;
     private int rumorKind;
     private int rumorStrength;
@@ -280,6 +281,14 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
     private void quipTick() {
         long time = getWorld().getTime();
         if (time < nextQuip) {
+            return;
+        }
+        // Interruptible: trouble cuts chatter off with a startled look.
+        if (getTarget() != null && random.nextInt(3) == 0
+                && getWorld() instanceof ServerWorld interruptWorld) {
+            com.rivalrealms.sound.ModSounds.playProfiled(interruptWorld, getBlockPos(),
+                    "interrupt_wait", getUuid(), 1.15f, 1.1f);
+            nextQuip = time + 600L;
             return;
         }
         nextQuip = time + 300L + random.nextInt(600);
@@ -697,6 +706,11 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
         return guardCenter;
     }
 
+    /** When this survivor last interacted with a player, for recognition. */
+    public Long lastMet(UUID player) {
+        return knownPlayers.get(player);
+    }
+
     // ------------------------------------------------------- family & bonds
 
     /** Joins a family line; {@code parent} (if present) becomes kin. */
@@ -821,6 +835,11 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
                     RealmState realms = RealmState.get(serverWorld);
                     var base = realms.findByCenter(other.guardCenter);
                     if (base != null) {
+                        // The rumor breaks audibly over the settlement square.
+                        if (getWorld() instanceof ServerWorld rumorWorld) {
+                            com.rivalrealms.sound.ModSounds.playProfiled(rumorWorld, getBlockPos(),
+                                    "rumor_player", getUuid(), 1.0f, 1.1f);
+                        }
                         PlayerEntity subject = getWorld().getPlayerByUuid(rumorAbout);
                         if (rumorKind == 4) {
                             // Good news travels too.
@@ -967,10 +986,15 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
             SurvivorEntity other = (SurvivorEntity) candidate;
             int bond = bondStrength(other.getUuid());
             if (bond >= 2 && random.nextInt(4) == 0) {
-                // Friends laugh; you can hear a settlement breathing.
-                serverWorld.playSound(null, getBlockPos(),
-                        net.minecraft.sound.SoundEvents.ENTITY_VILLAGER_CELEBRATE,
-                        SoundCategory.NEUTRAL, 0.5f, 1.3f);
+                // Friends laugh - and sometimes actually TALK, out loud,
+                // about the news, with the second voice a beat later.
+                if (random.nextInt(3) == 0) {
+                    com.rivalrealms.world.DialogueEngine.queueChat(this, other, serverWorld);
+                } else {
+                    serverWorld.playSound(null, getBlockPos(),
+                            net.minecraft.sound.SoundEvents.ENTITY_VILLAGER_CELEBRATE,
+                            SoundCategory.NEUTRAL, 0.5f, 1.3f);
+                }
             } else if (bond < 0 && random.nextInt(6) == 0) {
                 // A rivalry boils over: a shove, a stumble, hard words.
                 other.takeKnockback(0.5, getX() - other.getX(), getZ() - other.getZ());
@@ -1026,6 +1050,11 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
         ItemStack held = player.getStackInHand(hand);
 
         if (!getWorld().isClient) {
+            // Faces are remembered: every real meeting feeds recognition later.
+            if (knownPlayers.size() > 12) {
+                knownPlayers.clear();
+            }
+            knownPlayers.put(player.getUuid(), getWorld().getTime());
             // Stranded merchants want their axle fixed before anything else.
             if (RoadsideEncounters.tryHelpMerchant(this, player)) {
                 return ActionResult.SUCCESS;
@@ -1149,6 +1178,18 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
             return;
         }
         nextQuip = now + 400L;
+        // The world speaks first: interrupts, the hour, recognition, fresh
+        // scars, old stories. Ordinary greetings only when nothing applies.
+        com.rivalrealms.world.DialogueEngine.Moment moment =
+                com.rivalrealms.world.DialogueEngine.contextMoment(this, serverWorld, player);
+        if (moment != null) {
+            com.rivalrealms.sound.ModSounds.playProfiled(serverWorld, getBlockPos(), moment.key(),
+                    getUuid(), moment.pitchMul(), moment.volume());
+            if (moment.chatLine() != null) {
+                player.sendMessage(Text.literal(moment.chatLine()).formatted(Formatting.GRAY), true);
+            }
+            return;
+        }
         RealmState realms = RealmState.get(serverWorld);
         int rep = realms.getReputation(player.getUuid(), effectiveFaction());
         String title = com.rivalrealms.world.LivingRealm.titleFor(rep);
@@ -1494,6 +1535,13 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
         nbt.putString("Family", familyName);
         nbt.putString("Trait", trait.id());
         nbt.putInt("HobbyTimer", hobbyTimer);
+        if (!knownPlayers.isEmpty()) {
+            NbtCompound known = new NbtCompound();
+            for (Map.Entry<UUID, Long> known_ : knownPlayers.entrySet()) {
+                known.putLong(known_.getKey().toString(), known_.getValue());
+            }
+            nbt.put("KnownPlayers", known);
+        }
         nbt.putBoolean("Child", child);
         nbt.putInt("ChildAge", childAge);
         nbt.putString("InheritedRole", inheritedRole.id());
@@ -1547,6 +1595,15 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
         rumorAbout = nbt.containsUuid("RumorAbout") ? nbt.getUuid("RumorAbout") : null;
         rumorKind = Math.max(0, nbt.getInt("RumorKind"));
         rumorStrength = Math.max(0, nbt.getInt("RumorStrength"));
+        knownPlayers.clear();
+        NbtCompound savedKnown = nbt.getCompound("KnownPlayers");
+        for (String key : savedKnown.getKeys()) {
+            try {
+                knownPlayers.put(UUID.fromString(key), savedKnown.getLong(key));
+            } catch (IllegalArgumentException ignored) {
+                // One corrupt memory must not sink the rest.
+            }
+        }
         bonds.clear();
         NbtCompound savedBonds = nbt.getCompound("Bonds");
         for (String key : savedBonds.getKeys()) {

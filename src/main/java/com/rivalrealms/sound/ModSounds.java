@@ -41,6 +41,16 @@ public final class ModSounds {
     public static final SoundEvent THEFT_CAUGHT = register("voice.theft_caught");
     public static final SoundEvent GUARD_WARNING = register("voice.guard_warning");
     public static final SoundEvent HERALD_NEWS = register("voice.herald_news");
+    public static final SoundEvent EVENT_AFTERMATH = register("voice.event_aftermath");
+    public static final SoundEvent STORY_CHRONICLE = register("voice.story_chronicle");
+    public static final SoundEvent NPC_CHAT_A = register("voice.npc_chat_a");
+    public static final SoundEvent NPC_CHAT_B = register("voice.npc_chat_b");
+    public static final SoundEvent NIGHT_WARNING = register("voice.night_warning");
+    public static final SoundEvent MORNING_GREETING = register("voice.morning_greeting");
+    public static final SoundEvent WORK_SHOUT = register("voice.work_shout");
+    public static final SoundEvent CHILD_PLAY = register("voice.child_play");
+    public static final SoundEvent INTERRUPT_WAIT = register("voice.interrupt_wait");
+    public static final SoundEvent KNOWN_RETURN = register("voice.known_return");
 
     private static final Map<String, SoundEvent> VOICES = Map.ofEntries(
             Map.entry("siege_defense", SIEGE_DEFENSE),
@@ -62,7 +72,17 @@ public final class ModSounds {
             Map.entry("betray", BETRAY),
             Map.entry("theft_caught", THEFT_CAUGHT),
             Map.entry("guard_warning", GUARD_WARNING),
-            Map.entry("herald_news", HERALD_NEWS));
+            Map.entry("herald_news", HERALD_NEWS),
+            Map.entry("event_aftermath", EVENT_AFTERMATH),
+            Map.entry("story_chronicle", STORY_CHRONICLE),
+            Map.entry("npc_chat_a", NPC_CHAT_A),
+            Map.entry("npc_chat_b", NPC_CHAT_B),
+            Map.entry("night_warning", NIGHT_WARNING),
+            Map.entry("morning_greeting", MORNING_GREETING),
+            Map.entry("work_shout", WORK_SHOUT),
+            Map.entry("child_play", CHILD_PLAY),
+            Map.entry("interrupt_wait", INTERRUPT_WAIT),
+            Map.entry("known_return", KNOWN_RETURN));
 
     private static SoundEvent register(String name) {
         return Registry.register(Registries.SOUND_EVENT, RivalRealms.id(name), SoundEvent.of(RivalRealms.id(name)));
@@ -83,6 +103,21 @@ public final class ModSounds {
         if (voice != null) {
             world.playSound(player, pos, voice, SoundCategory.NEUTRAL, 1.0f, 1.0f);
         }
+    }
+
+    /**
+     * A line spoken with a character's own voice profile: every NPC derives
+     * a stable pitch from their identity, so no two farmers sound alike -
+     * two actors times five pitches, plus per-moment emotion multipliers.
+     */
+    public static void playProfiled(ServerWorld world, BlockPos pos, String key, UUID who,
+                                    float pitchMul, float volume) {
+        SoundEvent voice = VOICES.get(key);
+        if (voice == null) {
+            return;
+        }
+        float profile = 0.85f + Math.floorMod(who.getLeastSignificantBits(), 5L) * 0.1f;
+        world.playSound(null, pos, voice, SoundCategory.NEUTRAL, volume, pitchMul * profile);
     }
 
     public static void register() {

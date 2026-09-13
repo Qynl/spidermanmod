@@ -74,6 +74,7 @@ public final class RealmEvents {
         }
 
         RealmMusic.tick();
+        DialogueEngine.tick();
 
         for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
             if (player.age % 1200 != 0) {

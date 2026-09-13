@@ -73,5 +73,15 @@
   "subtitles.rivalrealms.voice.betray": "A bitter farewell",
   "subtitles.rivalrealms.voice.theft_caught": "A shout: Thief!",
   "subtitles.rivalrealms.voice.guard_warning": "A guarded warning",
-  "subtitles.rivalrealms.voice.herald_news": "The town crier calls"
+  "subtitles.rivalrealms.voice.herald_news": "The town crier calls",
+  "subtitles.rivalrealms.voice.event_aftermath": "A survivor recounts the attack",
+  "subtitles.rivalrealms.voice.story_chronicle": "An old story is told",
+  "subtitles.rivalrealms.voice.npc_chat_a": "Two folk trade rumors",
+  "subtitles.rivalrealms.voice.npc_chat_b": "Two folk trade rumors",
+  "subtitles.rivalrealms.voice.night_warning": "A night-time warning",
+  "subtitles.rivalrealms.voice.morning_greeting": "A bright morning call",
+  "subtitles.rivalrealms.voice.work_shout": "Workers shout at the walls",
+  "subtitles.rivalrealms.voice.child_play": "Children playing",
+  "subtitles.rivalrealms.voice.interrupt_wait": "Wait... what's that?",
+  "subtitles.rivalrealms.voice.known_return": "A familiar face returns"
 }

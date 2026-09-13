@@ -179,6 +179,15 @@ Claimed settlements recruit guards and workers up to their level. Jobs (guard, b
 - **Treasure maps**: craft from paper + compass. Never "go to X" — a bearing from the nearest town, a pace count, a riddle, and green motes where the X sleeps under dark earth
 - **Traveling merchants**: caravans walk settlement to settlement (and pirates still cut the roads)
 
+## The dialogue engine
+
+- **Context, not dice**: what an NPC says is chosen from what is true right now — your reputation, the hour (night warnings, bright morning calls), whether they've met you before (**recognition**: "Back again? You've the look of someone with unfinished business."), whether their settlement **recently bled** (survivors recount the attack, in their own words), and the chronicle's old stories, told where they happened
+- **Interruptible**: trouble cuts sentences off — "Wait... what's that? Did you hear that?"
+- **NPC-to-NPC conversations**: two friends actually talk out loud about the latest realm news, the second voice replying a beat later — and the two versions don't quite match, because news never travels clean
+- **Voiced rumors**: the moment word of your deeds (or crimes) reaches a settlement, someone *says it out loud* in the square; roadside gossips are voiced too
+- **Voice profiles**: every NPC derives a stable pitch from who they are — two actors, five registers, plus emotional delivery per moment (startled pitch, low night murmurs, shouts over the walls, children at play)
+- **Settlement atmosphere**: farms echo with work shouts, children playing, neighbors trading rumors — each place sounds like what it is
+
 ## Bard & voice
 
 - **Six composed melodies** play in the world: Hearthfire (taverns), March of Banners (sieges), Harvest Reel (festivals), Dirge (funerals), Wanderer's Rest (camps), Victory Fanfare (held walls)
