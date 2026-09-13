@@ -179,14 +179,12 @@ public final class WorldSettlementGenerator {
         }
         int highest = Integer.MIN_VALUE;
         int lowest = Integer.MAX_VALUE;
-        int[][] probes = {{0, 0}, {10, 0}, {-10, 0}, {0, 10}, {0, -10},
-                {10, 10}, {-10, -10}, {10, -10}, {-10, 10}};
+        int[][] probes = {{0, 0}, {14, 0}, {-14, 0}, {0, 14}, {0, -14},
+                {16, 16}, {-16, -16}, {16, -16}, {-16, 16},
+                {24, 0}, {-24, 0}, {0, 24}, {0, -24}};
         for (int[] probe : probes) {
             int px = center.getX() + probe[0];
             int pz = center.getZ() + probe[1];
-            if ((px >> 4) != (center.getX() >> 4) || (pz >> 4) != (center.getZ() >> 4)) {
-                continue;
-            }
             BlockPos top = world.getTopPosition(Heightmap.Type.WORLD_SURFACE,
                     new BlockPos(px, center.getY(), pz)).down();
             if (!world.getFluidState(top).isEmpty()) {
@@ -195,7 +193,7 @@ public final class WorldSettlementGenerator {
             highest = Math.max(highest, top.getY());
             lowest = Math.min(lowest, top.getY());
         }
-        return highest - lowest <= 12;
+        return highest - lowest <= 14;
     }
 
     private static BlockPos chooseSurface(ServerWorld world, BlockPos requested) {

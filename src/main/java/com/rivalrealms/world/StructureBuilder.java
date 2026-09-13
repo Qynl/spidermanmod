@@ -95,7 +95,7 @@ public final class StructureBuilder {
     // ------------------------------------------------------- variant builds
 
     private static void buildScatteredFortress(ServerWorld world, BlockPos base) {
-        int y = plateau(world, base, 39, 33, ModBlocks.CASTLE_TILES);
+        int y = plateau(world, base, 43, 37, ModBlocks.CASTLE_TILES);
         Block stone = ModBlocks.CASTLE_STONE;
         Block trim = ModBlocks.CROWN_BRICK;
 
@@ -123,6 +123,10 @@ public final class StructureBuilder {
         stockChest(world, base.add(-3, y + 1, -1), new ItemStack(Items.IRON_SWORD),
                 new ItemStack(Items.SHIELD), new ItemStack(Items.IRON_INGOT, 12),
                 new ItemStack(ModItems.RECRUITMENT_CONTRACT), new ItemStack(ModItems.ROYAL_COIN, 3));
+        // A cobbled way leads from the gate to the keep door; the courtyard
+        // well keeps a siege from becoming a thirst.
+        fill(world, base.add(-1, y, -11), 3, 1, 9, ModBlocks.ROAD_STONE);
+        well(world, base.add(8, 0, 7));
         lightYard(world, base, y, 14);
         spawnGuard(world, base, y, BuildStyle.KNIGHT);
     }
@@ -1102,6 +1106,13 @@ public final class StructureBuilder {
         for (int i = 0; i < length; i++) {
             set(world, start.add(0, 0, -i).west(i / 2), material);
             set(world, start.add(0, 0, -i).east(i / 2 + 1), material);
+            if (i % 3 == 1) {
+                // Piers down to honest ground, so the deck never spans air.
+                BlockPos pierPos = start.add(0, 0, -i);
+                foundation(world, pierPos.getX(), pierPos.getZ(), y - 1, material);
+                BlockPos east = pierPos.east(i / 2 + 1);
+                foundation(world, east.getX(), east.getZ(), y - 1, material);
+            }
         }
     }
 
@@ -1705,6 +1716,19 @@ public final class StructureBuilder {
     /** Buried loot for treasure maps: a real chest with a real haul. */
     public static void buryTreasure(ServerWorld world, BlockPos pos, ItemStack... stacks) {
         stockChest(world, pos, stacks);
+    }
+
+    /**
+     * The rebuild reset button: sweeps every block above honest ground in a
+     * square, so an old badly-built settlement can be raised anew.
+     */
+    public static void clearSite(ServerWorld world, BlockPos center, int half, int height) {
+        for (int x = -half; x <= half; x++) {
+            for (int z = -half; z <= half; z++) {
+                int top = groundAt(world, center.getX() + x, center.getZ() + z);
+                clearColumn(world, center.getX() + x, center.getZ() + z, top + 1, top + height);
+            }
+        }
     }
 
     private static void stockChest(ServerWorld world, BlockPos pos, ItemStack... stacks) {

@@ -201,7 +201,8 @@ Claimed settlements recruit guards and workers up to their level. Jobs (guard, b
 
 ## The living realm
 
-- **Sky towns are grounded**: skyfolk build one cohesive dirt terrace — workshops, houses, a farm strip and a single mooring mast with chained lines, the airship riding at the masthead; no floating slabs, and new sites are rejected unless the whole ground is solid and level
+- **`/rivalrealms rebuild`**: stand beside any settlement and raise it anew with the latest builder - the fix for places your world generated under older, clumsier drafts (residents step aside and return, recruited companions stay loyal, your chronicle remembers the reconstruction)
+- **Sky towns are grounded: skyfolk build one cohesive dirt terrace — workshops, houses, a farm strip and a single mooring mast with chained lines, the airship riding at the masthead; no floating slabs, and new sites are rejected unless the whole ground is solid and level
 - **Expeditions resolve for real**: fed fortified towns send named pioneers into the wild — if two or more survive the walk, they claim the land, raise walls in their faction's style, and a brand-new settlement joins the map (with a homecoming cry); if not, their town mourns and the chronicle remembers them as lost
 
 - **Factions run on wealth** (0–100): surplus food and caravans fill the treasury, raids and famine drain it. Wealthy factions field enchanted veterans and an extra patrol; bankrupt ones send people out in rags
