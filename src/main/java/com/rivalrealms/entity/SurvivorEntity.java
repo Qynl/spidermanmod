@@ -1344,7 +1344,7 @@ public class SurvivorEntity extends PathAwareEntity implements RangedAttackMob {
         NbtCompound savedBonds = nbt.getCompound("Bonds");
         for (String key : savedBonds.getKeys()) {
             try {
-                bonds.put(UUID.fromString(key), savedBonds.getByte(key, (byte) 0));
+                bonds.put(UUID.fromString(key), savedBonds.getByte(key));
             } catch (IllegalArgumentException ignored) {
                 // One corrupt bond must not sink the social graph.
             }

@@ -433,9 +433,12 @@ public final class RealmState extends PersistentState {
     }
 
     public BaseRecord findByCenter(BlockPos center) {
-        long key = center.asLong();
+        return findByCenter(center.asLong());
+    }
+
+    public BaseRecord findByCenter(long centerLong) {
         for (BaseRecord base : bases) {
-            if (base.centerLong == key) {
+            if (base.centerLong == centerLong) {
                 return base;
             }
         }

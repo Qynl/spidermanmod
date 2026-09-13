@@ -90,7 +90,7 @@ public final class LivingRealm {
                 continue;
             }
             try {
-                settleCycle(world, state, base);
+                settleCycle(world, state, base, bases);
             } catch (RuntimeException exception) {
                 RivalRealms.LOGGER.error("LivingRealm skipped settlement {}", base.name(), exception);
             }
@@ -102,7 +102,8 @@ public final class LivingRealm {
         }
     }
 
-    private static void settleCycle(ServerWorld world, RealmState state, RealmState.BaseRecord base) {
+    private static void settleCycle(ServerWorld world, RealmState state, RealmState.BaseRecord base,
+                                    List<RealmState.BaseRecord> all) {
         if (base.abandoned()) {
             return;
         }
@@ -169,7 +170,7 @@ public final class LivingRealm {
 
         // --- roads: caravans run between known towns -----------------------
         if (world.random.nextFloat() < 0.12f) {
-            runCaravan(world, state, base, bases);
+            runCaravan(world, state, base, all);
         }
     }
 
@@ -368,7 +369,8 @@ public final class LivingRealm {
             return;
         }
         // Two patrols meet on the road and settle it the old way.
-        BlockPos mid = base.center().add(foe.center()).divide(2);
+        BlockPos mid = new BlockPos((base.center().getX() + foe.center().getX()) / 2,
+                base.center().getY(), (base.center().getZ() + foe.center().getZ()) / 2);
         for (String faction : new String[]{base.faction(), foe.faction()}) {
             for (int i = 0; i < 2; i++) {
                 SurvivorEntity fighter = ModEntities.SURVIVOR.create(world);
@@ -441,9 +443,12 @@ public final class LivingRealm {
             }
         }
         // The caravan walks the road: two traders and a guard, headed for `to`.
-        BlockPos start = surface(world, from.center().offset(
-                Direction.getFacing(from.center().getX() - to.center().getX(), from.center().getZ() - to.center().getZ()),
-                from.radius() + 4));
+        int roadX = to.center().getX() - from.center().getX();
+        int roadZ = to.center().getZ() - from.center().getZ();
+        Direction road = Math.abs(roadX) >= Math.abs(roadZ)
+                ? (roadX >= 0 ? Direction.EAST : Direction.WEST)
+                : (roadZ >= 0 ? Direction.SOUTH : Direction.NORTH);
+        BlockPos start = surface(world, from.center().offset(road, from.radius() + 4));
         for (int i = 0; i < 3; i++) {
             SurvivorEntity trader = ModEntities.SURVIVOR.create(world);
             if (trader == null) {
