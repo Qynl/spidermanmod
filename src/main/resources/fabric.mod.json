@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "manhunt",
   "version": "${version}",
-  "name": "Manhunt: The Resident Hunter",
+  "name": "MANHUNT: The Resident",
   "description": "Another player lives in your world. He punches trees, mines, crafts, eats, sleeps-less and gears up like anyone else - but the moment you type /manhunt start he knows exactly where you are and comes for you. Lose him in the Nether and he will find your portal and camp it; run to the End and he will pitch his bed beside the frame and wait.",
   "authors": [
     "Qynl"
