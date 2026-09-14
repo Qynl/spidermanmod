@@ -149,6 +149,7 @@ public final class Manhunt implements ModInitializer {
                 WAS_SLEEPING.put(player.getUuid(), sleeping);
             }
         }
+        ServerWorld overworld = server.getOverworld();
         if (state.chatReplyTick > 0 && overworld.getTime() >= state.chatReplyTick) {
             state.chatReplyTick = 0;
             state.chatReplyUsed = true;
