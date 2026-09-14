@@ -1464,3 +1464,24 @@ add('net.minecraft.entity.ItemEntity', ['net.minecraft.entity.Entity'], [
     'public net.minecraft.item.ItemStack getStack();',
     'public void setStack(net.minecraft.item.ItemStack stack);',
 ])
+
+# ---- horror pass surface ----
+extend('net.minecraft.entity.Entity', [
+    'public net.minecraft.util.math.Vec3d getRotationVec(float tickDelta);',
+    'public void sendMessage(net.minecraft.text.Text message);',
+    'public net.minecraft.text.Text getName();',
+])
+extend('net.minecraft.entity.LivingEntity', [
+    'public net.minecraft.util.math.Vec3d getEyePos();',
+])
+extend('net.minecraft.sound.SoundCategory', [
+    'public static final net.minecraft.sound.SoundCategory HOSTILE;',
+]) if 'net.minecraft.sound.SoundCategory' in ['.'.join(k) for k in CLASSES] else None
+extend('net.minecraft.world.World', [
+    'public long getTimeOfDay();',
+])
+add('net.minecraft.world.RaycastContext', [], [
+    'public RaycastContext(net.minecraft.util.math.Vec3d start, net.minecraft.util.math.Vec3d end, net.minecraft.world.RaycastContext.ShapeType shapeType, net.minecraft.world.RaycastContext.FluidHandling fluid, net.minecraft.entity.Entity entity);',
+])
+add('net.minecraft.world.RaycastContext.ShapeType', [], [])
+add('net.minecraft.world.RaycastContext.FluidHandling', [], [])

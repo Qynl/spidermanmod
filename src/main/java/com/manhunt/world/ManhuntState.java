@@ -14,22 +14,35 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * Everything the hunt remembers across restarts: whether the chase is live,
- * which portal the player last slipped through (per dimension), where the
- * hunter's bed is, and his packed inventory while he is dead and counting
- * down to a respawn.
+ * Everything the haunting remembers: whether the chase has been acknowledged,
+ * which act it is in, which portal the player slipped through, where the
+ * hunter's bed is, how many times he has killed you, and his packed inventory
+ * while he is dead and counting down to a respawn.
  */
 public final class ManhuntState extends PersistentState {
 
-    private static final Identifier DIM_OVERWORLD = Identifier.of("minecraft", "overworld");
-    private static final Identifier DIM_NETHER = Identifier.of("minecraft", "the_nether");
-    private static final Identifier DIM_END = Identifier.of("minecraft", "the_end");
+    /** Acts of the hunt, in order of escalation. */
+    public static final int ACT_WATCH = 0;
+    public static final int ACT_STALK = 1;
+    public static final int ACT_HUNT = 2;
 
-    public boolean started;
+    public boolean ignited;
+    public int act;
+    public long ignitedTick;
+    public int contactTicks;
+    public int unseenTicks;
+    public int farTicks;
+    public int playerHits;
+    public int deathTally;
+    public int night;
+    public int lastCount;
+    public int mirrorNight;
+    public int signsTick;
+    public int truceNight;
+    public boolean chatReplyUsed;
     public UUID hunterUuid;
     /** Dimension the player is currently in. */
     public Identifier playerDimension;
-    /** Dimension the hunter should respawn in, {@code null} for world spawn. */
     public Identifier respawnDimension;
     public BlockPos respawnPos;
     public int respawnTimer;
@@ -52,7 +65,20 @@ public final class ManhuntState extends PersistentState {
 
     private static ManhuntState read(NbtCompound nbt) {
         ManhuntState state = new ManhuntState();
-        state.started = nbt.getBoolean("started");
+        state.ignited = nbt.getBoolean("ignited");
+        state.act = nbt.getInt("act");
+        state.ignitedTick = nbt.getLong("ignitedTick");
+        state.contactTicks = nbt.getInt("contactTicks");
+        state.unseenTicks = nbt.getInt("unseenTicks");
+        state.farTicks = nbt.getInt("farTicks");
+        state.playerHits = nbt.getInt("playerHits");
+        state.deathTally = nbt.getInt("deathTally");
+        state.night = nbt.getInt("night");
+        state.lastCount = nbt.getInt("lastCount");
+        state.mirrorNight = nbt.getInt("mirrorNight");
+        state.signsTick = nbt.getInt("signsTick");
+        state.truceNight = nbt.getInt("truceNight");
+        state.chatReplyUsed = nbt.getBoolean("chatReplyUsed");
         if (nbt.containsUuid("hunter")) {
             state.hunterUuid = nbt.getUuid("hunter");
         }
@@ -84,7 +110,20 @@ public final class ManhuntState extends PersistentState {
 
     @Override
     public NbtCompound writeNbt(NbtCompound nbt, RegistryWrapper.WrapperLookup registries) {
-        nbt.putBoolean("started", started);
+        nbt.putBoolean("ignited", ignited);
+        nbt.putInt("act", act);
+        nbt.putLong("ignitedTick", ignitedTick);
+        nbt.putInt("contactTicks", contactTicks);
+        nbt.putInt("unseenTicks", unseenTicks);
+        nbt.putInt("farTicks", farTicks);
+        nbt.putInt("playerHits", playerHits);
+        nbt.putInt("deathTally", deathTally);
+        nbt.putInt("night", night);
+        nbt.putInt("lastCount", lastCount);
+        nbt.putInt("mirrorNight", mirrorNight);
+        nbt.putInt("signsTick", signsTick);
+        nbt.putInt("truceNight", truceNight);
+        nbt.putBoolean("chatReplyUsed", chatReplyUsed);
         if (hunterUuid != null) {
             nbt.putUuid("hunter", hunterUuid);
         }
@@ -112,14 +151,14 @@ public final class ManhuntState extends PersistentState {
     }
 
     public static Identifier overworld() {
-        return DIM_OVERWORLD;
+        return Identifier.of("minecraft", "overworld");
     }
 
     public static Identifier nether() {
-        return DIM_NETHER;
+        return Identifier.of("minecraft", "the_nether");
     }
 
     public static Identifier end() {
-        return DIM_END;
+        return Identifier.of("minecraft", "the_end");
     }
 }

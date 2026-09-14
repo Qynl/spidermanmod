@@ -1,21 +1,24 @@
 package com.manhunt.entity;
 
 import com.manhunt.Manhunt;
+import com.manhunt.ManhuntSounds;
+import com.manhunt.world.HunterVoice;
 import com.manhunt.world.ManhuntState;
 import com.mojang.authlib.GameProfile;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
+import net.minecraft.component.DataComponentTypes;
+import net.minecraft.component.type.FoodComponent;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.ItemEntity;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.passive.AnimalEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ArrowItem;
 import net.minecraft.item.BlockItem;
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.component.type.FoodComponent;
 import net.minecraft.item.BowItem;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -28,6 +31,7 @@ import net.minecraft.registry.Registries;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.tag.BlockTags;
 import net.minecraft.registry.tag.TagKey;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
@@ -36,10 +40,12 @@ import net.minecraft.util.Formatting;
 import net.minecraft.util.Hand;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.hit.BlockHitResult;
+import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.RaycastContext;
 import net.minecraft.world.World;
 
 import java.util.ArrayList;
@@ -47,61 +53,41 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * The resident hunter: a {@link PlayerEntity} in every mechanical sense -
- * player inventory, hunger manager, attack cooldowns, bows, armor slots, beds
- * - driven by a survival state machine instead of a network connection.
+ * The resident: a {@link PlayerEntity} in every mechanical sense - player
+ * inventory, hunger manager, attack cooldowns, armor slots, bow, bed - driven
+ * by a haunting state machine instead of a network connection.
  *
- * <p>Before {@code /manhunt start} he lives: punches trees, mines with real
- * tool speeds, smelts in his pack, crafts his way up a gear plan, kills stock
- * when the larder is empty, and stares at you from across valleys. After it he
- * always knows where you are. Change dimension and he walks to the portal you
- * used - then either walls it in behind a ring of carried cobble and waits for
- * you to step through, or steps through after you.
+ * <p>He lives first: gathers, crafts, smelts, eats, equips. Then, when you
+ * make the mistake of looking at him for three full seconds - or on the third
+ * dawn, if you never look - the hunt ignites and escalates through WATCH,
+ * STALK and HUNT. He walks; he never sprints. He does not need to.
  */
 public class HunterEntity extends PlayerEntity {
 
-    public enum Phase { WANDER, HUNT, TRAP, CAMP }
+    public enum Phase { HAUNT, WATCH, STALK, HUNT, TRAP, CAMP }
 
     /** What he works towards, in order. Tags keep him compatible with mods. */
     private static final List<Object> GEAR_PLAN = List.of(
-            Items.OAK_PLANKS,
-            Items.CRAFTING_TABLE,
+            net.minecraft.item.Items.OAK_PLANKS,
+            net.minecraft.item.Items.CRAFTING_TABLE,
             TagKey.of(RegistryKeys.ITEM, Identifier.of("c", "wooden_pickaxes")),
-            Items.FURNACE,
+            net.minecraft.item.Items.FURNACE,
             TagKey.of(RegistryKeys.ITEM, Identifier.of("c", "stone_pickaxes")),
-            Items.STONE_SWORD,
+            net.minecraft.item.Items.STONE_SWORD,
             TagKey.of(RegistryKeys.ITEM, Identifier.of("c", "iron_pickaxes")),
-            Items.IRON_SWORD,
-            Items.IRON_HELMET,
-            Items.IRON_CHESTPLATE,
-            Items.IRON_LEGGINGS,
-            Items.IRON_BOOTS,
-            Items.BOW,
-            Items.ARROW,
-            Items.SHIELD,
-            Items.RED_BED,
+            net.minecraft.item.Items.IRON_SWORD,
+            net.minecraft.item.Items.IRON_HELMET,
+            net.minecraft.item.Items.IRON_CHESTPLATE,
+            net.minecraft.item.Items.IRON_LEGGINGS,
+            net.minecraft.item.Items.IRON_BOOTS,
+            net.minecraft.item.Items.BOW,
+            net.minecraft.item.Items.ARROW,
+            net.minecraft.item.Items.SHIELD,
+            net.minecraft.item.Items.RED_BED,
             TagKey.of(RegistryKeys.ITEM, Identifier.of("c", "diamond_pickaxes")),
-            Items.DIAMOND_SWORD);
+            net.minecraft.item.Items.DIAMOND_SWORD);
 
-    /** Local alias so the gear plan reads like a shopping list. */
-    private interface Items {
-        Item OAK_PLANKS = net.minecraft.item.Items.OAK_PLANKS;
-        Item CRAFTING_TABLE = net.minecraft.item.Items.CRAFTING_TABLE;
-        Item FURNACE = net.minecraft.item.Items.FURNACE;
-        Item STONE_SWORD = net.minecraft.item.Items.STONE_SWORD;
-        Item IRON_SWORD = net.minecraft.item.Items.IRON_SWORD;
-        Item IRON_HELMET = net.minecraft.item.Items.IRON_HELMET;
-        Item IRON_CHESTPLATE = net.minecraft.item.Items.IRON_CHESTPLATE;
-        Item IRON_LEGGINGS = net.minecraft.item.Items.IRON_LEGGINGS;
-        Item IRON_BOOTS = net.minecraft.item.Items.IRON_BOOTS;
-        Item BOW = net.minecraft.item.Items.BOW;
-        Item ARROW = net.minecraft.item.Items.ARROW;
-        Item SHIELD = net.minecraft.item.Items.SHIELD;
-        Item RED_BED = net.minecraft.item.Items.RED_BED;
-        Item DIAMOND_SWORD = net.minecraft.item.Items.DIAMOND_SWORD;
-    }
-
-    private Phase phase = Phase.WANDER;
+    private Phase phase = Phase.HAUNT;
     private Identifier lastDimension;
     private BlockPos mineTarget;
     private float mineProgress;
@@ -114,6 +100,8 @@ public class HunterEntity extends PlayerEntity {
     private Vec3d wanderPoint;
     private int wanderTimer;
     private boolean ringBuilt;
+    private boolean saidSight;
+    private int nightMark = -1;
     private List<Recipe<?>> craftingRecipes;
     private List<Recipe<?>> smeltingRecipes;
 
@@ -148,14 +136,19 @@ public class HunterEntity extends PlayerEntity {
         if (getWorld().isClient) {
             return;
         }
+        ServerWorld world = (ServerWorld) getWorld();
         getHungerManager().update(this);
-        ManhuntState state = ManhuntState.get((ServerWorld) getWorld());
-        syncPhase(state);
-        tickEating();
+        ManhuntState state = ManhuntState.get(world);
+        PlayerEntity player = nearestPlayer();
+        trackNight(world, state);
+        syncPhase(world, state, player);
+        tickEating(world);
         pickupNearby();
         switch (phase) {
-            case WANDER -> liveLikeAPlayer();
-            case HUNT -> huntPlayer(state);
+            case HAUNT -> liveLikeAPlayer(world, state, player);
+            case WATCH -> watchPlayer(world, state, player);
+            case STALK -> stalkPlayer(world, state, player);
+            case HUNT -> huntPlayer(world, state, player);
             case TRAP -> guardPortal(state);
             case CAMP -> campSite(state);
         }
@@ -169,33 +162,111 @@ public class HunterEntity extends PlayerEntity {
         equipBest();
     }
 
-    /** He always knows where you are; the phase decides what he does about it. */
-    private void syncPhase(ManhuntState state) {
-        Identifier here = getWorld().getRegistryKey().getValue();
-        PlayerEntity player = nearestPlayer();
-        if (!state.started) {
-            if (phase == Phase.HUNT || phase == Phase.TRAP) {
-                phase = Phase.WANDER;
+    private void trackNight(ServerWorld world, ManhuntState state) {
+        int night = (int) (world.getTimeOfDay() / 24000L);
+        if (night != nightMark) {
+            nightMark = night;
+            state.night = night;
+            saidSight = false;
+            if (state.ignited && state.act == ManhuntState.ACT_WATCH) {
+                HunterVoice.speak(world, this, "dawn");
             }
-            if (player != null && player.squaredDistanceTo(this) < 400 && stareTimer-- <= 0) {
-                faceEntity(player);
-                stareTimer = 60;
-            }
-            return;
+            state.markDirty();
         }
+    }
+
+    /** Ignition, acts, truce: the shape of the hunt at this moment. */
+    private void syncPhase(ServerWorld world, ManhuntState state, PlayerEntity player) {
+        Identifier here = world.getRegistryKey().getValue();
         if (player != null) {
-            phase = Phase.HUNT;
+            eyeContact(world, state, player);
+        }
+        if (!state.ignited) {
+            phase = Phase.HAUNT;
             return;
         }
-        if (!here.equals(lastDimension)) {
-            lastDimension = here;
-            ringBuilt = false;
-            boolean endGame = ManhuntState.end().equals(state.playerDimension);
-            phase = endGame && random.nextBoolean() ? Phase.CAMP
-                    : random.nextBoolean() ? Phase.TRAP : Phase.HUNT;
+        if (player == null) {
+            if (state.act != ManhuntState.ACT_HUNT) {
+                phase = Phase.HAUNT;
+                return;
+            }
+            if (!here.equals(lastDimension)) {
+                lastDimension = here;
+                ringBuilt = false;
+                boolean endGame = ManhuntState.end().equals(state.playerDimension);
+                phase = endGame && random.nextBoolean() ? Phase.CAMP
+                        : random.nextBoolean() ? Phase.TRAP : Phase.HUNT;
+            }
+            if (state.portalMarks.get(here) == null && state.lastSeen.get(here) == null) {
+                phase = Phase.HUNT;
+            }
+            return;
         }
-        if (state.portalMarks.get(here) == null && state.lastSeen.get(here) == null) {
-            phase = Phase.HUNT;
+        lastDimension = here;
+        long since = world.getTime() - state.ignitedTick;
+        double distance = Math.sqrt(player.squaredDistanceTo(this));
+        if (state.act == ManhuntState.ACT_WATCH && since > 2400L) {
+            state.act = ManhuntState.ACT_STALK;
+            state.markDirty();
+        }
+        if (state.act == ManhuntState.ACT_STALK
+                && (state.contactTicks >= 60 || state.playerHits >= 2 || since > 7200L)) {
+            state.act = ManhuntState.ACT_HUNT;
+            state.markDirty();
+            HunterVoice.speak(world, this, "hunt_open");
+        }
+        if (distance > 400) {
+            state.farTicks++;
+        } else {
+            state.farTicks = 0;
+        }
+        if (state.farTicks > 1200 && state.act > ManhuntState.ACT_WATCH) {
+            state.act = ManhuntState.ACT_WATCH;
+            state.farTicks = 0;
+            state.markDirty();
+            if (state.truceNight != state.night && player instanceof ServerPlayerEntity serverPlayer) {
+                state.truceNight = state.night;
+                HunterVoice.whisper(world, serverPlayer,
+                        "dawn truce, " + serverPlayer.getName().getString()
+                                + ". I'll be where I always am.");
+            }
+        }
+        phase = switch (state.act) {
+            case ManhuntState.ACT_STALK -> Phase.STALK;
+            case ManhuntState.ACT_HUNT -> Phase.HUNT;
+            default -> Phase.WATCH;
+        };
+    }
+
+    /** Three seconds of being looked at is consent. He counts every tick. */
+    private void eyeContact(ServerWorld world, ManhuntState state, PlayerEntity player) {
+        double distance = Math.sqrt(player.squaredDistanceTo(this));
+        if (distance > 48) {
+            state.contactTicks = Math.max(0, state.contactTicks - 4);
+            return;
+        }
+        Vec3d look = player.getRotationVec(1.0f);
+        Vec3d towards = getPos().add(0, 1.4, 0).subtract(player.getEyePos()).normalize();
+        if (look.dotProduct(towards) > 0.93 && hasLineOfSight(player)) {
+            state.contactTicks++;
+        } else {
+            state.contactTicks = Math.max(0, state.contactTicks - 2);
+        }
+        if (!state.ignited && state.contactTicks >= 60) {
+            ignite(world, state, player);
+        }
+    }
+
+    /** The Acknowledgement: the hunt begins because you looked. */
+    public void ignite(ServerWorld world, ManhuntState state, PlayerEntity player) {
+        state.ignited = true;
+        state.act = ManhuntState.ACT_WATCH;
+        state.ignitedTick = world.getTime();
+        state.contactTicks = 0;
+        state.markDirty();
+        HunterVoice.speak(world, this, "ignition");
+        if (player instanceof ServerPlayerEntity serverPlayer) {
+            HunterVoice.whisper(world, serverPlayer, "there it is. you looked.");
         }
     }
 
@@ -204,15 +275,53 @@ public class HunterEntity extends PlayerEntity {
                 candidate -> candidate.isAlive() && !candidate.isSpectator());
     }
 
+    private boolean playerLookingAt(PlayerEntity player, double threshold, double range) {
+        double distance = Math.sqrt(player.squaredDistanceTo(this));
+        if (distance > range) {
+            return false;
+        }
+        Vec3d look = player.getRotationVec(1.0f);
+        Vec3d towards = getPos().add(0, 1.4, 0).subtract(player.getEyePos()).normalize();
+        return look.dotProduct(towards) > threshold;
+    }
+
+    @Override
+    public boolean damage(DamageSource source, float amount) {
+        boolean hurt = super.damage(source, amount);
+        if (hurt && source.getAttacker() instanceof ServerPlayerEntity
+                && !getWorld().isClient) {
+            ManhuntState state = ManhuntState.get((ServerWorld) getWorld());
+            state.playerHits++;
+            state.markDirty();
+            HunterVoice.speak((ServerWorld) getWorld(), this,
+                    random.nextBoolean() ? "hurt_a" : "hurt_b");
+        }
+        return hurt;
+    }
+
     @Override
     public void onDeath(DamageSource damageSource) {
+        if (!getWorld().isClient) {
+            HunterVoice.speak((ServerWorld) getWorld(), this,
+                    random.nextBoolean() ? "death_a" : "death_b");
+        }
         super.onDeath(damageSource);
         Manhunt.onHunterDeath(this);
     }
 
-    // ------------------------------------------------------------- survival --
+    // ------------------------------------------------------------- haunting --
 
-    private void liveLikeAPlayer() {
+    /** Pre-ignition: he lives, and sometimes lets you catch him looking. */
+    private void liveLikeAPlayer(ServerWorld world, ManhuntState state, PlayerEntity player) {
+        if (player != null && playerLookingAt(player, 0.9, 40) && stareTimer-- <= 0) {
+            stareTimer = 80;
+            faceEntity(player);
+            HunterVoice.speak(world, this, switch (state.night % 3) {
+                case 0 -> "watch_a";
+                case 1 -> "watch_b";
+                default -> "watch_c";
+            });
+        }
         if (getHungerManager().getFoodLevel() < 10 && huntAnimal()) {
             return;
         }
@@ -237,7 +346,61 @@ public class HunterEntity extends PlayerEntity {
         steerTowards(wanderPoint, 0.4);
     }
 
-    /** Chase and kill the nearest stock when the larder is empty. */
+    /** WATCH: keep the band, mirror the strafe, never blink first. */
+    private void watchPlayer(ServerWorld world, ManhuntState state, PlayerEntity player) {
+        double distance = Math.sqrt(player.squaredDistanceTo(this));
+        faceEntity(player);
+        if (!saidSight && distance < 40) {
+            saidSight = true;
+            HunterVoice.speak(world, this, random.nextBoolean() ? "sight_a" : "sight_b");
+        }
+        if (distance < 24) {
+            steerTowards(getPos().add(getPos().subtract(player.getPos()).multiply(1, 0, 1)
+                    .normalize()), 0.5);
+        } else if (distance > 40) {
+            steerTowards(player.getPos(), 0.5);
+        } else {
+            double sway = Math.sin(age * 0.02) * 0.6;
+            steerTowards(player.getPos().add(sway, 0, sway), 0.35);
+        }
+    }
+
+    /** STALK: close only while unseen; freeze the instant you look. */
+    private void stalkPlayer(ServerWorld world, ManhuntState state, PlayerEntity player) {
+        double distance = Math.sqrt(player.squaredDistanceTo(this));
+        boolean observed = playerLookingAt(player, 0.8, 32) && hasLineOfSight(player);
+        if (observed) {
+            state.unseenTicks = 0;
+            faceEntity(player);
+            if (distance < 20 && random.nextInt(200) == 0) {
+                HunterVoice.ghost(world, this, ManhuntSounds.GHOST_TURN);
+            }
+            return;
+        }
+        state.unseenTicks++;
+        if (state.unseenTicks > 900 && distance > 24 && distance < 96) {
+            Vec3d look = player.getRotationVec(1.0f);
+            Vec3d behind = player.getPos().subtract(look.multiply(18, 0, 18));
+            setPos(behind.x, player.getY(), behind.z);
+            state.unseenTicks = 0;
+            state.markDirty();
+        }
+        if (distance < 60 && player instanceof ServerPlayerEntity serverPlayer) {
+            int value = Math.clamp((int) (distance / 3), 1, 20);
+            if (value != state.lastCount) {
+                state.lastCount = value;
+                state.markDirty();
+                HunterVoice.count(world, serverPlayer, value);
+            }
+        }
+        if (distance > 3.5) {
+            steerTowards(player.getPos(), 0.7);
+        }
+        faceEntity(player);
+    }
+
+    // ------------------------------------------------------------- survival --
+
     private boolean huntAnimal() {
         if (eatTimer > 0) {
             return true;
@@ -259,7 +422,6 @@ public class HunterEntity extends PlayerEntity {
         return true;
     }
 
-    /** What a player would mine next, given what his inventory is missing. */
     private BlockPos findWantedBlock() {
         World world = getWorld();
         BlockPos self = getBlockPos();
@@ -275,7 +437,7 @@ public class HunterEntity extends PlayerEntity {
         }
         if (pickTier() >= 1 && countItem(net.minecraft.item.Items.RAW_IRON) < 6) {
             wants.add(Blocks.IRON_ORE);
-            wants.add(Blocks.DEEPSLATE_IRON_ORE);
+            wants.add(Blocks.DEEPSLATE_DIAMOND_ORE);
         }
         if (pickTier() >= 2 && countItem(net.minecraft.item.Items.DIAMOND) < 3) {
             wants.add(Blocks.DIAMOND_ORE);
@@ -316,7 +478,6 @@ public class HunterEntity extends PlayerEntity {
         return tier;
     }
 
-    /** Swing at a block with real tool speeds until it breaks and drops. */
     private boolean mineTick(BlockPos pos) {
         World world = getWorld();
         if (!world.isChunkLoaded(pos)) {
@@ -364,7 +525,7 @@ public class HunterEntity extends PlayerEntity {
 
     // ---------------------------------------------------------------- eating --
 
-    private void tickEating() {
+    private void tickEating(ServerWorld world) {
         if (eatTimer > 0) {
             swingHand(Hand.MAIN_HAND);
             if (--eatTimer == 0) {
@@ -375,6 +536,7 @@ public class HunterEntity extends PlayerEntity {
                     food.decrement(1);
                     getWorld().playSound(null, getBlockPos(), SoundEvents.ENTITY_PLAYER_BURP,
                             SoundCategory.PLAYERS, 0.5f, 0.9f + random.nextFloat() * 0.2f);
+                    HunterVoice.speak(world, this, "eat");
                 }
             }
             return;
@@ -481,7 +643,6 @@ public class HunterEntity extends PlayerEntity {
         }
     }
 
-    /** Pack smelting with real smelting recipes: one input, one result, coal every fourth. */
     private void smeltOnce() {
         if (countItem(net.minecraft.item.Items.COAL) < 1) {
             return;
@@ -502,8 +663,7 @@ public class HunterEntity extends PlayerEntity {
                         continue;
                     }
                     getInventory().getStack(slot).decrement(1);
-                    getInventory().insertStack(
-                            recipe.getResult(getRegistryManager()).copy());
+                    getInventory().insertStack(recipe.getResult(getRegistryManager()).copy());
                     if (smeltCounter++ % 4 == 0) {
                         int coal = slotOf(net.minecraft.item.Items.COAL);
                         if (coal >= 0) {
@@ -525,7 +685,6 @@ public class HunterEntity extends PlayerEntity {
         return -1;
     }
 
-    /** Wear the best of what he carries, exactly where a player would. */
     private void equipBest() {
         for (EquipmentSlot slot : new EquipmentSlot[]{EquipmentSlot.HEAD, EquipmentSlot.CHEST,
                 EquipmentSlot.LEGS, EquipmentSlot.FEET}) {
@@ -599,20 +758,16 @@ public class HunterEntity extends PlayerEntity {
                 : path.startsWith("golden") ? 2 : 1;
     }
 
+    private int countItem(Item item) {
+        return getInventory().count(item);
+    }
+
     private List<ItemStack> carried() {
         List<ItemStack> list = new ArrayList<>();
         for (int slot = 0; slot < getInventory().size(); slot++) {
             list.add(getInventory().getStack(slot));
         }
         return list;
-    }
-
-    private int countItem(Item item) {
-        return getInventory().count(item);
-    }
-
-    private FoodComponent foodOf(ItemStack stack) {
-        return stack.getItem().getComponents().get(DataComponentTypes.FOOD);
     }
 
     private void moveToHand(int slot) {
@@ -625,29 +780,38 @@ public class HunterEntity extends PlayerEntity {
         getInventory().setStack(slot, held);
     }
 
+    private FoodComponent foodOf(ItemStack stack) {
+        return stack.getItem().getComponents().get(DataComponentTypes.FOOD);
+    }
+
     // ------------------------------------------------------------------ hunt --
 
-    private void huntPlayer(ManhuntState state) {
-        PlayerEntity target = nearestPlayer();
-        if (target == null) {
-            huntThroughPortals(state);
-            return;
+    /** He walks. He never sprints. You can outrun him; it changes nothing. */
+    private void huntPlayer(ServerWorld world, ManhuntState state, PlayerEntity player) {
+        double distance = Math.sqrt(player.squaredDistanceTo(this));
+        if (!saidSight && distance < 48) {
+            saidSight = true;
+            HunterVoice.speak(world, this, random.nextBoolean() ? "sight_a" : "search_a");
         }
-        double distance = Math.sqrt(target.squaredDistanceTo(this));
         if (distance > 3.2) {
-            if (tryShootBow(target, distance)) {
+            if (tryShootBow(world, player, distance)) {
                 return;
             }
-            steerTowards(target.getPos(), 1.0);
+            steerTowards(player.getPos(), 1.0);
             return;
         }
         if (getAttackCooldownProgress(0.5f) >= 1.0f) {
-            attack(target);
+            attack(player);
+            if (!player.isAlive()) {
+                ManhuntState hunterState = ManhuntState.get(world);
+                hunterState.deathTally++;
+                hunterState.markDirty();
+                HunterVoice.speak(world, this, "kill_a");
+            }
         }
     }
 
-    /** A drawn bow, a loosed arrow: vanilla projectile, hunter aim with lead. */
-    private boolean tryShootBow(PlayerEntity target, double distance) {
+    private boolean tryShootBow(ServerWorld world, PlayerEntity target, double distance) {
         if (bowCooldown > 0) {
             bowCooldown--;
             return false;
@@ -682,19 +846,19 @@ public class HunterEntity extends PlayerEntity {
         swingHand(Hand.MAIN_HAND);
         getWorld().playSound(null, getBlockPos(), SoundEvents.ENTITY_ARROW_SHOOT,
                 SoundCategory.PLAYERS, 0.8f, 0.9f + random.nextFloat() * 0.2f);
+        HunterVoice.speak(world, this, "bow");
         bowCooldown = 30;
         return true;
     }
 
-    private boolean hasLineOfSight(net.minecraft.entity.LivingEntity target) {
-        net.minecraft.util.hit.HitResult hit = getWorld().raycast(new net.minecraft.world.RaycastContext(
+    private boolean hasLineOfSight(LivingEntity target) {
+        HitResult hit = getWorld().raycast(new RaycastContext(
                 getCameraPosVec(1.0f), target.getCameraPosVec(1.0f),
-                net.minecraft.world.RaycastContext.ShapeType.COLLIDER,
-                net.minecraft.world.RaycastContext.FluidHandling.NONE, this));
-        return hit.getType() == net.minecraft.util.hit.HitResult.Type.MISS;
+                RaycastContext.ShapeType.COLLIDER,
+                RaycastContext.FluidHandling.NONE, this));
+        return hit.getType() == HitResult.Type.MISS;
     }
 
-    /** Player is in another dimension: walk to the portal they slipped through. */
     private void huntThroughPortals(ManhuntState state) {
         Identifier here = getWorld().getRegistryKey().getValue();
         BlockPos mark = state.portalMarks.get(here);
@@ -708,12 +872,11 @@ public class HunterEntity extends PlayerEntity {
         steerTowards(Vec3d.ofCenter(mark), 1.0);
         if (Vec3d.ofCenter(mark).squaredDistanceTo(getPos()) < 2.5
                 && getWorld().getBlockState(mark).isOf(Blocks.NETHER_PORTAL)) {
-            // Vanilla portal mechanics carry players; he is one, mechanically.
+            HunterVoice.speak((ServerWorld) getWorld(), this, "portal");
             setPos(mark.getX() + 0.5, mark.getY(), mark.getZ() + 0.5);
         }
     }
 
-    /** Camp the player's portal behind a ring of carried cobble, and wait. */
     private void guardPortal(ManhuntState state) {
         Identifier here = getWorld().getRegistryKey().getValue();
         BlockPos mark = state.portalMarks.get(here);
@@ -727,6 +890,9 @@ public class HunterEntity extends PlayerEntity {
                 return;
             }
             ringBuilt = buildRing(mark);
+            if (ringBuilt) {
+                HunterVoice.speak((ServerWorld) getWorld(), this, "trap_done");
+            }
             return;
         }
         double angle = age * 0.02;
@@ -768,7 +934,6 @@ public class HunterEntity extends PlayerEntity {
         return -1;
     }
 
-    /** Pitch his bed by the End frame or your portal and hold the ground. */
     private void campSite(ManhuntState state) {
         if (nearestPlayer() != null) {
             phase = Phase.HUNT;
@@ -810,6 +975,7 @@ public class HunterEntity extends PlayerEntity {
                         state.respawnPos = pos;
                         state.respawnDimension = getWorld().getRegistryKey().getValue();
                         state.markDirty();
+                        HunterVoice.speak((ServerWorld) getWorld(), this, "end_bed");
                     }
                     return;
                 }
@@ -819,11 +985,6 @@ public class HunterEntity extends PlayerEntity {
 
     // --------------------------------------------------------------- movement --
 
-    /**
-     * Player-like locomotion without a navigator: face the target, feed the
-     * travel input, jump when shin-high geometry gets in the way, swim when
-     * the world puts water in the way. Works in any structure any mod adds.
-     */
     private void steerTowards(Vec3d target, double effort) {
         double dx = target.x - getX();
         double dz = target.z - getZ();
