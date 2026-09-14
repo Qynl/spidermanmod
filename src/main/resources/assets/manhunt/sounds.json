@@ -58,5 +58,64 @@
       "manhunt:voice/wake_a"
     ],
     "subtitle": "subtitles.manhunt.wake_a"
+  },
+  "heartbeat": {
+    "sounds": [
+      "manhunt:heartbeat"
+    ]
+  },
+  "drone": {
+    "sounds": [
+      "manhunt:drone"
+    ]
+  },
+  "motif": {
+    "sounds": [
+      "manhunt:motif"
+    ]
+  },
+  "breath": {
+    "sounds": [
+      "manhunt:breath"
+    ]
+  },
+  "creak": {
+    "sounds": [
+      "manhunt:creak"
+    ],
+    "subtitle": "subtitles.manhunt.creak"
+  },
+  "thunder": {
+    "sounds": [
+      "manhunt:thunder"
+    ],
+    "subtitle": "subtitles.manhunt.thunder"
+  },
+  "ghost_turn": {
+    "sounds": [
+      {
+        "name": "manhunt:ghost_turn",
+        "volume": 0.0
+      }
+    ],
+    "subtitle": "subtitles.manhunt.ghost_turn"
+  },
+  "ghost_check": {
+    "sounds": [
+      {
+        "name": "manhunt:ghost_check",
+        "volume": 0.0
+      }
+    ],
+    "subtitle": "subtitles.manhunt.ghost_check"
+  },
+  "ghost_look": {
+    "sounds": [
+      {
+        "name": "manhunt:ghost_look",
+        "volume": 0.0
+      }
+    ],
+    "subtitle": "subtitles.manhunt.ghost_look"
   }
 }

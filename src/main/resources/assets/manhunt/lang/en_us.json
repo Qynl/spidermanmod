@@ -10,5 +10,10 @@
   "subtitles.manhunt.hurt_a": "The Hunter: Yes. That's the part I like.",
   "subtitles.manhunt.kill_a": "The Hunter: Shh. It's over. I'm here.",
   "subtitles.manhunt.death_a": "The Hunter: Clever prey.",
-  "subtitles.manhunt.wake_a": "The Hunter: Sleep well?"
+  "subtitles.manhunt.wake_a": "The Hunter: Sleep well?",
+  "subtitles.manhunt.creak": "Something shifts",
+  "subtitles.manhunt.thunder": "Thunder rolls from nowhere",
+  "subtitles.manhunt.ghost_turn": "Whisper: don't turn around.",
+  "subtitles.manhunt.ghost_check": "Whisper: I'm not behind you. Check anyway.",
+  "subtitles.manhunt.ghost_look": "Whisper: look at me."
 }
