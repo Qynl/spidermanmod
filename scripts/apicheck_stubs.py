@@ -1209,10 +1209,11 @@ extend('net.minecraft.entity.player.PlayerEntity', [
     'public void attack(net.minecraft.entity.Entity target);',
     'public float getAttackCooldownProgress(float baseTime);',
     'public static net.minecraft.entity.attribute.DefaultAttributeContainer.Builder createPlayerAttributes();',
+    'public abstract boolean isCreative();',
+    'public abstract boolean isSpectator();',
 ])
 add('net.minecraft.entity.player.PlayerInventory', [], [
-    'public net.minecraft.item.ItemStack insertStack(net.minecraft.item.ItemStack stack);',
-    'public java.util.List<net.minecraft.item.ItemStack> getMain();',
+    'public boolean insertStack(net.minecraft.item.ItemStack stack);',
     'public int count(net.minecraft.item.Item item);',
     'public int selectedSlot;',
     'public net.minecraft.item.ItemStack getStack(int slot);',
@@ -1233,9 +1234,19 @@ add('net.minecraft.item.ArmorItem', ['net.minecraft.item.Item'], [
     'public net.minecraft.entity.EquipmentSlot getSlotType();',
 ])
 add('net.minecraft.item.BowItem', ['net.minecraft.item.Item'], [])
-add('net.minecraft.item.FoodComponent', [], [
-    'public int getHunger();',
-    'public float getSaturationModifier();',
+add('net.minecraft.component.type.FoodComponent', [], [
+    'public int nutrition();',
+    'public float saturation();',
+])
+add('net.minecraft.component.DataComponentTypes', [], [
+    'public static final net.minecraft.component.ComponentType<net.minecraft.component.type.FoodComponent> FOOD;',
+])
+add('net.minecraft.component.ComponentMap', [], [
+    'public <T> T get(net.minecraft.component.ComponentType<T> type);',
+], iface=True)
+add('net.minecraft.component.ComponentType', [], [], iface=True)
+extend('net.minecraft.item.Item', [
+    'public net.minecraft.component.ComponentMap getComponents();',
 ])
 add('net.minecraft.item.ItemUsageContext', [], [
     'public ItemUsageContext(net.minecraft.entity.player.PlayerEntity player, net.minecraft.util.Hand hand, net.minecraft.util.hit.BlockHitResult hit);',
@@ -1255,6 +1266,8 @@ add('net.minecraft.recipe.Recipe', [], [
 add('net.minecraft.recipe.RecipeEntry', [], [
     'public net.minecraft.recipe.Recipe<?> value();',
 ])
+extend('net.minecraft.registry.Registry', [
+]) if False else None
 add('net.minecraft.recipe.Ingredient', [], [
     'public net.minecraft.item.ItemStack[] getMatchingStacks();',
 ])
@@ -1273,7 +1286,11 @@ add('net.minecraft.registry.DynamicRegistryManager', [], [
     'public net.minecraft.registry.Registry<?> get(net.minecraft.registry.RegistryKey<?> key);',
 ])
 extend('net.minecraft.entity.Entity', [
-    'public net.minecraft.util.math.Vec3d getCameraPosVec();',
+    'public void setYaw(float yaw);',
+    'public void setPitch(float pitch);',
+    'public float getYaw();',
+    'public float getPitch();',
+    'public net.minecraft.util.math.Vec3d getCameraPosVec(float tickDelta);',
     'public boolean velocityDirty;',
     'public net.minecraft.registry.DynamicRegistryManager getRegistryManager();',
 ])
@@ -1285,14 +1302,16 @@ extend('net.minecraft.entity.LivingEntity', [
 add('net.minecraft.entity.passive.PassiveEntity', ['net.minecraft.entity.MobEntity'], [])
 add('net.minecraft.entity.passive.AnimalEntity', ['net.minecraft.entity.passive.PassiveEntity'], [])
 extend('net.minecraft.entity.projectile.ArrowEntity', [
-    'public ArrowEntity(net.minecraft.world.World world, net.minecraft.entity.LivingEntity owner, net.minecraft.item.ItemStack stack);',
+    'public ArrowEntity(net.minecraft.world.World world, double x, double y, double z, net.minecraft.item.ItemStack stack);',
+])
+extend('net.minecraft.entity.projectile.ProjectileEntity', [
+    'public void setOwner(net.minecraft.entity.Entity owner);',
 ])
 extend('net.minecraft.entity.projectile.PersistentProjectileEntity', [
     'public void setVelocity(net.minecraft.entity.LivingEntity shooter, float pitch, float yaw, float roll, float speed, float divergence);',
 ])
 extend('net.minecraft.util.math.BlockPos', [
-    'public static java.lang.Iterable<net.minecraft.util.math.BlockPos> iterateRandomly(net.minecraft.util.math.random.Random random, int count, net.minecraft.util.math.BlockPos min, net.minecraft.util.math.BlockPos max);',
-    'public double getSquaredDistance(double x, double y, double z, boolean centerPositive);',
+    'public static java.lang.Iterable<net.minecraft.util.math.BlockPos> iterateRandomly(net.minecraft.util.math.random.Random random, int count, int x0, int y0, int z0, int x1, int y1, int z1);',
     'public net.minecraft.util.math.BlockPos toImmutable();',
     'public net.minecraft.util.math.BlockPos offset(net.minecraft.util.math.Direction direction);',
     'public net.minecraft.util.math.BlockPos up(int);',

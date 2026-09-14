@@ -13,15 +13,16 @@ import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.passive.AnimalEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.projectile.ArrowEntity;
-import net.minecraft.item.ArmorItem;
 import net.minecraft.item.BlockItem;
+import net.minecraft.component.DataComponentTypes;
+import net.minecraft.component.type.FoodComponent;
 import net.minecraft.item.BowItem;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemUsageContext;
 import net.minecraft.recipe.CraftingRecipe;
 import net.minecraft.recipe.Ingredient;
-import net.minecraft.recipe.RecipeEntry;
+import net.minecraft.recipe.Recipe;
 import net.minecraft.recipe.SmeltingRecipe;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.RegistryKeys;
@@ -113,11 +114,21 @@ public class HunterEntity extends PlayerEntity {
     private Vec3d wanderPoint;
     private int wanderTimer;
     private boolean ringBuilt;
-    private List<RecipeEntry<?>> craftingRecipes;
-    private List<RecipeEntry<?>> smeltingRecipes;
+    private List<Recipe<?>> craftingRecipes;
+    private List<Recipe<?>> smeltingRecipes;
 
     public HunterEntity(EntityType<? extends PlayerEntity> type, World world) {
         super(world, BlockPos.ORIGIN, 0.0f, new GameProfile(UUID.randomUUID(), "TheHunter"));
+    }
+
+    @Override
+    public boolean isCreative() {
+        return false;
+    }
+
+    @Override
+    public boolean isSpectator() {
+        return false;
     }
 
     @Override
@@ -273,7 +284,8 @@ public class HunterEntity extends PlayerEntity {
         if (wantLogs || !wants.isEmpty()) {
             int radius = 20;
             for (BlockPos pos : BlockPos.iterateRandomly(random, 900,
-                    self.add(-radius, -8, -radius), self.add(radius, 12, radius))) {
+                    self.getX() - radius, self.getY() - 8, self.getZ() - radius,
+                    self.getX() + radius, self.getY() + 12, self.getZ() + radius)) {
                 if (!world.isChunkLoaded(pos)) {
                     continue;
                 }
@@ -293,7 +305,7 @@ public class HunterEntity extends PlayerEntity {
 
     private int pickTier() {
         int tier = 0;
-        for (ItemStack stack : getInventory().getMain()) {
+        for (ItemStack stack : carried()) {
             String path = Registries.ITEM.getId(stack.getItem()).getPath();
             if (!path.endsWith("_pickaxe")) {
                 continue;
@@ -311,10 +323,10 @@ public class HunterEntity extends PlayerEntity {
             return true;
         }
         BlockState blockState = world.getBlockState(pos);
-        if (blockState.isAir() || pos.getSquaredDistance(getX(), getY(), getZ(), true) > 36) {
+        if (blockState.isAir() || Vec3d.ofCenter(pos).squaredDistanceTo(getPos()) > 36) {
             return true;
         }
-        if (pos.getSquaredDistance(getX(), getY(), getZ(), true) > 6.5) {
+        if (Vec3d.ofCenter(pos).squaredDistanceTo(getPos()) > 6.5) {
             steerTowards(Vec3d.ofCenter(pos), 0.6);
             return false;
         }
@@ -341,13 +353,11 @@ public class HunterEntity extends PlayerEntity {
         for (ItemEntity itemEntity : getWorld().getEntitiesByClass(ItemEntity.class,
                 getBoundingBox().expand(2.5), ItemEntity::isAlive)) {
             ItemStack stack = itemEntity.getStack();
-            ItemStack leftover = getInventory().insertStack(stack);
-            if (leftover.isEmpty()) {
+            getInventory().insertStack(stack);
+            if (stack.isEmpty()) {
                 itemEntity.discard();
                 getWorld().playSound(null, getBlockPos(), SoundEvents.ENTITY_ITEM_PICKUP,
                         SoundCategory.PLAYERS, 0.4f, 0.9f + random.nextFloat() * 0.2f);
-            } else {
-                itemEntity.setStack(leftover);
             }
         }
     }
@@ -359,9 +369,9 @@ public class HunterEntity extends PlayerEntity {
             swingHand(Hand.MAIN_HAND);
             if (--eatTimer == 0) {
                 ItemStack food = getMainHandStack();
-                if (food.getItem().getFoodComponent() != null) {
-                    getHungerManager().add(food.getItem().getFoodComponent().getHunger(),
-                            food.getItem().getFoodComponent().getSaturationModifier() * 2.0f);
+                FoodComponent meal = foodOf(food);
+                if (meal != null) {
+                    getHungerManager().add(meal.nutrition(), meal.saturation() * 2.0f);
                     food.decrement(1);
                     getWorld().playSound(null, getBlockPos(), SoundEvents.ENTITY_PLAYER_BURP,
                             SoundCategory.PLAYERS, 0.5f, 0.9f + random.nextFloat() * 0.2f);
@@ -373,7 +383,7 @@ public class HunterEntity extends PlayerEntity {
             return;
         }
         for (int slot = 0; slot < getInventory().size(); slot++) {
-            if (getInventory().getStack(slot).getItem().getFoodComponent() != null) {
+            if (foodOf(getInventory().getStack(slot)) != null) {
                 moveToHand(slot);
                 eatTimer = 32;
                 return;
@@ -389,12 +399,12 @@ public class HunterEntity extends PlayerEntity {
             if (have(want, needed)) {
                 continue;
             }
-            RecipeEntry<?> recipe = findRecipe(want);
+            Recipe<?> recipe = findRecipe(want);
             if (recipe == null || !canConsume(recipe)) {
                 continue;
             }
             consume(recipe);
-            getInventory().insertStack(recipe.value().getResult(getRegistryManager()).copy());
+            getInventory().insertStack(recipe.getResult(getRegistryManager()).copy());
             getWorld().playSound(null, getBlockPos(), SoundEvents.BLOCK_ANVIL_USE,
                     SoundCategory.PLAYERS, 0.3f, 1.1f);
             return;
@@ -408,7 +418,7 @@ public class HunterEntity extends PlayerEntity {
         @SuppressWarnings("unchecked")
         TagKey<Item> tag = (TagKey<Item>) want;
         int total = 0;
-        for (ItemStack stack : getInventory().getMain()) {
+        for (ItemStack stack : carried()) {
             if (stack.getRegistryEntry().isIn(tag)) {
                 total += stack.getCount();
             }
@@ -416,17 +426,17 @@ public class HunterEntity extends PlayerEntity {
         return total >= count;
     }
 
-    private RecipeEntry<?> findRecipe(Object want) {
+    private Recipe<?> findRecipe(Object want) {
         if (craftingRecipes == null) {
             craftingRecipes = new ArrayList<>();
-            for (RecipeEntry<?> entry : getRegistryManager().get(RegistryKeys.RECIPE)) {
-                if (entry.value() instanceof CraftingRecipe) {
-                    craftingRecipes.add(entry);
+            for (Recipe<?> recipe : getRegistryManager().get(RegistryKeys.RECIPE)) {
+                if (recipe instanceof CraftingRecipe) {
+                    craftingRecipes.add(recipe);
                 }
             }
         }
-        for (RecipeEntry<?> entry : craftingRecipes) {
-            ItemStack result = entry.value().getResult(getRegistryManager());
+        for (Recipe<?> recipe : craftingRecipes) {
+            ItemStack result = recipe.getResult(getRegistryManager());
             if (result.isEmpty()) {
                 continue;
             }
@@ -440,8 +450,8 @@ public class HunterEntity extends PlayerEntity {
         return null;
     }
 
-    private boolean canConsume(RecipeEntry<?> recipe) {
-        for (Ingredient ingredient : recipe.value().getIngredients()) {
+    private boolean canConsume(Recipe<?> recipe) {
+        for (Ingredient ingredient : recipe.getIngredients()) {
             boolean has = false;
             for (ItemStack option : ingredient.getMatchingStacks()) {
                 if (countItem(option.getItem()) >= 1) {
@@ -456,8 +466,8 @@ public class HunterEntity extends PlayerEntity {
         return true;
     }
 
-    private void consume(RecipeEntry<?> recipe) {
-        for (Ingredient ingredient : recipe.value().getIngredients()) {
+    private void consume(Recipe<?> recipe) {
+        for (Ingredient ingredient : recipe.getIngredients()) {
             outer:
             for (ItemStack option : ingredient.getMatchingStacks()) {
                 for (int slot = 0; slot < getInventory().size(); slot++) {
@@ -478,14 +488,14 @@ public class HunterEntity extends PlayerEntity {
         }
         if (smeltingRecipes == null) {
             smeltingRecipes = new ArrayList<>();
-            for (RecipeEntry<?> entry : getRegistryManager().get(RegistryKeys.RECIPE)) {
-                if (entry.value() instanceof SmeltingRecipe) {
-                    smeltingRecipes.add(entry);
+            for (Recipe<?> recipe : getRegistryManager().get(RegistryKeys.RECIPE)) {
+                if (recipe instanceof SmeltingRecipe) {
+                    smeltingRecipes.add(recipe);
                 }
             }
         }
-        for (RecipeEntry<?> entry : smeltingRecipes) {
-            for (Ingredient ingredient : entry.value().getIngredients()) {
+        for (Recipe<?> recipe : smeltingRecipes) {
+            for (Ingredient ingredient : recipe.getIngredients()) {
                 for (ItemStack option : ingredient.getMatchingStacks()) {
                     int slot = slotOf(option.getItem());
                     if (slot < 0) {
@@ -493,7 +503,7 @@ public class HunterEntity extends PlayerEntity {
                     }
                     getInventory().getStack(slot).decrement(1);
                     getInventory().insertStack(
-                            entry.value().getResult(getRegistryManager()).copy());
+                            recipe.getResult(getRegistryManager()).copy());
                     if (smeltCounter++ % 4 == 0) {
                         int coal = slotOf(net.minecraft.item.Items.COAL);
                         if (coal >= 0) {
@@ -523,8 +533,7 @@ public class HunterEntity extends PlayerEntity {
             int bestRank = armorRank(getEquippedStack(slot));
             for (int i = 0; i < getInventory().size(); i++) {
                 ItemStack stack = getInventory().getStack(i);
-                if (stack.getItem() instanceof ArmorItem armor && armor.getSlotType() == slot
-                        && armorRank(stack) > bestRank) {
+                if (slotForArmor(stack) == slot && armorRank(stack) > bestRank) {
                     bestRank = armorRank(stack);
                     bestSlot = i;
                 }
@@ -551,8 +560,20 @@ public class HunterEntity extends PlayerEntity {
         }
     }
 
+    private EquipmentSlot slotForArmor(ItemStack stack) {
+        if (stack.isEmpty()) {
+            return null;
+        }
+        String path = Registries.ITEM.getId(stack.getItem()).getPath();
+        if (path.endsWith("_helmet")) return EquipmentSlot.HEAD;
+        if (path.endsWith("_chestplate")) return EquipmentSlot.CHEST;
+        if (path.endsWith("_leggings")) return EquipmentSlot.LEGS;
+        if (path.endsWith("_boots")) return EquipmentSlot.FEET;
+        return null;
+    }
+
     private int armorRank(ItemStack stack) {
-        if (stack.isEmpty() || !(stack.getItem() instanceof ArmorItem)) {
+        if (slotForArmor(stack) == null) {
             return 0;
         }
         String path = Registries.ITEM.getId(stack.getItem()).getPath();
@@ -578,8 +599,20 @@ public class HunterEntity extends PlayerEntity {
                 : path.startsWith("golden") ? 2 : 1;
     }
 
+    private List<ItemStack> carried() {
+        List<ItemStack> list = new ArrayList<>();
+        for (int slot = 0; slot < getInventory().size(); slot++) {
+            list.add(getInventory().getStack(slot));
+        }
+        return list;
+    }
+
     private int countItem(Item item) {
         return getInventory().count(item);
+    }
+
+    private FoodComponent foodOf(ItemStack stack) {
+        return stack.getItem().getComponents().get(DataComponentTypes.FOOD);
     }
 
     private void moveToHand(int slot) {
@@ -633,13 +666,16 @@ public class HunterEntity extends PlayerEntity {
         moveToHand(bowSlot);
         faceEntity(target);
         Vec3d lead = target.getPos().add(target.getVelocity().multiply(distance / 3.0, 0, distance / 3.0));
-        Vec3d delta = lead.add(0, 1.2, 0).subtract(getCameraPosVec());
+        Vec3d delta = lead.add(0, 1.2, 0).subtract(getCameraPosVec(1.0f));
         double flat = Math.sqrt(delta.x * delta.x + delta.z * delta.z);
-        this.yaw = (float) Math.toDegrees(Math.atan2(-delta.x, delta.z));
-        this.pitch = (float) -Math.toDegrees(Math.atan2(delta.y, flat));
-        ArrowEntity arrow = new ArrowEntity(getWorld(), this,
+        float aimYaw = (float) Math.toDegrees(Math.atan2(-delta.x, delta.z));
+        float aimPitch = (float) -Math.toDegrees(Math.atan2(delta.y, flat));
+        setYaw(aimYaw);
+        setPitch(aimPitch);
+        ArrowEntity arrow = new ArrowEntity(getWorld(), getX(), getEyeY(), getZ(),
                 new ItemStack(net.minecraft.item.Items.ARROW));
-        arrow.setVelocity(this, this.pitch, this.yaw, 0.0f, 3.0f, 1.0f);
+        arrow.setOwner(this);
+        arrow.setVelocity(this, aimPitch, aimYaw, 0.0f, 3.0f, 1.0f);
         getWorld().spawnEntity(arrow);
         getInventory().getStack(slotOf(net.minecraft.item.Items.ARROW)).decrement(1);
         swingHand(Hand.MAIN_HAND);
@@ -651,7 +687,7 @@ public class HunterEntity extends PlayerEntity {
 
     private boolean hasLineOfSight(net.minecraft.entity.LivingEntity target) {
         net.minecraft.util.hit.HitResult hit = getWorld().raycast(new net.minecraft.world.RaycastContext(
-                getCameraPosVec(), target.getCameraPosVec(),
+                getCameraPosVec(1.0f), target.getCameraPosVec(1.0f),
                 net.minecraft.world.RaycastContext.ShapeType.COLLIDER,
                 net.minecraft.world.RaycastContext.FluidHandling.NONE, this));
         return hit.getType() == net.minecraft.util.hit.HitResult.Type.MISS;
@@ -669,7 +705,7 @@ public class HunterEntity extends PlayerEntity {
             return;
         }
         steerTowards(Vec3d.ofCenter(mark), 1.0);
-        if (mark.getSquaredDistance(getX(), getY(), getZ(), true) < 2.5
+        if (Vec3d.ofCenter(mark).squaredDistanceTo(getPos()) < 2.5
                 && getWorld().getBlockState(mark).isOf(Blocks.NETHER_PORTAL)) {
             // Vanilla portal mechanics carry players; he is one, mechanically.
             setPos(mark.getX() + 0.5, mark.getY(), mark.getZ() + 0.5);
@@ -685,7 +721,7 @@ public class HunterEntity extends PlayerEntity {
             return;
         }
         if (!ringBuilt) {
-            if (mark.getSquaredDistance(getX(), getY(), getZ(), true) > 49) {
+            if (Vec3d.ofCenter(mark).squaredDistanceTo(getPos()) > 49) {
                 steerTowards(Vec3d.ofCenter(mark), 0.9);
                 return;
             }
@@ -739,7 +775,7 @@ public class HunterEntity extends PlayerEntity {
         }
         Identifier here = getWorld().getRegistryKey().getValue();
         BlockPos mark = state.portalMarks.get(here);
-        if (mark != null && mark.getSquaredDistance(getX(), getY(), getZ(), true) > 36) {
+        if (mark != null && Vec3d.ofCenter(mark).squaredDistanceTo(getPos()) > 36) {
             steerTowards(Vec3d.ofCenter(mark), 0.8);
             return;
         }
@@ -791,9 +827,9 @@ public class HunterEntity extends PlayerEntity {
         double dx = target.x - getX();
         double dz = target.z - getZ();
         float want = (float) Math.toDegrees(Math.atan2(-dx, dz));
-        this.yaw = lerpAngle(yaw, want, 24);
-        this.headYaw = yaw;
-        this.bodyYaw = yaw;
+        setYaw(lerpAngle(getYaw(), want, 24));
+        this.headYaw = getYaw();
+        this.bodyYaw = getYaw();
         travel(new Vec3d(0, 0, effort));
         if (horizontalCollision && isOnGround()) {
             setVelocity(getVelocity().add(0, 0.42, 0));
@@ -811,10 +847,10 @@ public class HunterEntity extends PlayerEntity {
     }
 
     private void faceBlock(BlockPos pos) {
-        Vec3d delta = Vec3d.ofCenter(pos).subtract(getCameraPosVec());
+        Vec3d delta = Vec3d.ofCenter(pos).subtract(getCameraPosVec(1.0f));
         double flat = Math.sqrt(delta.x * delta.x + delta.z * delta.z);
         this.headYaw = (float) Math.toDegrees(Math.atan2(-delta.x, delta.z));
-        this.pitch = (float) -Math.toDegrees(Math.atan2(delta.y, flat));
+        setPitch((float) -Math.toDegrees(Math.atan2(delta.y, flat)));
     }
 
     private void faceEntity(net.minecraft.entity.Entity entity) {
