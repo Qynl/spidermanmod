@@ -1,4 +1,14 @@
 {
   "manhunt.the_hunter": "The Hunter",
-  "entity.manhunt.hunter": "The Hunter"
+  "entity.manhunt.hunter": "The Hunter",
+  "subtitles.manhunt.ignition": "The Hunter: There it is. You looked.",
+  "subtitles.manhunt.sight_a": "The Hunter: There you are.",
+  "subtitles.manhunt.search_a": "The Hunter: I don't need to see you. I just need you to exist.",
+  "subtitles.manhunt.portal": "The Hunter: Your door home? I'm standing in it.",
+  "subtitles.manhunt.trap_done": "The Hunter: I closed it gently. Doors deserve that.",
+  "subtitles.manhunt.respawn_a": "The Hunter: Fifteen seconds. Count them with me.",
+  "subtitles.manhunt.hurt_a": "The Hunter: Yes. That's the part I like.",
+  "subtitles.manhunt.kill_a": "The Hunter: Shh. It's over. I'm here.",
+  "subtitles.manhunt.death_a": "The Hunter: Clever prey.",
+  "subtitles.manhunt.wake_a": "The Hunter: Sleep well?"
 }

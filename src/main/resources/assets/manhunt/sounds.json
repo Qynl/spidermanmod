@@ -1,0 +1,62 @@
+{
+  "voice.ignition": {
+    "sounds": [
+      "manhunt:voice/ignition"
+    ],
+    "subtitle": "subtitles.manhunt.ignition"
+  },
+  "voice.sight_a": {
+    "sounds": [
+      "manhunt:voice/sight_a"
+    ],
+    "subtitle": "subtitles.manhunt.sight_a"
+  },
+  "voice.search_a": {
+    "sounds": [
+      "manhunt:voice/search_a"
+    ],
+    "subtitle": "subtitles.manhunt.search_a"
+  },
+  "voice.portal": {
+    "sounds": [
+      "manhunt:voice/portal"
+    ],
+    "subtitle": "subtitles.manhunt.portal"
+  },
+  "voice.trap_done": {
+    "sounds": [
+      "manhunt:voice/trap_done"
+    ],
+    "subtitle": "subtitles.manhunt.trap_done"
+  },
+  "voice.respawn_a": {
+    "sounds": [
+      "manhunt:voice/respawn_a"
+    ],
+    "subtitle": "subtitles.manhunt.respawn_a"
+  },
+  "voice.hurt_a": {
+    "sounds": [
+      "manhunt:voice/hurt_a"
+    ],
+    "subtitle": "subtitles.manhunt.hurt_a"
+  },
+  "voice.kill_a": {
+    "sounds": [
+      "manhunt:voice/kill_a"
+    ],
+    "subtitle": "subtitles.manhunt.kill_a"
+  },
+  "voice.death_a": {
+    "sounds": [
+      "manhunt:voice/death_a"
+    ],
+    "subtitle": "subtitles.manhunt.death_a"
+  },
+  "voice.wake_a": {
+    "sounds": [
+      "manhunt:voice/wake_a"
+    ],
+    "subtitle": "subtitles.manhunt.wake_a"
+  }
+}
