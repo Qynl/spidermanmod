@@ -1312,7 +1312,7 @@ extend('net.minecraft.entity.LivingEntity', [
 add('net.minecraft.entity.passive.PassiveEntity', ['net.minecraft.entity.MobEntity'], [])
 add('net.minecraft.entity.passive.AnimalEntity', ['net.minecraft.entity.passive.PassiveEntity'], [])
 add('net.minecraft.item.ArrowItem', ['net.minecraft.item.Item'], [
-    'public net.minecraft.entity.projectile.PersistentProjectileEntity createArrow(net.minecraft.world.World world, net.minecraft.item.ItemStack stack, net.minecraft.entity.LivingEntity shooter);',
+    'public net.minecraft.entity.projectile.PersistentProjectileEntity createArrow(net.minecraft.world.World world, net.minecraft.item.ItemStack stack, net.minecraft.entity.LivingEntity shooter, net.minecraft.item.ItemStack weapon);',
 ])
 extend('net.minecraft.entity.projectile.ProjectileEntity', [
     'public void setOwner(net.minecraft.entity.Entity owner);',

@@ -674,7 +674,8 @@ public class HunterEntity extends PlayerEntity {
         setPitch(aimPitch);
         net.minecraft.entity.projectile.PersistentProjectileEntity arrow =
                 ((ArrowItem) net.minecraft.item.Items.ARROW).createArrow(
-                        getWorld(), new ItemStack(net.minecraft.item.Items.ARROW), this);
+                        getWorld(), new ItemStack(net.minecraft.item.Items.ARROW), this,
+                        getMainHandStack());
         arrow.setVelocity(this, aimPitch, aimYaw, 0.0f, 3.0f, 1.0f);
         getWorld().spawnEntity(arrow);
         getInventory().getStack(slotOf(net.minecraft.item.Items.ARROW)).decrement(1);
