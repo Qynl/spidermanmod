@@ -1419,8 +1419,12 @@ add('com.mojang.brigadier.context.CommandContext', [], [
 ])
 add('net.minecraft.client.render.entity.BipedEntityRenderer', ['net.minecraft.client.render.entity.LivingEntityRenderer'], [
     'public BipedEntityRenderer(net.minecraft.client.render.entity.EntityRendererFactory.Context context, net.minecraft.client.render.entity.model.BipedEntityModel model, float shadowRadius);',
+])
+add('net.minecraft.client.render.entity.LivingEntityRenderer', ['net.minecraft.client.render.entity.EntityRenderer'], [
+    'public LivingEntityRenderer(net.minecraft.client.render.entity.EntityRendererFactory.Context ctx, net.minecraft.client.render.entity.model.EntityModel model, float shadowRadius);',
     'public boolean addFeature(net.minecraft.client.render.entity.feature.FeatureRenderer feature);',
 ])
+add('net.minecraft.client.render.entity.feature.FeatureRendererContext', [], [], iface=True)
 add('net.minecraft.client.render.entity.model.PlayerEntityModel', ['net.minecraft.client.render.entity.model.BipedEntityModel'], [
     'public PlayerEntityModel(net.minecraft.client.render.entity.model.ModelPart part);',
 ])
@@ -1429,10 +1433,10 @@ add('net.minecraft.client.render.entity.model.BipedEntityModel', ['net.minecraft
 ])
 add('net.minecraft.client.render.entity.model.EntityModel', [], [], iface=True)
 add('net.minecraft.client.render.entity.feature.ArmorFeatureRenderer', ['net.minecraft.client.render.entity.feature.FeatureRenderer'], [
-    'public ArmorFeatureRenderer(net.minecraft.client.render.entity.BipedEntityRenderer renderer, net.minecraft.client.render.entity.model.BipedEntityModel inner, net.minecraft.client.render.entity.model.BipedEntityModel outer, net.minecraft.client.render.model.BakedModelManager modelManager);',
+    'public ArmorFeatureRenderer(net.minecraft.client.render.entity.feature.FeatureRendererContext context, net.minecraft.client.render.entity.model.BipedEntityModel inner, net.minecraft.client.render.entity.model.BipedEntityModel outer, net.minecraft.client.render.model.BakedModelManager modelManager);',
 ])
 add('net.minecraft.client.render.entity.feature.HeldItemFeatureRenderer', ['net.minecraft.client.render.entity.feature.FeatureRenderer'], [
-    'public HeldItemFeatureRenderer(net.minecraft.client.render.entity.BipedEntityRenderer renderer, net.minecraft.client.render.entity.HeldItemRenderer heldItemRenderer);',
+    'public HeldItemFeatureRenderer(net.minecraft.client.render.entity.feature.FeatureRendererContext context, net.minecraft.client.render.entity.HeldItemRenderer heldItemRenderer);',
 ])
 extend('net.minecraft.client.render.entity.EntityRendererFactory.Context', [
     'public net.minecraft.client.render.entity.model.ModelPart getPart(net.minecraft.client.render.entity.model.EntityModelLayer layer);',

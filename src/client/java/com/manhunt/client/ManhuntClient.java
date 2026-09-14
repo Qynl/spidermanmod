@@ -4,7 +4,7 @@ import com.manhunt.Manhunt;
 import com.manhunt.entity.HunterEntity;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
-import net.minecraft.client.render.entity.BipedEntityRenderer;
+import net.minecraft.client.render.entity.LivingEntityRenderer;
 import net.minecraft.client.render.entity.EntityRendererFactory;
 import net.minecraft.client.render.entity.feature.ArmorFeatureRenderer;
 import net.minecraft.client.render.entity.feature.HeldItemFeatureRenderer;
@@ -27,7 +27,7 @@ public final class ManhuntClient implements ClientModInitializer {
     }
 
     private static final class HunterRenderer
-            extends BipedEntityRenderer<HunterEntity, BipedEntityModel<HunterEntity>> {
+            extends LivingEntityRenderer<HunterEntity, BipedEntityModel<HunterEntity>> {
 
         private HunterRenderer(EntityRendererFactory.Context context) {
             super(context, new BipedEntityModel<>(context.getPart(EntityModelLayers.PLAYER)), 0.5f);
