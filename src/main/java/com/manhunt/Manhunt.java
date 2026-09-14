@@ -5,7 +5,7 @@ import com.manhunt.world.ManhuntState;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
-import net.fabricmc.fabric.api.message.v1.ServerMessageCallback;
+import net.fabricmc.fabric.api.message.v1.ServerMessageEvents;
 import net.fabricmc.fabric.api.object.builder.v1.entity.FabricDefaultAttributeRegistry;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
@@ -77,7 +77,7 @@ public final class Manhunt implements ModInitializer {
                 state.markDirty();
             }
         });
-        ServerMessageCallback.EVENT.register((message, sender, params) -> {
+        ServerMessageEvents.CHAT_MESSAGE.register((message, sender, params) -> {
             MinecraftServer server = sender.getServer();
             ManhuntState state = ManhuntState.get(server.getOverworld());
             HunterEntity hunter = hunter(server, state);

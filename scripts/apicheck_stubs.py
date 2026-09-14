@@ -1539,10 +1539,15 @@ add('net.minecraft.util.math.BlockPosIterator', [], [])
 extend('net.minecraft.util.math.BlockPos', [
     'public static java.lang.Iterable<net.minecraft.util.math.BlockPos> iterate(net.minecraft.util.math.BlockPos min, net.minecraft.util.math.BlockPos max);',
 ])
-add('net.fabricmc.fabric.api.message.v1.ServerMessageCallback', [], [
-    'public static final net.fabricmc.fabric.api.message.v1.ServerMessageCallback EVENT;',
-    'public void register(net.fabricmc.fabric.api.message.v1.ServerMessageCallback listener);',
-], iface=True)
+add('net.fabricmc.fabric.api.event.Event', [], [
+    'public void register(java.lang.Object listener);',
+])
+add('net.minecraft.network.message.SignedMessage', [], [
+    'public String getContent();',
+])
+add('net.fabricmc.fabric.api.message.v1.ServerMessageEvents', [], [
+    'public static final net.fabricmc.fabric.api.event.Event CHAT_MESSAGE;',
+])
 add('net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents', [], [
     'public static final net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents.AfterDeath AFTER_DEATH;',
 ], iface=True)
