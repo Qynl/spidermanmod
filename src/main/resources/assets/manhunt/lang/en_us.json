@@ -15,5 +15,14 @@
   "subtitles.manhunt.thunder": "Thunder rolls from nowhere",
   "subtitles.manhunt.ghost_turn": "Whisper: don't turn around.",
   "subtitles.manhunt.ghost_check": "Whisper: I'm not behind you. Check anyway.",
-  "subtitles.manhunt.ghost_look": "Whisper: look at me."
+  "subtitles.manhunt.ghost_look": "Whisper: look at me.",
+  "subtitles.manhunt.watch_a": "Whisper: nothing to do tonight.",
+  "subtitles.manhunt.watch_b": "Whisper: you are so small.",
+  "subtitles.manhunt.watch_c": "Whisper: sleep, sleep.",
+  "subtitles.manhunt.sight_b": "Whisper: you're always right where I left you.",
+  "subtitles.manhunt.search_b": "Whisper: I was in your caves first.",
+  "subtitles.manhunt.stalk_close": "Whisper: you can hear me breathing now.",
+  "subtitles.manhunt.hunt_open": "Whisper: run. Run, run, run.",
+  "subtitles.manhunt.nether": "Whisper: everything down here is already dead.",
+  "subtitles.manhunt.end_bed": "Whisper: you know what happens. Sleep anyway."
 }

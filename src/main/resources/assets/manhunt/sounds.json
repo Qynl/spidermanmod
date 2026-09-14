@@ -117,5 +117,59 @@
       }
     ],
     "subtitle": "subtitles.manhunt.ghost_look"
+  },
+  "watch_a": {
+    "sounds": [
+      "manhunt:voice/watch_a"
+    ],
+    "subtitle": "Whisper: nothing to do tonight."
+  },
+  "watch_b": {
+    "sounds": [
+      "manhunt:voice/watch_b"
+    ],
+    "subtitle": "Whisper: you are so small."
+  },
+  "watch_c": {
+    "sounds": [
+      "manhunt:voice/watch_c"
+    ],
+    "subtitle": "Whisper: sleep, sleep."
+  },
+  "sight_b": {
+    "sounds": [
+      "manhunt:voice/sight_b"
+    ],
+    "subtitle": "Whisper: you're always right where I left you."
+  },
+  "search_b": {
+    "sounds": [
+      "manhunt:voice/search_b"
+    ],
+    "subtitle": "Whisper: I was in your caves first."
+  },
+  "stalk_close": {
+    "sounds": [
+      "manhunt:voice/stalk_close"
+    ],
+    "subtitle": "Whisper: you can hear me breathing now."
+  },
+  "hunt_open": {
+    "sounds": [
+      "manhunt:voice/hunt_open"
+    ],
+    "subtitle": "Whisper: run. Run, run, run."
+  },
+  "nether": {
+    "sounds": [
+      "manhunt:voice/nether"
+    ],
+    "subtitle": "Whisper: everything down here is already dead."
+  },
+  "end_bed": {
+    "sounds": [
+      "manhunt:voice/end_bed"
+    ],
+    "subtitle": "Whisper: you know what happens. Sleep anyway."
   }
 }
