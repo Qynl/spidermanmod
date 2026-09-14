@@ -9,7 +9,7 @@ import net.minecraft.client.render.entity.EntityRendererFactory;
 import net.minecraft.client.render.entity.feature.ArmorFeatureRenderer;
 import net.minecraft.client.render.entity.feature.HeldItemFeatureRenderer;
 import net.minecraft.client.render.entity.model.EntityModelLayers;
-import net.minecraft.client.render.entity.model.PlayerEntityModel;
+import net.minecraft.client.render.entity.model.BipedEntityModel;
 import net.minecraft.util.Identifier;
 
 /**
@@ -27,14 +27,14 @@ public final class ManhuntClient implements ClientModInitializer {
     }
 
     private static final class HunterRenderer
-            extends BipedEntityRenderer<HunterEntity, PlayerEntityModel<HunterEntity>> {
+            extends BipedEntityRenderer<HunterEntity, BipedEntityModel<HunterEntity>> {
 
         private HunterRenderer(EntityRendererFactory.Context context) {
-            super(context, new PlayerEntityModel<>(context.getPart(EntityModelLayers.PLAYER)), 0.5f);
+            super(context, new BipedEntityModel<>(context.getPart(EntityModelLayers.PLAYER)), 0.5f);
             addFeature(new HeldItemFeatureRenderer<>(this, context.getHeldItemRenderer()));
             addFeature(new ArmorFeatureRenderer<>(this,
-                    new PlayerEntityModel<>(context.getPart(EntityModelLayers.PLAYER_INNER_ARMOR)),
-                    new PlayerEntityModel<>(context.getPart(EntityModelLayers.PLAYER_OUTER_ARMOR)),
+                    new BipedEntityModel<>(context.getPart(EntityModelLayers.PLAYER_INNER_ARMOR)),
+                    new BipedEntityModel<>(context.getPart(EntityModelLayers.PLAYER_OUTER_ARMOR)),
                     context.getModelManager()));
         }
 

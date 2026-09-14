@@ -1424,6 +1424,10 @@ add('net.minecraft.client.render.entity.BipedEntityRenderer', ['net.minecraft.cl
 add('net.minecraft.client.render.entity.model.PlayerEntityModel', ['net.minecraft.client.render.entity.model.BipedEntityModel'], [
     'public PlayerEntityModel(net.minecraft.client.render.entity.model.ModelPart part);',
 ])
+add('net.minecraft.client.render.entity.model.BipedEntityModel', ['net.minecraft.client.render.entity.model.EntityModel'], [
+    'public BipedEntityModel(net.minecraft.client.render.entity.model.ModelPart part);',
+])
+add('net.minecraft.client.render.entity.model.EntityModel', [], [], iface=True)
 add('net.minecraft.client.render.entity.feature.ArmorFeatureRenderer', ['net.minecraft.client.render.entity.feature.FeatureRenderer'], [
     'public ArmorFeatureRenderer(net.minecraft.client.render.entity.BipedEntityRenderer renderer, net.minecraft.client.render.entity.model.BipedEntityModel inner, net.minecraft.client.render.entity.model.BipedEntityModel outer, net.minecraft.client.render.model.BakedModelManager modelManager);',
 ])
