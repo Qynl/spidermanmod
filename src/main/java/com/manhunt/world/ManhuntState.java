@@ -40,6 +40,10 @@ public final class ManhuntState extends PersistentState {
     public int signsTick;
     public int truceNight;
     public boolean chatReplyUsed;
+    public long chatReplyTick;
+    public long deathTick;
+    public BlockPos deathSite;
+    public Identifier deathSiteDim;
     public UUID hunterUuid;
     /** Dimension the player is currently in. */
     public Identifier playerDimension;
@@ -79,6 +83,14 @@ public final class ManhuntState extends PersistentState {
         state.signsTick = nbt.getInt("signsTick");
         state.truceNight = nbt.getInt("truceNight");
         state.chatReplyUsed = nbt.getBoolean("chatReplyUsed");
+        state.chatReplyTick = nbt.getLong("chatReplyTick");
+        state.deathTick = nbt.getLong("deathTick");
+        if (nbt.contains("deathSite")) {
+            state.deathSite = BlockPos.fromLong(nbt.getLong("deathSite"));
+        }
+        if (nbt.contains("deathSiteDim")) {
+            state.deathSiteDim = Identifier.of(nbt.getString("deathSiteDim"));
+        }
         if (nbt.containsUuid("hunter")) {
             state.hunterUuid = nbt.getUuid("hunter");
         }
@@ -124,6 +136,14 @@ public final class ManhuntState extends PersistentState {
         nbt.putInt("signsTick", signsTick);
         nbt.putInt("truceNight", truceNight);
         nbt.putBoolean("chatReplyUsed", chatReplyUsed);
+        nbt.putLong("chatReplyTick", chatReplyTick);
+        nbt.putLong("deathTick", deathTick);
+        if (deathSite != null) {
+            nbt.putLong("deathSite", deathSite.asLong());
+        }
+        if (deathSiteDim != null) {
+            nbt.putString("deathSiteDim", deathSiteDim.toString());
+        }
         if (hunterUuid != null) {
             nbt.putUuid("hunter", hunterUuid);
         }

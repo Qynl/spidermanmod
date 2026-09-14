@@ -1485,3 +1485,67 @@ add('net.minecraft.world.RaycastContext', [], [
 ])
 add('net.minecraft.world.RaycastContext.ShapeType', [], [])
 add('net.minecraft.world.RaycastContext.FluidHandling', [], [])
+
+# ---- haunting behaviours surface ----
+add('net.minecraft.state.property.BooleanProperty', ['net.minecraft.state.property.Property'], [])
+add('net.minecraft.block.DoorBlock', ['net.minecraft.block.Block'], [
+    'public static final net.minecraft.state.property.BooleanProperty OPEN;',
+])
+extend('net.minecraft.block.BlockState', [
+    'public net.minecraft.block.BlockState with(net.minecraft.state.property.BooleanProperty property, boolean value);',
+    'public boolean get(net.minecraft.state.property.BooleanProperty property);',
+])
+extend('net.minecraft.block.Blocks', [
+    'public static final net.minecraft.block.Block OAK_DOOR;',
+    'public static final net.minecraft.block.Block SPRUCE_DOOR;',
+    'public static final net.minecraft.block.Block BIRCH_DOOR;',
+    'public static final net.minecraft.block.Block TORCH;',
+    'public static final net.minecraft.block.Block SOUL_TORCH;',
+    'public static final net.minecraft.block.Block PAPER;',
+])
+extend('net.minecraft.world.World', [
+    'public boolean setBlockState(net.minecraft.util.math.BlockPos pos, net.minecraft.block.BlockState state);',
+    'public boolean isNight();',
+])
+extend('net.minecraft.server.world.ServerWorld', [
+    'public void setWeather(int clearTicks, int rainTicks, boolean raining, boolean thundering);',
+])
+extend('net.minecraft.entity.LivingEntity', [
+    'public boolean isSleeping();',
+])
+extend('net.minecraft.sound.SoundCategory', [
+    'public static final net.minecraft.sound.SoundCategory WEATHER;',
+])
+add('net.minecraft.component.type.LoreComponent', [], [
+    'public LoreComponent(java.util.List<net.minecraft.text.Text> lines);',
+])
+extend('net.minecraft.component.DataComponentTypes', [
+    'public static final net.minecraft.component.ComponentType<net.minecraft.text.Text> CUSTOM_NAME;',
+    'public static final net.minecraft.component.ComponentType<net.minecraft.component.type.LoreComponent> LORE;',
+])
+extend('net.minecraft.item.ItemStack', [
+    'public <T> void set(net.minecraft.component.ComponentType<T> type, T value);',
+])
+extend('net.minecraft.item.Items', [
+    'public static final net.minecraft.item.Item PAPER;',
+])
+extend('net.minecraft.server.MinecraftServer', [
+    'public net.minecraft.server.PlayerManager getPlayerManager();',
+])
+add('net.minecraft.server.PlayerManager', [], [
+    'public net.minecraft.server.network.ServerPlayerEntity getPlayer(java.util.UUID uuid);',
+])
+add('net.minecraft.util.math.BlockPosIterator', [], [])
+extend('net.minecraft.util.math.BlockPos', [
+    'public static java.lang.Iterable<net.minecraft.util.math.BlockPos> iterate(net.minecraft.util.math.BlockPos min, net.minecraft.util.math.BlockPos max);',
+])
+add('net.fabricmc.fabric.api.message.v1.ServerMessageCallback', [], [
+    'public static final net.fabricmc.fabric.api.message.v1.ServerMessageCallback EVENT;',
+    'public void register(net.fabricmc.fabric.api.message.v1.ServerMessageCallback listener);',
+], iface=True)
+add('net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents', [], [
+    'public static final net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents.AfterDeath AFTER_DEATH;',
+], iface=True)
+add('net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents.AfterDeath', [], [
+    'public void register(java.lang.Object listener);',
+], iface=True)

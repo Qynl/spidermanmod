@@ -102,6 +102,8 @@ public class HunterEntity extends PlayerEntity {
     private boolean ringBuilt;
     private boolean saidSight;
     private int nightMark = -1;
+    private int mirrorTicks;
+    private BlockPos vigilTarget;
     private List<Recipe<?>> craftingRecipes;
     private List<Recipe<?>> smeltingRecipes;
 
@@ -142,6 +144,9 @@ public class HunterEntity extends PlayerEntity {
         PlayerEntity player = nearestPlayer();
         trackNight(world, state);
         syncPhase(world, state, player);
+        tickMirror(world, state, player);
+        tickSigns(world, state, player);
+        scareAnimals();
         tickEating(world);
         pickupNearby();
         switch (phase) {
@@ -175,6 +180,115 @@ public class HunterEntity extends PlayerEntity {
         }
     }
 
+    /** Mirror hours, 3:00 to 3:30: at the edge of sight, facing you, once a night. */
+    private void tickMirror(ServerWorld world, ManhuntState state, PlayerEntity player) {
+        long clock = world.getTimeOfDay() % 24000L;
+        boolean window = clock >= 21000L && clock <= 21500L;
+        if (mirrorTicks > 0) {
+            mirrorTicks--;
+            if (player != null) {
+                faceEntity(player);
+                if (player.squaredDistanceTo(this) < 144) {
+                    mirrorTicks = 0;
+                    vanish(world, state);
+                }
+            }
+            if (mirrorTicks == 0 && player != null) {
+                vanish(world, state);
+            }
+            return;
+        }
+        if (window && player != null && state.mirrorNight != state.night
+                && player.squaredDistanceTo(this) > 900) {
+            state.mirrorNight = state.night;
+            state.markDirty();
+            Vec3d away = getPos().subtract(player.getPos()).multiply(1, 0, 1).normalize();
+            BlockPos spot = player.getBlockPos().add((int) (away.x * 44), 0, (int) (away.z * 44));
+            spot = world.getTopPosition(net.minecraft.world.Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, spot);
+            refreshPositionAndAngles(spot.getX() + 0.5, spot.getY() + 1, spot.getZ() + 0.5,
+                    getYaw(), 0);
+            mirrorTicks = 300;
+            HunterVoice.ghost(world, this, ManhuntSounds.GHOST_LOOK);
+        }
+    }
+
+    private void vanish(ServerWorld world, ManhuntState state) {
+        PlayerEntity player = nearestPlayer();
+        if (player == null) {
+            return;
+        }
+        Vec3d away = getPos().subtract(player.getPos()).multiply(1, 0, 1).normalize();
+        BlockPos spot = player.getBlockPos().add((int) (away.x * 96), 0, (int) (away.z * 96));
+        spot = world.getTopPosition(net.minecraft.world.Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, spot);
+        refreshPositionAndAngles(spot.getX() + 0.5, spot.getY() + 1, spot.getZ() + 0.5,
+                getYaw(), 0);
+    }
+
+    /** Signs: one subtle edit near you, every several minutes, with a whisper. */
+    private void tickSigns(ServerWorld world, ManhuntState state, PlayerEntity player) {
+        if (--state.signsTick > 0 || player == null) {
+            return;
+        }
+        state.signsTick = 4800 + random.nextInt(6000);
+        state.markDirty();
+        if (player.squaredDistanceTo(this) > 6400) {
+            return;
+        }
+        BlockPos spot = findSignSpot(world, player);
+        if (spot == null) {
+            return;
+        }
+        applySign(world, spot);
+        HunterVoice.whisper(world, (ServerPlayerEntity) player, random.nextBoolean()
+                ? "I moved something small. You'll notice tonight."
+                : "Your door was open. It isn't.");
+    }
+
+    private BlockPos findSignSpot(World world, PlayerEntity player) {
+        for (int attempt = 0; attempt < 24; attempt++) {
+            BlockPos pos = player.getBlockPos().add(random.nextInt(13) - 6, random.nextInt(5) - 2,
+                    random.nextInt(13) - 6);
+            if (!world.isChunkLoaded(pos)) {
+                continue;
+            }
+            BlockState blockState = world.getBlockState(pos);
+            if (blockState.isOf(Blocks.OAK_DOOR) || blockState.isOf(Blocks.SPRUCE_DOOR)
+                    || blockState.isOf(Blocks.BIRCH_DOOR) || blockState.isOf(Blocks.TORCH)) {
+                return pos;
+            }
+            if (blockState.isAir() && world.getBlockState(pos.down()).isSolid()) {
+                return pos;
+            }
+        }
+        return null;
+    }
+
+    private void applySign(World world, BlockPos spot) {
+        BlockState blockState = world.getBlockState(spot);
+        if (blockState.getBlock() instanceof net.minecraft.block.DoorBlock door) {
+            world.setBlockState(spot, blockState.with(net.minecraft.block.DoorBlock.OPEN,
+                    !blockState.get(net.minecraft.block.DoorBlock.OPEN)));
+        } else if (blockState.isOf(Blocks.TORCH)) {
+            world.setBlockState(spot, Blocks.SOUL_TORCH.getDefaultState());
+        } else if (blockState.isAir()) {
+            world.setBlockState(spot, Blocks.COBBLESTONE.getDefaultState());
+        }
+        world.playSound(null, spot, ManhuntSounds.CREAK, SoundCategory.BLOCKS, 0.35f, 0.8f);
+    }
+
+    /** Livestock know what he is. They flee, and they will not eat near him. */
+    private void scareAnimals() {
+        for (AnimalEntity animal : getWorld().getEntitiesByClass(AnimalEntity.class,
+                getBoundingBox().expand(8), AnimalEntity::isAlive)) {
+            Vec3d away = animal.getPos().subtract(getPos()).multiply(1, 0, 1);
+            if (away.lengthSquared() < 0.01) {
+                away = new Vec3d(1, 0, 0);
+            }
+            animal.setVelocity(away.normalize().multiply(0.35));
+            animal.velocityDirty = true;
+        }
+    }
+
     /** Ignition, acts, truce: the shape of the hunt at this moment. */
     private void syncPhase(ServerWorld world, ManhuntState state, PlayerEntity player) {
         Identifier here = world.getRegistryKey().getValue();
@@ -186,6 +300,13 @@ public class HunterEntity extends PlayerEntity {
             return;
         }
         if (player == null) {
+            if (state.deathSite != null && here.equals(state.deathSiteDim)
+                    && world.getTime() - state.deathTick < 6000L) {
+                vigilTarget = state.deathSite;
+                phase = Phase.CAMP;
+                return;
+            }
+            vigilTarget = null;
             if (state.act != ManhuntState.ACT_HUNT) {
                 phase = Phase.HAUNT;
                 return;
@@ -265,6 +386,8 @@ public class HunterEntity extends PlayerEntity {
         state.contactTicks = 0;
         state.markDirty();
         HunterVoice.speak(world, this, "ignition");
+        world.setWeather(0, 2400, true, false);
+        world.playSound(null, getBlockPos(), ManhuntSounds.THUNDER, SoundCategory.WEATHER, 2.0f, 0.6f);
         if (player instanceof ServerPlayerEntity serverPlayer) {
             HunterVoice.whisper(world, serverPlayer, "there it is. you looked.");
         }
@@ -312,6 +435,10 @@ public class HunterEntity extends PlayerEntity {
     // ------------------------------------------------------------- haunting --
 
     /** Pre-ignition: he lives, and sometimes lets you catch him looking. */
+    private Identifier here(World world) {
+        return world.getRegistryKey().getValue();
+    }
+
     private void liveLikeAPlayer(ServerWorld world, ManhuntState state, PlayerEntity player) {
         if (player != null && playerLookingAt(player, 0.9, 40) && stareTimer-- <= 0) {
             stareTimer = 80;
@@ -335,6 +462,16 @@ public class HunterEntity extends PlayerEntity {
         }
         if (mineTarget != null) {
             steerTowards(Vec3d.ofCenter(mineTarget), 0.55);
+            return;
+        }
+        if (state.deathSite != null && here(world).equals(state.deathSiteDim)
+                && world.isNight() && player != null
+                && player.squaredDistanceTo(Vec3d.ofCenter(state.deathSite)) > 1024) {
+            if (Vec3d.ofCenter(state.deathSite).squaredDistanceTo(getPos()) > 4) {
+                steerTowards(Vec3d.ofCenter(state.deathSite), 0.45);
+            } else {
+                faceBlock(state.deathSite);
+            }
             return;
         }
         if (--wanderTimer <= 0 || wanderPoint == null) {
@@ -940,7 +1077,7 @@ public class HunterEntity extends PlayerEntity {
             return;
         }
         Identifier here = getWorld().getRegistryKey().getValue();
-        BlockPos mark = state.portalMarks.get(here);
+        BlockPos mark = vigilTarget != null ? vigilTarget : state.portalMarks.get(here);
         if (mark != null && Vec3d.ofCenter(mark).squaredDistanceTo(getPos()) > 36) {
             steerTowards(Vec3d.ofCenter(mark), 0.8);
             return;
