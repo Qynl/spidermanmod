@@ -53,7 +53,7 @@ public final class Manhunt implements ModInitializer {
     @Override
     public void onInitialize() {
         FabricDefaultAttributeRegistry.register(HUNTER, PlayerEntity.createPlayerAttributes());
-        CommandRegistrationCallback.register((dispatcher, registryAccess, environment) ->
+        CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) ->
                 ManhuntCommands.register(dispatcher));
         ServerTickEvents.END_SERVER_TICK.register(Manhunt::direct);
         LOG.info("Manhunt: the hunter is in your world.");
@@ -119,7 +119,7 @@ public final class Manhunt implements ModInitializer {
         BlockPos pos = null;
         if (state.respawnDimension != null && state.respawnPos != null) {
             ServerWorld bed = server.getWorld(
-                    net.minecraft.registry.RegistryKey.of(Registries.WORLD_KEY, state.respawnDimension));
+                    net.minecraft.registry.RegistryKey.of(net.minecraft.registry.RegistryKeys.WORLD, state.respawnDimension));
             if (bed != null) {
                 world = bed;
                 pos = state.respawnPos;

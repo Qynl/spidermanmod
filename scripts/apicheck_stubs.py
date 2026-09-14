@@ -830,6 +830,11 @@ add('net.minecraft.datafixer.DataFixTypes', [], [])
 add('net.minecraft.registry.tag.FluidTags', [], [
     'public static final net.minecraft.registry.tag.TagKey WATER;',
 ])
+add('net.minecraft.registry.RegistryKeys', [], [
+    'public static final net.minecraft.registry.RegistryKey<net.minecraft.registry.Registry<net.minecraft.world.World>> WORLD;',
+    'public static final net.minecraft.registry.RegistryKey<net.minecraft.registry.Registry<net.minecraft.item.Item>> ITEM;',
+    'public static final net.minecraft.registry.RegistryKey<net.minecraft.registry.Registry<net.minecraft.recipe.RecipeEntry<?>>> RECIPE;',
+])
 add('net.minecraft.registry.tag.TagKey', [], [])
 add('net.minecraft.fluid.FluidState', [], [
     'public boolean isIn(net.minecraft.registry.tag.TagKey tag);',
@@ -1273,6 +1278,11 @@ add('net.minecraft.recipe.Ingredient', [], [
 ])
 add('net.minecraft.recipe.CraftingRecipe', ['net.minecraft.recipe.Recipe'], [], iface=True)
 add('net.minecraft.recipe.SmeltingRecipe', ['net.minecraft.recipe.Recipe'], [])
+add('net.minecraft.registry.RegistryKeys', [], [
+    'public static final net.minecraft.registry.RegistryKey<net.minecraft.registry.Registry<net.minecraft.world.World>> WORLD;',
+    'public static final net.minecraft.registry.RegistryKey<net.minecraft.registry.Registry<net.minecraft.item.Item>> ITEM;',
+    'public static final net.minecraft.registry.RegistryKey<net.minecraft.registry.Registry<net.minecraft.recipe.RecipeEntry<?>>> RECIPE;',
+])
 add('net.minecraft.registry.tag.TagKey', [], [
     'public static <T> net.minecraft.registry.tag.TagKey<T> of(net.minecraft.registry.RegistryKey<?> registry, net.minecraft.util.Identifier id);',
 ])
@@ -1301,8 +1311,8 @@ extend('net.minecraft.entity.LivingEntity', [
 ])
 add('net.minecraft.entity.passive.PassiveEntity', ['net.minecraft.entity.MobEntity'], [])
 add('net.minecraft.entity.passive.AnimalEntity', ['net.minecraft.entity.passive.PassiveEntity'], [])
-extend('net.minecraft.entity.projectile.ArrowEntity', [
-    'public ArrowEntity(net.minecraft.world.World world, double x, double y, double z, net.minecraft.item.ItemStack stack);',
+add('net.minecraft.item.ArrowItem', ['net.minecraft.item.Item'], [
+    'public net.minecraft.entity.projectile.PersistentProjectileEntity createArrow(net.minecraft.world.World world, net.minecraft.item.ItemStack stack, net.minecraft.entity.LivingEntity shooter);',
 ])
 extend('net.minecraft.entity.projectile.ProjectileEntity', [
     'public void setOwner(net.minecraft.entity.Entity owner);',
@@ -1383,7 +1393,7 @@ extend('net.minecraft.item.Items', [
     'public static final net.minecraft.item.Item DIAMOND;',
 ])
 extend('net.minecraft.registry.Registries', [
-    'public static final net.minecraft.registry.RegistryKey<net.minecraft.registry.Registry<net.minecraft.world.World>> WORLD_KEY;',
+
 ])
 extend('net.minecraft.nbt.NbtCompound', [
     'public java.util.Set<String> getKeys();',

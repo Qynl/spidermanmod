@@ -12,7 +12,7 @@ import net.minecraft.entity.ItemEntity;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.passive.AnimalEntity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.projectile.ArrowEntity;
+import net.minecraft.item.ArrowItem;
 import net.minecraft.item.BlockItem;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.component.type.FoodComponent;
@@ -441,10 +441,10 @@ public class HunterEntity extends PlayerEntity {
                 continue;
             }
             if (want instanceof Item item && result.isOf(item)) {
-                return entry;
+                return recipe;
             }
             if (want instanceof TagKey<?> tag && result.getRegistryEntry().isIn((TagKey<Item>) tag)) {
-                return entry;
+                return recipe;
             }
         }
         return null;
@@ -672,9 +672,9 @@ public class HunterEntity extends PlayerEntity {
         float aimPitch = (float) -Math.toDegrees(Math.atan2(delta.y, flat));
         setYaw(aimYaw);
         setPitch(aimPitch);
-        ArrowEntity arrow = new ArrowEntity(getWorld(), getX(), getEyeY(), getZ(),
-                new ItemStack(net.minecraft.item.Items.ARROW));
-        arrow.setOwner(this);
+        net.minecraft.entity.projectile.PersistentProjectileEntity arrow =
+                ((ArrowItem) net.minecraft.item.Items.ARROW).createArrow(
+                        getWorld(), new ItemStack(net.minecraft.item.Items.ARROW), this);
         arrow.setVelocity(this, aimPitch, aimYaw, 0.0f, 3.0f, 1.0f);
         getWorld().spawnEntity(arrow);
         getInventory().getStack(slotOf(net.minecraft.item.Items.ARROW)).decrement(1);
