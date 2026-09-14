@@ -77,7 +77,29 @@ def box(canvas: Canvas, x: int, y: int, w: int, h: int, base, shade, seed: int):
     canvas.noise(x, y, x + w - 1, y + h - 1, [base, base, shade], seed)
 
 
-def hunter_skin() -> Canvas:
+PALE = {
+    "coat": (96, 94, 102, 255), "coat_dark": (70, 68, 76, 255),
+    "coat_light": (116, 114, 122, 255), "hood": (84, 82, 90, 255),
+    "scarf": (92, 40, 42, 255), "scarf_dark": (64, 26, 28, 255),
+    "skin": (212, 208, 200, 255), "skin_shade": (180, 176, 170, 255),
+    "eye": (246, 246, 244, 255), "strap": (70, 66, 60, 255),
+    "strap_dark": (50, 46, 42, 255), "pants": (84, 82, 90, 255),
+    "pants_dark": (64, 62, 70, 255), "boot": (48, 44, 42, 255),
+}
+
+
+def hunter_skin(pale: bool = False) -> Canvas:
+    if pale:
+        g = lambda n: PALE[n]
+        return _skin(g("coat"), g("coat_dark"), g("coat_light"), g("hood"), g("scarf"),
+                     g("scarf_dark"), g("skin"), g("skin_shade"), g("eye"), g("strap"),
+                     g("strap_dark"), g("pants"), g("pants_dark"), g("boot"))
+    return _skin(COAT, COAT_DARK, COAT_LIGHT, HOOD, SCARF, SCARF_DARK, SKIN, SKIN_SHADE,
+                 EYE, STRAP, STRAP_DARK, PANTS, PANTS_DARK, BOOT)
+
+
+def _skin(COAT, COAT_DARK, COAT_LIGHT, HOOD, SCARF, SCARF_DARK, SKIN, SKIN_SHADE,
+          EYE, STRAP, STRAP_DARK, PANTS, PANTS_DARK, BOOT) -> Canvas:
     c = Canvas(64, 64)
     # ---- head: hooded, scarf across the mouth, pale eyes -------------------
     box(c, 8, 0, 8, 8, HOOD, COAT_DARK, 11)          # top
@@ -184,6 +206,7 @@ def icon() -> Canvas:
 
 def main():
     hunter_skin().save(OUT / "textures/entity/hunter.png")
+    hunter_skin(pale=True).save(OUT / "textures/entity/hunter_pale.png")
     icon().save(OUT / "icon.png")
     print("manhunt art forged: hunter skin + icon")
 

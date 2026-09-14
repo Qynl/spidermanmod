@@ -1554,3 +1554,42 @@ add('net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents', [], [
 add('net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents.AfterDeath', [], [
     'public void register(java.lang.Object listener);',
 ], iface=True)
+
+# ---- client dread layer surface ----
+add('net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents', [], [
+    'public static final net.fabricmc.fabric.api.event.Event END_CLIENT_TICK;',
+], iface=True)
+add('net.minecraft.client.render.RenderTickCounter', [], [], iface=True)
+add('net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback', [], [
+    'public static final net.fabricmc.fabric.api.event.Event EVENT;',
+], iface=True)
+add('net.minecraft.client.MinecraftClient', [], [
+    'public static net.minecraft.client.MinecraftClient getInstance();',
+    'public net.minecraft.client.network.ClientPlayerEntity getPlayer();',
+    'public net.minecraft.client.world.ClientWorld getWorld();',
+    'public net.minecraft.client.util.Window getWindow();',
+])
+add('net.minecraft.client.util.Window', [], [
+    'public int getScaledWidth();',
+    'public int getScaledHeight();',
+])
+add('net.minecraft.client.gui.DrawContext', [], [
+    'public void fill(int x0, int y0, int x1, int y1, int color);',
+])
+add('net.minecraft.client.util.SkinTextures', [], [
+    'public net.minecraft.util.Identifier texture();',
+])
+extend('net.minecraft.client.network.AbstractClientPlayerEntity', [
+    'public net.minecraft.client.util.SkinTextures getSkinTextures();',
+]) if ('net.minecraft.client.network', 'AbstractClientPlayerEntity') in CLASSES else add('net.minecraft.client.network.AbstractClientPlayerEntity', ['net.minecraft.entity.player.PlayerEntity'], [
+    'public net.minecraft.client.util.SkinTextures getSkinTextures();',
+])
+extend('net.minecraft.entity.Entity', [
+    'public void playSound(net.minecraft.sound.SoundEvent sound, float volume, float pitch);',
+    'public net.minecraft.util.math.random.Random getRandom();',
+])
+extend('net.minecraft.client.render.entity.LivingEntityRenderer', [
+    'public boolean shouldRenderName(net.minecraft.entity.Entity entity);',
+])
+
+add('net.minecraft.client.world.ClientWorld', ['net.minecraft.world.World'], [])

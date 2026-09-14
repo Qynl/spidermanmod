@@ -23,6 +23,7 @@ MOD_ID = "manhunt"
 
 EXPECTED_DIMENSIONS = {
     "assets/manhunt/textures/entity/hunter.png": (64, 64),
+    "assets/manhunt/textures/entity/hunter_pale.png": (64, 64),
     "assets/manhunt/icon.png": (128, 128),
 }
 
