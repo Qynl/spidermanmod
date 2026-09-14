@@ -58,13 +58,6 @@ public final class ManhuntClient implements ClientModInitializer {
             return HUNTER_SKIN;
         }
 
-        /** No name over his head until he is close enough to matter. */
-        @Override
-        public boolean shouldRenderName(HunterEntity entity) {
-            MinecraftClient client = MinecraftClient.getInstance();
-            ClientPlayerEntity player = client.player;
-            return player != null && entity.squaredDistanceTo(player) < 144;
-        }
 
     }
 }

@@ -1593,3 +1593,11 @@ extend('net.minecraft.client.render.entity.LivingEntityRenderer', [
 ])
 
 add('net.minecraft.client.world.ClientWorld', ['net.minecraft.world.World'], [])
+
+extend('net.minecraft.entity.Entity', [
+    'public boolean shouldRenderName();',
+    'public net.minecraft.entity.player.PlayerEntity getClosestPlayer(net.minecraft.entity.Entity entity, double maxDistance);',
+])
+extend('net.minecraft.world.World', [
+    'public net.minecraft.entity.player.PlayerEntity getClosestPlayer(net.minecraft.entity.Entity entity, double maxDistance);',
+])
