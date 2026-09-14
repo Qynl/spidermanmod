@@ -171,5 +171,59 @@
       "manhunt:voice/end_bed"
     ],
     "subtitle": "Whisper: you know what happens. Sleep anyway."
+  },
+  "end_wait": {
+    "sounds": [
+      "manhunt:voice/end_wait"
+    ],
+    "subtitle": "Whisper: kill it, and we go home."
+  },
+  "respawn_b": {
+    "sounds": [
+      "manhunt:voice/respawn_b"
+    ],
+    "subtitle": "Whisper: I was standing over your bed."
+  },
+  "hurt_b": {
+    "sounds": [
+      "manhunt:voice/hurt_b"
+    ],
+    "subtitle": "Whisper: ow. Keep it up."
+  },
+  "kill_loot": {
+    "sounds": [
+      "manhunt:voice/kill_loot"
+    ],
+    "subtitle": "Whisper: you dropped something. I'll keep it."
+  },
+  "death_b": {
+    "sounds": [
+      "manhunt:voice/death_b"
+    ],
+    "subtitle": "Whisper: it never sticks to me. See you soon."
+  },
+  "eat": {
+    "sounds": [
+      "manhunt:voice/eat"
+    ],
+    "subtitle": "Whisper: your carrots taste better than mine."
+  },
+  "bow": {
+    "sounds": [
+      "manhunt:voice/bow"
+    ],
+    "subtitle": "Whisper: duck."
+  },
+  "wake_b": {
+    "sounds": [
+      "manhunt:voice/wake_b"
+    ],
+    "subtitle": "Whisper: good morning. I didn't sleep."
+  },
+  "dawn": {
+    "sounds": [
+      "manhunt:voice/dawn"
+    ],
+    "subtitle": "Whisper: third sunrise. Now look at me."
   }
 }

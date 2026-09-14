@@ -24,5 +24,14 @@
   "subtitles.manhunt.stalk_close": "Whisper: you can hear me breathing now.",
   "subtitles.manhunt.hunt_open": "Whisper: run. Run, run, run.",
   "subtitles.manhunt.nether": "Whisper: everything down here is already dead.",
-  "subtitles.manhunt.end_bed": "Whisper: you know what happens. Sleep anyway."
+  "subtitles.manhunt.end_bed": "Whisper: you know what happens. Sleep anyway.",
+  "subtitles.manhunt.end_wait": "Whisper: kill it, and we go home.",
+  "subtitles.manhunt.respawn_b": "Whisper: I was standing over your bed.",
+  "subtitles.manhunt.hurt_b": "Whisper: ow. Keep it up.",
+  "subtitles.manhunt.kill_loot": "Whisper: you dropped something. I'll keep it.",
+  "subtitles.manhunt.death_b": "Whisper: it never sticks to me. See you soon.",
+  "subtitles.manhunt.eat": "Whisper: your carrots taste better than mine.",
+  "subtitles.manhunt.bow": "Whisper: duck.",
+  "subtitles.manhunt.wake_b": "Whisper: good morning. I didn't sleep.",
+  "subtitles.manhunt.dawn": "Whisper: third sunrise. Now look at me."
 }
