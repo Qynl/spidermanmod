@@ -51,11 +51,11 @@ jobs:
           path: gradle-build.log
           if-no-files-found: ignore
       - name: Inspect produced jars
-        run: python3 scripts/bughunt.py --jar "$(find build/libs -maxdepth 1 -type f -name 'rival-realms-*.jar' ! -name '*-sources.jar' | head -n 1)"
+        run: python3 scripts/bughunt.py --jar "$(find build/libs -maxdepth 1 -type f -name 'manhunt-*.jar' ! -name '*-sources.jar' | head -n 1)"
       - name: Upload release-ready jars
         uses: actions/upload-artifact@v7
         with:
-          name: rival-realms-${{ github.sha }}
+          name: manhunt-${{ github.sha }}
           path: |
             build/libs/*.jar
             !build/libs/*-sources.jar
