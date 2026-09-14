@@ -1,9 +1,0 @@
-{
-  "type": "minecraft:crafting_shaped",
-  "pattern": [" I ", "ICI", " I "],
-  "key": {
-    "I": {"item": "minecraft:iron_ingot"},
-    "C": {"item": "minecraft:coal_block"}
-  },
-  "result": {"id": "rivalrealms:cannonball", "count": 4}
-}

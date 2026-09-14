@@ -1,1 +1,0 @@
-{"type": "minecraft:crafting_shaped", "pattern": ["NNN", "NHN", "NTN"], "key": {"N": {"item": "minecraft:iron_nugget"}, "H": {"item": "minecraft:honey_bottle"}, "T": {"item": "minecraft:torch"}}, "result": {"id": "rivalrealms:hearth_lantern", "count": 2}}

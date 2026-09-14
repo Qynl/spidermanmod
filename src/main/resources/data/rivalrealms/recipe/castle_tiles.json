@@ -1,6 +1,0 @@
-{
-  "type": "minecraft:crafting_shaped",
-  "pattern": ["DD", "DD"],
-  "key": {"D": {"item": "minecraft:deepslate_tiles"}},
-  "result": {"id": "rivalrealms:castle_tiles", "count": 4}
-}

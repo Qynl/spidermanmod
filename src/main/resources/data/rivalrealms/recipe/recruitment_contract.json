@@ -1,9 +1,0 @@
-{
-  "type": "minecraft:crafting_shaped",
-  "pattern": ["PP ", "PC ", "PP "],
-  "key": {
-    "P": {"item": "minecraft:paper"},
-    "C": {"item": "rivalrealms:royal_coin"}
-  },
-  "result": {"id": "rivalrealms:recruitment_contract", "count": 2}
-}

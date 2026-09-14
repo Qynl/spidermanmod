@@ -1,6 +1,0 @@
-{
-  "type": "minecraft:crafting_shaped",
-  "pattern": ["BB", "BB"],
-  "key": {"B": {"item": "minecraft:stone_bricks"}},
-  "result": {"id": "rivalrealms:crown_brick", "count": 4}
-}

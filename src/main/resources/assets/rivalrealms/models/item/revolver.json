@@ -1,6 +1,0 @@
-{
-  "parent": "rivalrealms:item/3d/handheld_standard",
-  "textures": {
-    "layer0": "rivalrealms:item/revolver"
-  }
-}

@@ -14,7 +14,7 @@ loom {
     splitEnvironmentSourceSets()
 
     mods {
-        "rivalrealms" {
+        "manhunt" {
             sourceSet sourceSets.main
             sourceSet sourceSets.client
         }

@@ -1,1 +1,0 @@
-{"type": "minecraft:crafting_shaped", "pattern": ["PDP", "PPP"], "key": {"P": {"item": "minecraft:paper"}, "D": {"item": "minecraft:dark_oak_planks"}}, "result": {"id": "rivalrealms:notice_board", "count": 1}}

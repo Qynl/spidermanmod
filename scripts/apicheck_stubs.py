@@ -1136,3 +1136,294 @@ if __name__ == '__main__':
 add('net.minecraft.world.chunk.ChunkStatus', [], [
     'public static final net.minecraft.world.chunk.ChunkStatus FULL;',
 ]);
+
+
+# ---- additions for the Rival Realms III rewrite ------------------------------
+
+def extend(fqcn, members):
+    pkg, _, name = fqcn.rpartition('.')
+    CLASSES.setdefault((pkg, name), {'supers': [], 'members': [], 'iface': False})
+    CLASSES[(pkg, name)]['members'].extend(members)
+
+
+add('net.minecraft.util.BlockRotation', [], [
+    'public net.minecraft.util.math.Direction rotate(net.minecraft.util.math.Direction direction);',
+])
+add('net.minecraft.nbt.NbtString', [], [
+    'public static net.minecraft.nbt.NbtString of(String value);',
+])
+add('net.minecraft.item.ItemGroup.Entries', [], [
+    'public void add(net.minecraft.item.ItemStack stack);',
+    'public void add(net.minecraft.item.ItemConvertible item);',
+], iface=True)
+add('net.minecraft.item.ItemGroup.DisplayContext', [], [])
+extend('net.minecraft.item.ItemGroup.EntryCollector', [
+    'public void accept(net.minecraft.item.ItemGroup.DisplayContext context, net.minecraft.item.ItemGroup.Entries entries);',
+])
+extend('net.minecraft.block.Block', [
+    'public static final int NOTIFY_NEIGHBORS;',
+    'public static final int NOTIFY_LISTENERS;',
+    'public static final int NOTIFY_ALL;',
+    'public net.minecraft.item.Item asItem();',
+])
+extend('net.minecraft.util.Formatting', [
+    'public static final net.minecraft.util.Formatting ITALIC;',
+])
+extend('net.minecraft.item.Items', [
+    'public static final net.minecraft.item.Item BOOK;',
+    'public static final net.minecraft.item.Item FLINT_AND_STEEL;',
+    'public static final net.minecraft.item.Item RAW_IRON;',
+])
+extend('net.minecraft.block.Blocks', [
+    'public static final net.minecraft.block.Block IRON_BLOCK;',
+    'public static final net.minecraft.block.Block SPRUCE_FENCE;',
+    'public static final net.minecraft.block.Block DARK_OAK_FENCE;',
+    'public static final net.minecraft.block.Block STONE_BRICK_WALL;',
+    'public static final net.minecraft.block.Block RAW_IRON_BLOCK;',
+])
+extend('net.minecraft.sound.SoundEvents', [
+    'public static final net.minecraft.sound.SoundEvent BLOCK_BARREL_OPEN;',
+    'public static final net.minecraft.sound.SoundEvent BLOCK_NOTE_BLOCK_PLING;',
+    'public static final net.minecraft.sound.SoundEvent ENTITY_HORSE_GALLOP;',
+])
+add('net.minecraft.block.SlabBlock', ['net.minecraft.block.Block'], [
+    'public SlabBlock(net.minecraft.block.AbstractBlock.Settings settings);',
+])
+add('net.minecraft.block.FenceBlock', ['net.minecraft.block.Block'], [
+    'public FenceBlock(net.minecraft.block.AbstractBlock.Settings settings);',
+])
+
+
+# ================= manhunt mod surface (1.21.1 yarn) =================
+
+def extend(fqcn, members):
+    pkg, _, name = fqcn.rpartition('.')
+    entry = CLASSES.setdefault((pkg, name), {'supers': [], 'members': [], 'iface': False})
+    entry['members'].extend(members)
+
+
+extend('net.minecraft.entity.player.PlayerEntity', [
+    'public PlayerEntity(net.minecraft.world.World world, net.minecraft.util.math.BlockPos pos, float yaw, com.mojang.authlib.GameProfile profile);',
+    'public net.minecraft.entity.player.PlayerInventory getInventory();',
+    'public net.minecraft.entity.player.HungerManager getHungerManager();',
+    'public void attack(net.minecraft.entity.Entity target);',
+    'public float getAttackCooldownProgress(float baseTime);',
+    'public static net.minecraft.entity.attribute.DefaultAttributeContainer.Builder createPlayerAttributes();',
+])
+add('net.minecraft.entity.player.PlayerInventory', [], [
+    'public net.minecraft.item.ItemStack insertStack(net.minecraft.item.ItemStack stack);',
+    'public java.util.List<net.minecraft.item.ItemStack> getMain();',
+    'public int count(net.minecraft.item.Item item);',
+    'public int selectedSlot;',
+    'public net.minecraft.item.ItemStack getStack(int slot);',
+    'public void setStack(int slot, net.minecraft.item.ItemStack stack);',
+    'public int size();',
+    'public void writeNbt(net.minecraft.nbt.NbtList nbt);',
+    'public void readNbt(net.minecraft.nbt.NbtList nbt);',
+])
+add('net.minecraft.entity.player.HungerManager', [], [
+    'public int getFoodLevel();',
+    'public void add(int hunger, float saturation);',
+    'public void update(net.minecraft.entity.LivingEntity player);',
+])
+add('com.mojang.authlib.GameProfile', [], [
+    'public GameProfile(java.util.UUID id, String name);',
+])
+add('net.minecraft.item.ArmorItem', ['net.minecraft.item.Item'], [
+    'public net.minecraft.entity.EquipmentSlot getSlotType();',
+])
+add('net.minecraft.item.BowItem', ['net.minecraft.item.Item'], [])
+add('net.minecraft.item.FoodComponent', [], [
+    'public int getHunger();',
+    'public float getSaturationModifier();',
+])
+add('net.minecraft.item.ItemUsageContext', [], [
+    'public ItemUsageContext(net.minecraft.entity.player.PlayerEntity player, net.minecraft.util.Hand hand, net.minecraft.util.hit.BlockHitResult hit);',
+])
+extend('net.minecraft.item.ItemStack', [
+    'public net.minecraft.registry.entry.RegistryEntry<net.minecraft.item.Item> getRegistryEntry();',
+    'public float getMiningSpeedMultiplier(net.minecraft.block.BlockState state);',
+    'public net.minecraft.util.ActionResult useOnBlock(net.minecraft.item.ItemUsageContext context);',
+])
+extend('net.minecraft.item.Item', [
+    'public net.minecraft.item.FoodComponent getFoodComponent();',
+])
+add('net.minecraft.recipe.Recipe', [], [
+    'public net.minecraft.item.ItemStack getResult(net.minecraft.registry.RegistryWrapper.WrapperLookup registries);',
+    'public java.util.List<net.minecraft.recipe.Ingredient> getIngredients();',
+], iface=True)
+add('net.minecraft.recipe.RecipeEntry', [], [
+    'public net.minecraft.recipe.Recipe<?> value();',
+])
+add('net.minecraft.recipe.Ingredient', [], [
+    'public net.minecraft.item.ItemStack[] getMatchingStacks();',
+])
+add('net.minecraft.recipe.CraftingRecipe', ['net.minecraft.recipe.Recipe'], [], iface=True)
+add('net.minecraft.recipe.SmeltingRecipe', ['net.minecraft.recipe.Recipe'], [])
+add('net.minecraft.registry.tag.TagKey', [], [
+    'public static <T> net.minecraft.registry.tag.TagKey<T> of(net.minecraft.registry.RegistryKey<?> registry, net.minecraft.util.Identifier id);',
+])
+add('net.minecraft.registry.RegistryKey', [], [
+    'public static <T> net.minecraft.registry.RegistryKey<T> of(net.minecraft.registry.RegistryKey<?> registry, net.minecraft.util.Identifier id);',
+])
+extend('net.minecraft.registry.entry.RegistryEntry', [
+    'public boolean isIn(net.minecraft.registry.tag.TagKey<?> tag);',
+])
+add('net.minecraft.registry.DynamicRegistryManager', [], [
+    'public net.minecraft.registry.Registry<?> get(net.minecraft.registry.RegistryKey<?> key);',
+])
+extend('net.minecraft.entity.Entity', [
+    'public net.minecraft.util.math.Vec3d getCameraPosVec();',
+    'public boolean velocityDirty;',
+    'public net.minecraft.registry.DynamicRegistryManager getRegistryManager();',
+])
+extend('net.minecraft.entity.LivingEntity', [
+    'public void travel(net.minecraft.util.math.Vec3d movementInput);',
+    'public net.minecraft.item.ItemStack getEquippedStack(net.minecraft.entity.EquipmentSlot slot);',
+    'public void equipStack(net.minecraft.entity.EquipmentSlot slot, net.minecraft.item.ItemStack stack);',
+])
+add('net.minecraft.entity.passive.PassiveEntity', ['net.minecraft.entity.MobEntity'], [])
+add('net.minecraft.entity.passive.AnimalEntity', ['net.minecraft.entity.passive.PassiveEntity'], [])
+extend('net.minecraft.entity.projectile.ArrowEntity', [
+    'public ArrowEntity(net.minecraft.world.World world, net.minecraft.entity.LivingEntity owner, net.minecraft.item.ItemStack stack);',
+])
+extend('net.minecraft.entity.projectile.PersistentProjectileEntity', [
+    'public void setVelocity(net.minecraft.entity.LivingEntity shooter, float pitch, float yaw, float roll, float speed, float divergence);',
+])
+extend('net.minecraft.util.math.BlockPos', [
+    'public static java.lang.Iterable<net.minecraft.util.math.BlockPos> iterateRandomly(net.minecraft.util.math.random.Random random, int count, net.minecraft.util.math.BlockPos min, net.minecraft.util.math.BlockPos max);',
+    'public double getSquaredDistance(double x, double y, double z, boolean centerPositive);',
+    'public net.minecraft.util.math.BlockPos toImmutable();',
+    'public net.minecraft.util.math.BlockPos offset(net.minecraft.util.math.Direction direction);',
+    'public net.minecraft.util.math.BlockPos up(int);',
+    'public net.minecraft.util.math.BlockPos down();',
+    'public static net.minecraft.util.math.BlockPos fromLong(long);',
+    'public long asLong();',
+    'public String toShortString();',
+])
+extend('net.minecraft.block.Block', [
+    'public float getHardness();',
+])
+extend('net.minecraft.block.BlockState', [
+    'public float getHardness(net.minecraft.world.World world, net.minecraft.util.math.BlockPos pos);',
+    'public net.minecraft.block.SoundGroup getSoundGroup();',
+    'public boolean isOf(net.minecraft.block.Block block);',
+    'public boolean isIn(net.minecraft.registry.tag.TagKey<?> tag);',
+    'public boolean isAir();',
+    'public boolean isSolid();',
+])
+add('net.minecraft.block.SoundGroup', [], [
+    'public net.minecraft.sound.SoundEvent getBreakSound();',
+])
+add('net.minecraft.block.BedBlock', ['net.minecraft.block.Block'], [])
+add('net.minecraft.util.math.Direction.Type', [], [
+    'public static final net.minecraft.util.math.Direction.Type HORIZONTAL;',
+])
+add('net.minecraft.util.math.MathHelper', [], [
+    'public static float wrapDegrees(float value);',
+])
+extend('net.minecraft.world.World', [
+    'public net.minecraft.entity.player.PlayerEntity getClosestPlayer(double x, double y, double z, double distance, java.util.function.Predicate<net.minecraft.entity.player.PlayerEntity> predicate);',
+    'public net.minecraft.util.hit.HitResult raycast(net.minecraft.world.RaycastContext context);',
+    'public boolean breakBlock(net.minecraft.util.math.BlockPos pos, boolean drop, net.minecraft.entity.Entity breaker);',
+    'public boolean isChunkLoaded(net.minecraft.util.math.BlockPos pos);',
+])
+extend('net.minecraft.server.world.ServerWorld', [
+    'public java.util.List<net.minecraft.server.network.ServerPlayerEntity> getPlayers();',
+])
+extend('net.minecraft.server.MinecraftServer', [
+    'public java.lang.Iterable<net.minecraft.server.world.ServerWorld> getWorlds();',
+    'public net.minecraft.server.world.ServerWorld getOverworld();',
+    'public net.minecraft.server.world.ServerWorld getWorld(net.minecraft.registry.RegistryKey<?> key);',
+])
+extend('net.minecraft.sound.SoundEvents', [
+    'public static final net.minecraft.sound.SoundEvent ENTITY_ITEM_PICKUP;',
+    'public static final net.minecraft.sound.SoundEvent ENTITY_PLAYER_BURP;',
+    'public static final net.minecraft.sound.SoundEvent BLOCK_ANVIL_USE;',
+    'public static final net.minecraft.sound.SoundEvent BLOCK_STONE_PLACE;',
+    'public static final net.minecraft.sound.SoundEvent ENTITY_ARROW_SHOOT;',
+])
+extend('net.minecraft.item.Items', [
+    'public static final net.minecraft.item.Item OAK_PLANKS;',
+    'public static final net.minecraft.item.Item CRAFTING_TABLE;',
+    'public static final net.minecraft.item.Item FURNACE;',
+    'public static final net.minecraft.item.Item STONE_SWORD;',
+    'public static final net.minecraft.item.Item IRON_SWORD;',
+    'public static final net.minecraft.item.Item IRON_HELMET;',
+    'public static final net.minecraft.item.Item IRON_CHESTPLATE;',
+    'public static final net.minecraft.item.Item IRON_LEGGINGS;',
+    'public static final net.minecraft.item.Item IRON_BOOTS;',
+    'public static final net.minecraft.item.Item BOW;',
+    'public static final net.minecraft.item.Item ARROW;',
+    'public static final net.minecraft.item.Item SHIELD;',
+    'public static final net.minecraft.item.Item RED_BED;',
+    'public static final net.minecraft.item.Item DIAMOND_SWORD;',
+    'public static final net.minecraft.item.Item COBBLESTONE;',
+    'public static final net.minecraft.item.Item COAL;',
+    'public static final net.minecraft.item.Item RAW_IRON;',
+    'public static final net.minecraft.item.Item DIAMOND;',
+])
+extend('net.minecraft.registry.Registries', [
+    'public static final net.minecraft.registry.RegistryKey<net.minecraft.registry.Registry<net.minecraft.world.World>> WORLD_KEY;',
+])
+extend('net.minecraft.nbt.NbtCompound', [
+    'public java.util.Set<String> getKeys();',
+    'public boolean containsUuid(String key);',
+    'public java.util.UUID getUuid(String key);',
+    'public void putUuid(String key, java.util.UUID value);',
+    'public void putBoolean(String key, boolean value);',
+    'public boolean getBoolean(String key);',
+])
+extend('net.minecraft.server.command.ServerCommandSource', [
+    'public void sendError(net.minecraft.text.Text message);',
+    'public net.minecraft.server.world.ServerWorld getWorld();',
+    'public net.minecraft.server.MinecraftServer getServer();',
+    'public net.minecraft.server.network.ServerPlayerEntity getPlayer();',
+    'public boolean hasPermissionLevel(int level);',
+    'public void sendFeedback(java.util.function.Supplier<net.minecraft.text.Text> message, boolean broadcast);',
+])
+extend('com.mojang.brigadier.context.CommandContext', [
+    'public S getSource();',
+]) if False else None
+add('com.mojang.brigadier.context.CommandContext', [], [
+    'public Object getSource();',
+])
+add('net.minecraft.client.render.entity.BipedEntityRenderer', ['net.minecraft.client.render.entity.LivingEntityRenderer'], [
+    'public BipedEntityRenderer(net.minecraft.client.render.entity.EntityRendererFactory.Context context, net.minecraft.client.render.entity.model.BipedEntityModel model, float shadowRadius);',
+    'public boolean addFeature(net.minecraft.client.render.entity.feature.FeatureRenderer feature);',
+])
+add('net.minecraft.client.render.entity.model.PlayerEntityModel', ['net.minecraft.client.render.entity.model.BipedEntityModel'], [
+    'public PlayerEntityModel(net.minecraft.client.render.entity.model.ModelPart part);',
+])
+add('net.minecraft.client.render.entity.feature.ArmorFeatureRenderer', ['net.minecraft.client.render.entity.feature.FeatureRenderer'], [
+    'public ArmorFeatureRenderer(net.minecraft.client.render.entity.BipedEntityRenderer renderer, net.minecraft.client.render.entity.model.BipedEntityModel inner, net.minecraft.client.render.entity.model.BipedEntityModel outer, net.minecraft.client.render.model.BakedModelManager modelManager);',
+])
+add('net.minecraft.client.render.entity.feature.HeldItemFeatureRenderer', ['net.minecraft.client.render.entity.feature.FeatureRenderer'], [
+    'public HeldItemFeatureRenderer(net.minecraft.client.render.entity.BipedEntityRenderer renderer, net.minecraft.client.render.entity.HeldItemRenderer heldItemRenderer);',
+])
+extend('net.minecraft.client.render.entity.EntityRendererFactory.Context', [
+    'public net.minecraft.client.render.entity.model.ModelPart getPart(net.minecraft.client.render.entity.model.EntityModelLayer layer);',
+    'public net.minecraft.client.render.entity.HeldItemRenderer getHeldItemRenderer();',
+    'public net.minecraft.client.render.model.BakedModelManager getModelManager();',
+])
+
+extend('net.minecraft.block.Blocks', [
+    'public static final net.minecraft.block.Block BEDROCK;',
+    'public static final net.minecraft.block.Block DEEPSLATE;',
+    'public static final net.minecraft.block.Block DIAMOND_ORE;',
+    'public static final net.minecraft.block.Block DEEPSLATE_DIAMOND_ORE;',
+    'public static final net.minecraft.block.Block DEEPSLATE_IRON_ORE;',
+    'public static final net.minecraft.block.Block DEEPSLATE_COAL_ORE;',
+    'public static final net.minecraft.block.Block IRON_ORE;',
+    'public static final net.minecraft.block.Block COAL_ORE;',
+    'public static final net.minecraft.block.Block STONE;',
+    'public static final net.minecraft.block.Block NETHER_PORTAL;',
+    'public static final net.minecraft.block.Block WATER;',
+])
+add('net.minecraft.registry.tag.BlockTags', [], [
+    'public static final net.minecraft.registry.tag.TagKey<net.minecraft.block.Block> LOGS;',
+])
+add('net.minecraft.entity.ItemEntity', ['net.minecraft.entity.Entity'], [
+    'public net.minecraft.item.ItemStack getStack();',
+    'public void setStack(net.minecraft.item.ItemStack stack);',
+])

@@ -1,1 +1,0 @@
-{"type": "minecraft:crafting_shaped", "pattern": ["WPW", "WLW", "WWW"], "key": {"W": {"item": "minecraft:white_wool"}, "P": {"item": "minecraft:campfire"}, "L": {"item": "minecraft:lead"}}, "result": {"id": "rivalrealms:camp_kit", "count": 1}}

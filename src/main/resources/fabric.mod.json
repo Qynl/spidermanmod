@@ -1,25 +1,24 @@
 {
   "schemaVersion": 1,
-  "id": "rivalrealms",
+  "id": "manhunt",
   "version": "${version}",
-  "name": "Rival Realms",
-  "description": "Hand-built zeppelins, sailing ships with live cannon duels, four warring survivor cultures, terrain-adaptive fortresses, harbors, frontier towns and skyports. Rival Realms 2.0 \u2014 nothing here is a repainted vanilla boat.",
+  "name": "Manhunt: The Resident Hunter",
+  "description": "Another player lives in your world. He punches trees, mines, crafts, eats, sleeps-less and gears up like anyone else - but the moment you type /manhunt start he knows exactly where you are and comes for you. Lose him in the Nether and he will find your portal and camp it; run to the End and he will pitch his bed beside the frame and wait.",
   "authors": [
-    "Qynl",
-    "Rival Realms contributors"
+    "Qynl"
   ],
   "contact": {
     "sources": "https://github.com/Qynl/spidermanmod"
   },
   "license": "MIT",
-  "icon": "assets/rivalrealms/icon.png",
+  "icon": "assets/manhunt/icon.png",
   "environment": "*",
   "entrypoints": {
     "main": [
-      "com.rivalrealms.RivalRealms"
+      "com.manhunt.Manhunt"
     ],
     "client": [
-      "com.rivalrealms.client.RivalRealmsClient"
+      "com.manhunt.client.ManhuntClient"
     ]
   },
   "depends": {

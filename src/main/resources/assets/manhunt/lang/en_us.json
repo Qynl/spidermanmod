@@ -1,0 +1,18 @@
+{
+  "manhunt.the_hunter": "The Hunter",
+  "manhunt.needs_player": "This verb needs a player in the world.",
+  "manhunt.spawn.already": "He is already out there.",
+  "manhunt.spawn.failed": "The hunter could not be placed.",
+  "manhunt.spawn.ok": "Someone else just woke up in your world.",
+  "manhunt.start": "%s knows where you are now. Run.",
+  "manhunt.stop": "The hunt is called off. He goes back to his own life.",
+  "manhunt.status": "%s - %s, %s blocks away, in the %s.",
+  "manhunt.status.absent": "No hunter walks this world (%s).",
+  "manhunt.status.hunting": "the hunt is live",
+  "manhunt.status.living": "he is living quietly",
+  "manhunt.phase.wander": "living off the land",
+  "manhunt.phase.hunt": "hunting you",
+  "manhunt.phase.trap": "camping your portal",
+  "manhunt.phase.camp": "bedded down by the frame",
+  "entity.manhunt.hunter": "The Hunter"
+}

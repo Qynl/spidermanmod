@@ -1,9 +1,0 @@
-{
-  "type": "minecraft:crafting_shaped",
-  "pattern": ["GGG", "GIG", "GGG"],
-  "key": {
-    "G": {"item": "minecraft:gold_nugget"},
-    "I": {"item": "minecraft:iron_nugget"}
-  },
-  "result": {"id": "rivalrealms:royal_coin", "count": 8}
-}

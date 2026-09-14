@@ -1,1 +1,0 @@
-{"type": "minecraft:crafting_shaped", "pattern": ["SGS", "GSG", "SGS"], "key": {"S": {"item": "minecraft:stone_bricks"}, "G": {"item": "minecraft:gold_nugget"}}, "result": {"id": "rivalrealms:gilded_brick", "count": 8}}
