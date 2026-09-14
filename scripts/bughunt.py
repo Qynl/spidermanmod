@@ -304,12 +304,13 @@ def _split_args(args: str) -> int:
 def check_jar(jar: Path) -> None:
     with zipfile.ZipFile(jar) as archive:
         names = set(archive.namelist())
-    for required in ("fabric.mod.json", "assets/rivalrealms/lang/en_us.json",
-                     "assets/rivalrealms/sounds.json", "assets/rivalrealms/icon.png"):
+    for required in ("fabric.mod.json", "assets/manhunt/lang/en_us.json",
+                     "assets/manhunt/icon.png", "assets/manhunt/textures/entity/hunter.png"):
         if required not in names:
             fail(f"built jar is missing {required}")
-    if not any(name.endswith(".class") and "RivalRealms" in name for name in names):
-        fail("built jar has no RivalRealms entrypoint class")
+    if not any(name.endswith(".class") and name.endswith("com/manhunt/Manhunt.class")
+               for name in names):
+        fail("built jar has no Manhunt entrypoint class")
 
 
 def main() -> None:
